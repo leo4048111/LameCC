@@ -1,11 +1,11 @@
-#include "cc.hpp"
+#include "lcc.hpp"
 
 namespace cc
 {
     Lexer::Lexer(File* file):
         _file(file)
     {
-        // TODO
+        // DO NOTHING
     }
 
     const char Lexer::nextChar()
