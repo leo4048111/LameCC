@@ -6,7 +6,9 @@ namespace cc
         _file(file)
     {
         #define keyword(name, disc) _keywordMap.insert(std::make_pair(disc, TokenType::name));
+        #define operator(name, disc) 
         #include "TokenType.inc"
+        #undef operator
         #undef keyword
     }
 
@@ -15,9 +17,15 @@ namespace cc
         return _file->nextChar();
     }
 
-    bool Lexer::isNextChar(const char c) const
+    bool Lexer::isNextChar(const char c)
     {
-        return _file->peekChar() == c;
+        if(_file->peekChar() == c) 
+        {
+            nextChar();
+            return true;
+        }
+
+        return false;
     }
 
     const char Lexer::peekChar()
@@ -53,8 +61,8 @@ namespace cc
         }
         else if(isNextChar('*')) // ignore block comment
         {
-            char c = nextChar();
             bool isLastStar = false;
+            char c = 0;
             do
             {
                 c = nextChar();
@@ -87,21 +95,15 @@ namespace cc
             case TokenType::TOKEN_INVALID:
                 printf("row:%d, col:%d, ?\n", token->pos.line, token->pos.column);
                 break;
-            case TokenType::TOKEN_KWINT:
-                printf("row:%d, col:%d, KEYWORD_INT\n", token->pos.line, token->pos.column);
-                break;
-            case TokenType::TOKEN_KWRETURN:
-                printf("row:%d, col:%d, KEYWORD_RETURN\n", token->pos.line, token->pos.column);
-                break;
-            case TokenType::TOKEN_KWELSE:
-                printf("row:%d, col:%d, KEYWORD_ELSE\n", token->pos.line, token->pos.column);
-                break;
-            case TokenType::TOKEN_KWIF:
-                printf("row:%d, col:%d, KEYWORD_IF\n", token->pos.line, token->pos.column);
-                break;
-            case TokenType::TOKEN_KWWHILE:
-                printf("row:%d, col:%d, KEYWORD_WHILE\n", token->pos.line, token->pos.column);
-                break;
+            #define keyword(name, disc) \
+            case TokenType::name: \
+            printf("row:%d, col:%d, %s\n", token->pos.line, token->pos.column, disc); \
+            break;
+            #define operator(name, disc) keyword(name, disc)
+            #include "TokenType.inc"
+            #undef operator
+            #undef keyword
+
             default:
                 break;
             }
@@ -183,6 +185,21 @@ namespace cc
         return makeGeneralToken(&token);
     }
 
+    Token* Lexer::forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType)
+    {
+        if(isNextChar(possibleCh)) return makeKeywordToken(possibleType);
+
+        return makeKeywordToken(defaultType);
+    }
+
+    Token* Lexer::forwardSearch2(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType)
+    {
+        if(isNextChar(possibleCh1)) return makeKeywordToken(possibleType1);
+        else if(isNextChar(possibleCh2)) return makeKeywordToken(possibleType2);
+
+        return makeKeywordToken(defaultType);
+    }   
+
     Token* Lexer::readIdentifier(char c)
     {
         CharBuffer buffer;
@@ -200,19 +217,17 @@ namespace cc
             // determine whether this identifier is a keyword
             for(auto& pair: _keywordMap)
             {
-                if(buffer == pair.first) return makeKeywordToken(pair.second, buffer);
+                if(buffer == pair.first) return makeKeywordToken(pair.second);
             }
 
             return makeIdentifierToken(buffer);
         }
     }
 
-    Token* Lexer::makeKeywordToken(TokenType keywordType, CharBuffer& buffer) const
+    Token* Lexer::makeKeywordToken(TokenType keywordType) const
     {
         Token token;
         token.type = keywordType;
-        token.pchar = buffer.new_c_str();
-        token.length = buffer.size();
         return makeGeneralToken(&token);
     }
 
@@ -229,6 +244,13 @@ namespace cc
         case 'a' ... 'z': case 'A' ... 'Z': case '_': case '$':
         case 0x80 ... 0xFD:
             return readIdentifier(ch);
+        case '=': return forwardSearch('=', TokenType::TOKEN_OPEQ, TokenType::TOKEN_OPASSIGN);
+        case '<': return forwardSearch('=', TokenType::TOKEN_OPLEQ, TokenType::TOKEN_OPLESS);
+        case '>': return forwardSearch('=', TokenType::TOKEN_OPGEQ, TokenType::TOKEN_OPGREATER);
+        case '+': return makeKeywordToken(TokenType::TOKEN_OPADD);
+        case '-': return makeKeywordToken(TokenType::TOKEN_OPMINUS);
+        case '*': return makeKeywordToken(TokenType::TOKEN_OPTIMES);
+        case '/': return makeKeywordToken(TokenType::TOKEN_OPDIV);
         case EOF: 
             return makeEOFToken();
         default:
