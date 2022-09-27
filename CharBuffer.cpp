@@ -3,6 +3,8 @@
 
 #define CHARBUFFER_INITSIZE 8
 
+#define ZeroMemory(addr, size) memset((void*)addr, 0, size)
+
 namespace cc
 {
     CharBuffer::CharBuffer() :
@@ -29,7 +31,7 @@ namespace cc
 
     void CharBuffer::append(const char c)
     {
-        if(_size == _capacity) reserve(2 * _capacity);
+        if(_size + 1 == _capacity) reserve(2 * _capacity);
         _buffer[_size] = c;
         _size++;
     }
@@ -44,27 +46,31 @@ namespace cc
         if(_buffer == nullptr)
         {
             _buffer = (char*)malloc(newSize * sizeof(char));
+            ZeroMemory(_buffer, newSize);
             _capacity = newSize;
         } 
         else if(_capacity < newSize)
         {
-            _buffer = (char*)realloc(_buffer, newSize * sizeof(char));
+            char* newBuffer = (char*)malloc(newSize * sizeof(char));
+            ZeroMemory(newBuffer, newSize);
+            memcpy((void*)newBuffer, (void*)_buffer, _size);
             _capacity = newSize;
+            free(_buffer);
+            _buffer = newBuffer;
         }
     }
 
     const char* CharBuffer::c_str()
     {
         if(_size >= _capacity) reserve(_capacity + 1);
-        _buffer[_size] = 0;
         return _buffer;
     }
 
     const char* CharBuffer::new_c_str() const
     {
         char* buffer = (char*)malloc(sizeof(char) * (_size + 1));
+        ZeroMemory(buffer, _size + 1);
         memcpy(buffer, _buffer, _size * sizeof(char));
-        buffer[_size] = 0;
         return buffer;
     }
 
