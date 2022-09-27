@@ -1,5 +1,3 @@
-#pragma once
-
 keyword(TOKEN_KWINT, "int")
 keyword(TOKEN_KWVOID, "void")
 keyword(TOKEN_KWIF, "if")
