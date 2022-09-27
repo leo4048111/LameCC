@@ -19,10 +19,15 @@ namespace cc
         void pop();
         void reserve(size_t newSize);
         const size_t size() const { return _size; };
-        char* asCBuffer() const;
+        const char* c_str();
+        // note that this method is different from cc::CharBuffer::c_str()
+        // because it allocates memory on heap
+        const char* new_c_str() const;
         char* begin(){ return &_buffer[0]; };
         char* end() {return &_buffer[_size - 1];};
 
+        // implement this method here to make things easier
+        bool operator == (const char* s);
     private:
         char* _buffer;
         size_t _size;
@@ -66,12 +71,14 @@ namespace cc
         TOKEN_WHITESPACE,
         TOKEN_NEWLINE,
         TOKEN_IDENTIFIER,
-        TOKEN_KEYWORD,
         TOKEN_NUMBER,
         TOKEN_CHAR,
         TOKEN_STRING,
         TOKEN_EOF,
-        TOKEN_INVALID
+        TOKEN_INVALID,
+        #define keyword(name, disc) name,
+        #include "TokenType.inc"
+        #undef keyword
     };
 
     // Token
@@ -91,7 +98,7 @@ namespace cc
             // string, char, number and identifier name
             struct
             {
-                char* pchar;
+                const char* pchar;
                 int length;
             };
         };
@@ -121,6 +128,7 @@ namespace cc
         Token* makeNewlineToken() const;
         Token* makeInvalidToken() const;
         Token* makeIdentifierToken(CharBuffer& buffer) const;
+        Token* makeKeywordToken(TokenType keywordType, CharBuffer& buffer) const;
 
         // wrapper for file methods
         const char nextChar();

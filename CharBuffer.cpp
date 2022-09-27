@@ -53,10 +53,23 @@ namespace cc
         }
     }
 
-    char* CharBuffer::asCBuffer() const
+    const char* CharBuffer::c_str()
     {
-        char* buffer = (char*)malloc(sizeof(char) * _size);
+        if(_size >= _capacity) reserve(_capacity + 1);
+        _buffer[_size] = 0;
+        return _buffer;
+    }
+
+    const char* CharBuffer::new_c_str() const
+    {
+        char* buffer = (char*)malloc(sizeof(char) * (_size + 1));
         memcpy(buffer, _buffer, _size * sizeof(char));
+        buffer[_size] = 0;
         return buffer;
+    }
+
+    bool CharBuffer::operator == (const char* s)
+    {
+        return !strcmp(this->c_str(), s);
     }
 }
