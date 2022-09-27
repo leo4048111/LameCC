@@ -5,7 +5,9 @@ namespace cc
     Lexer::Lexer(File* file):
         _file(file)
     {
-        // DO NOTHING
+        #define keyword(name, disc) _keywordMap.insert(std::make_pair(disc, TokenType::name));
+        #include "TokenType.inc"
+        #undef keyword
     }
 
     const char Lexer::nextChar()
@@ -179,9 +181,17 @@ namespace cc
                 continue;
             }
             retractChar();
-            buffer.append('\0');
             return makeIdentifierToken(buffer);
         }
+    }
+
+    Token* Lexer::makeKeywordToken(TokenType keywordType, CharBuffer& buffer) const
+    {
+        Token token;
+        token.type = keywordType;
+        token.pchar = buffer.new_c_str();
+        token.length = buffer.size();
+        return makeGeneralToken(&token);
     }
 
     Token* Lexer::nextToken()
