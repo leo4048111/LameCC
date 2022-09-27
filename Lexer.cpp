@@ -87,6 +87,21 @@ namespace cc
             case TokenType::TOKEN_INVALID:
                 printf("row:%d, col:%d, ?\n", token->pos.line, token->pos.column);
                 break;
+            case TokenType::TOKEN_KWINT:
+                printf("row:%d, col:%d, KEYWORD_INT\n", token->pos.line, token->pos.column);
+                break;
+            case TokenType::TOKEN_KWRETURN:
+                printf("row:%d, col:%d, KEYWORD_RETURN\n", token->pos.line, token->pos.column);
+                break;
+            case TokenType::TOKEN_KWELSE:
+                printf("row:%d, col:%d, KEYWORD_ELSE\n", token->pos.line, token->pos.column);
+                break;
+            case TokenType::TOKEN_KWIF:
+                printf("row:%d, col:%d, KEYWORD_IF\n", token->pos.line, token->pos.column);
+                break;
+            case TokenType::TOKEN_KWWHILE:
+                printf("row:%d, col:%d, KEYWORD_WHILE\n", token->pos.line, token->pos.column);
+                break;
             default:
                 break;
             }
@@ -181,6 +196,13 @@ namespace cc
                 continue;
             }
             retractChar();
+
+            // determine whether this identifier is a keyword
+            for(auto& pair: _keywordMap)
+            {
+                if(buffer == pair.first) return makeKeywordToken(pair.second, buffer);
+            }
+
             return makeIdentifierToken(buffer);
         }
     }
