@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 namespace cc
 {
@@ -141,6 +142,7 @@ namespace cc
     private:
         File* _file;
         Position _curTokenPos;
+        std::unordered_map<const char*, TokenType> _keywordMap;
     };
 
     //utils
