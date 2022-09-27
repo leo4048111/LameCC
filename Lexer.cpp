@@ -161,7 +161,7 @@ namespace cc
     {
         Token token;
         token.type = TokenType::TOKEN_IDENTIFIER;
-        token.pchar = buffer.asCBuffer();
+        token.pchar = buffer.new_c_str();
         token.length = buffer.size();
         return makeGeneralToken(&token);
     }
