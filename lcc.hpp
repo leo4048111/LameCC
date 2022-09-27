@@ -78,8 +78,10 @@ namespace cc
         TOKEN_EOF,
         TOKEN_INVALID,
         #define keyword(name, disc) name,
+        #define operator(name, disc) name,
         #include "TokenType.inc"
-        #undef keyword
+        #undef operator
+        #undef keyword    
     };
 
     // Token
@@ -129,7 +131,7 @@ namespace cc
         Token* makeNewlineToken() const;
         Token* makeInvalidToken() const;
         Token* makeIdentifierToken(CharBuffer& buffer) const;
-        Token* makeKeywordToken(TokenType keywordType, CharBuffer& buffer) const;
+        Token* makeKeywordToken(TokenType keywordType) const;
 
         // wrapper for file methods
         const char nextChar();
@@ -137,7 +139,9 @@ namespace cc
         const char peekChar();
 
         // functional
-        bool isNextChar(const char c) const;
+        bool isNextChar(const char c);
+        Token* forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType);
+        Token* forwardSearch2(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType);
 
     private:
         File* _file;
