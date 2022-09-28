@@ -95,6 +95,9 @@ namespace cc
             case TokenType::TOKEN_INVALID:
                 printf("row:%d, col:%d, ?\n", token->pos.line, token->pos.column);
                 break;
+            case TokenType::TOKEN_KEYWORD:
+                printf("row:%d, col:%d, %c\n", token->pos.line, token->pos.column, token->id);
+                break;
             #define keyword(name, disc) \
             case TokenType::name: \
             printf("row:%d, col:%d, %s\n", token->pos.line, token->pos.column, disc); \
@@ -231,6 +234,14 @@ namespace cc
         return makeGeneralToken(&token);
     }
 
+    Token* Lexer::makeKeywordToken(int id) const
+    {
+        Token token;
+        token.type = TokenType::TOKEN_KEYWORD;
+        token.id = id;
+        return makeGeneralToken(&token);
+    }
+
     Token* Lexer::nextToken()
     {
         ignoreComments();
@@ -251,6 +262,8 @@ namespace cc
         case '-': return makeKeywordToken(TokenType::TOKEN_OPMINUS);
         case '*': return makeKeywordToken(TokenType::TOKEN_OPTIMES);
         case '/': return makeKeywordToken(TokenType::TOKEN_OPDIV);
+        case '{': case '}': case '(': case ')':
+            return makeKeywordToken((int)ch);
         case EOF: 
             return makeEOFToken();
         default:
