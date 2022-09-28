@@ -99,6 +99,8 @@ namespace cc
                 printf("row:%d, col:%d, %c\n", token->pos.line, token->pos.column, token->id);
                 break;
             case TokenType::TOKEN_STRING:
+            case TokenType::TOKEN_NUMBER:
+            case TokenType::TOKEN_CHAR:
                 printf("row:%d, col:%d, %s\n", token->pos.line, token->pos.column, token->pchar);
                 break;
             #define keyword(name, disc) \
@@ -191,6 +193,15 @@ namespace cc
         return makeGeneralToken(&token);
     }
 
+    Token* Lexer::makeCharToken(CharBuffer& buffer)
+    {
+        Token token;
+        token.type = TokenType::TOKEN_CHAR;
+        token.pchar = buffer.new_c_str();
+        token.length = buffer.size();
+        return makeGeneralToken(&token);
+    }
+
     Token* Lexer::forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType)
     {
         if(isNextChar(possibleCh)) return makeKeywordToken(possibleType);
@@ -198,7 +209,7 @@ namespace cc
         return makeKeywordToken(defaultType);
     }
 
-    Token* Lexer::forwardSearch2(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType)
+    Token* Lexer::forwardSearch(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType)
     {
         if(isNextChar(possibleCh1)) return makeKeywordToken(possibleType1);
         else if(isNextChar(possibleCh2)) return makeKeywordToken(possibleType2);
@@ -246,6 +257,38 @@ namespace cc
         return makeStringToken(buffer);
     }
 
+    Token* Lexer::readNumber(char c)
+    {
+        CharBuffer buffer;
+        buffer.append(c);
+        while(true)
+        {
+            c = nextChar();
+            if(c < '0' || c > '9')
+            {
+                retractChar();
+                break;
+            }
+            buffer.append(c);
+        }
+
+        return makeNumberToken(buffer);
+    }
+
+    Token* Lexer::readChar()
+    {
+        CharBuffer buffer;
+        while(true)
+        {
+            char c = nextChar();
+            if(c == '\'') break;
+            else if(c == '\\') c = nextChar();
+            buffer.append(c);
+        }
+
+        return makeCharToken(buffer);
+    }
+
     Token* Lexer::makeKeywordToken(TokenType keywordType) const
     {
         Token token;
@@ -270,6 +313,15 @@ namespace cc
         return makeGeneralToken(&token);
     }
 
+    Token* Lexer::makeNumberToken(CharBuffer& buffer) const
+    {
+        Token token;
+        token.type = TokenType::TOKEN_NUMBER;
+        token.pchar = buffer.new_c_str();
+        token.length = buffer.size();
+        return makeGeneralToken(&token);
+    }
+
     Token* Lexer::nextToken()
     {
         ignoreComments();
@@ -283,6 +335,8 @@ namespace cc
         case 'a' ... 'z': case 'A' ... 'Z': case '_': case '$':
         case 0x80 ... 0xFD:
             return readIdentifier(ch);
+        case '0' ... '9':
+            return readNumber(ch);
         case '=': return forwardSearch('=', TokenType::TOKEN_OPEQ, TokenType::TOKEN_OPASSIGN);
         case '<': return forwardSearch('=', TokenType::TOKEN_OPLEQ, TokenType::TOKEN_OPLESS);
         case '>': return forwardSearch('=', TokenType::TOKEN_OPGEQ, TokenType::TOKEN_OPGREATER);
@@ -292,9 +346,12 @@ namespace cc
         case '/': return makeKeywordToken(TokenType::TOKEN_OPDIV);
         case '{': case '}': 
         case '[': case ']':
+        case ';':
             return makeKeywordToken((int)ch);
         case '\"':
             return readString();
+        case '\'':
+            return readChar();
         case EOF: 
             return makeEOFToken();
         default:

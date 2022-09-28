@@ -125,6 +125,8 @@ namespace cc
         Token* nextToken();
         Token* readIdentifier(char c);
         Token* readString();
+        Token* readNumber(char c);
+        Token* readChar();
 
         // token makers
         Token* makeGeneralToken(Token *token) const;
@@ -136,7 +138,9 @@ namespace cc
         Token* makeKeywordToken(TokenType keywordType) const;
         Token* makeKeywordToken(int id) const;
         Token* makeStringToken(CharBuffer& buffer) const;
-        
+        Token* makeNumberToken(CharBuffer& buffer) const;
+        Token* makeCharToken(CharBuffer& buffer);
+
         // wrapper for file methods
         const char nextChar();
         void retractChar();
@@ -145,7 +149,7 @@ namespace cc
         // functional
         bool isNextChar(const char c);
         Token* forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType);
-        Token* forwardSearch2(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType);
+        Token* forwardSearch(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType);
 
     private:
         File* _file;
