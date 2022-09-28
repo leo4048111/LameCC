@@ -6,6 +6,7 @@ keyword(TOKEN_KWWHILE, "while")
 keyword(TOKEN_KWRETURN, "return")
 keyword(TOKEN_KWBOOL, "bool")
 keyword(TOKEN_KWFLOAT, "float")
+keyword(TOKEN_KWCHAR, "char")
 
 operator(TOKEN_OPASSIGN, "=")
 operator(TOKEN_OPEQ, "==")
