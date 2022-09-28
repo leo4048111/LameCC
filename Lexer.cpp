@@ -262,7 +262,8 @@ namespace cc
         case '-': return makeKeywordToken(TokenType::TOKEN_OPMINUS);
         case '*': return makeKeywordToken(TokenType::TOKEN_OPTIMES);
         case '/': return makeKeywordToken(TokenType::TOKEN_OPDIV);
-        case '{': case '}': case '(': case ')':
+        case '{': case '}': case '(': case ')': 
+        case '[': case ']':
             return makeKeywordToken((int)ch);
         case EOF: 
             return makeEOFToken();
