@@ -4,6 +4,8 @@ keyword(TOKEN_KWIF, "if")
 keyword(TOKEN_KWELSE, "else")
 keyword(TOKEN_KWWHILE, "while")
 keyword(TOKEN_KWRETURN, "return")
+keyword(TOKEN_KWBOOL, "bool")
+keyword(TOKEN_KWFLOAT, "float")
 
 operator(TOKEN_OPASSIGN, "=")
 operator(TOKEN_OPEQ, "==")
