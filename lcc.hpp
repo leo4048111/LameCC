@@ -70,6 +70,7 @@ namespace cc
     enum class TokenType
     {
         TOKEN_WHITESPACE,
+        TOKEN_KEYWORD, // single ch keywords are marked by this enum
         TOKEN_NEWLINE,
         TOKEN_IDENTIFIER,
         TOKEN_NUMBER,
@@ -132,7 +133,7 @@ namespace cc
         Token* makeInvalidToken() const;
         Token* makeIdentifierToken(CharBuffer& buffer) const;
         Token* makeKeywordToken(TokenType keywordType) const;
-
+        Token* makeKeywordToken(int id) const;
         // wrapper for file methods
         const char nextChar();
         void retractChar();
