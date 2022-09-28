@@ -124,6 +124,7 @@ namespace cc
         // readers
         Token* nextToken();
         Token* readIdentifier(char c);
+        Token* readString();
 
         // token makers
         Token* makeGeneralToken(Token *token) const;
@@ -134,6 +135,8 @@ namespace cc
         Token* makeIdentifierToken(CharBuffer& buffer) const;
         Token* makeKeywordToken(TokenType keywordType) const;
         Token* makeKeywordToken(int id) const;
+        Token* makeStringToken(CharBuffer& buffer) const;
+        
         // wrapper for file methods
         const char nextChar();
         void retractChar();

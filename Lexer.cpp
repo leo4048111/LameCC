@@ -98,6 +98,9 @@ namespace cc
             case TokenType::TOKEN_KEYWORD:
                 printf("row:%d, col:%d, %c\n", token->pos.line, token->pos.column, token->id);
                 break;
+            case TokenType::TOKEN_STRING:
+                printf("row:%d, col:%d, %s\n", token->pos.line, token->pos.column, token->pchar);
+                break;
             #define keyword(name, disc) \
             case TokenType::name: \
             printf("row:%d, col:%d, %s\n", token->pos.line, token->pos.column, disc); \
@@ -227,6 +230,22 @@ namespace cc
         }
     }
 
+    Token* Lexer::readString()
+    {
+        CharBuffer buffer;
+        while(true)
+        {
+            char c = nextChar();
+            if(c == '\"') break;
+            else if(c == '\\') {
+                c = nextChar();
+            }
+            buffer.append(c);
+        }
+
+        return makeStringToken(buffer);
+    }
+
     Token* Lexer::makeKeywordToken(TokenType keywordType) const
     {
         Token token;
@@ -239,6 +258,15 @@ namespace cc
         Token token;
         token.type = TokenType::TOKEN_KEYWORD;
         token.id = id;
+        return makeGeneralToken(&token);
+    }
+
+    Token* Lexer::makeStringToken(CharBuffer& buffer) const
+    {
+        Token token;
+        token.type = TokenType::TOKEN_STRING;
+        token.pchar = buffer.new_c_str();
+        token.length = buffer.size();
         return makeGeneralToken(&token);
     }
 
@@ -262,9 +290,11 @@ namespace cc
         case '-': return makeKeywordToken(TokenType::TOKEN_OPMINUS);
         case '*': return makeKeywordToken(TokenType::TOKEN_OPTIMES);
         case '/': return makeKeywordToken(TokenType::TOKEN_OPDIV);
-        case '{': case '}': case '(': case ')': 
+        case '{': case '}': 
         case '[': case ']':
             return makeKeywordToken((int)ch);
+        case '\"':
+            return readString();
         case EOF: 
             return makeEOFToken();
         default:
