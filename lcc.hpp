@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <cstdio>
 #include <fstream>
@@ -8,6 +10,11 @@
 #include <json.hpp>
 
 using json = nlohmann::json;
+
+#include <ProgramOptions.hpp>
+
+#define FATAL_ERROR(msg) \
+    std::cout << po::red << "Fatal error: " << po::light_gray << msg << std::endl
 
 namespace cc
 {
