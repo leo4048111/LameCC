@@ -8,6 +8,16 @@ namespace cc
         _ifs = std::ifstream(path);
     }
 
+    File::~File()
+    {
+        _ifs.close();
+    }
+
+    const bool File::fail() const
+    {
+        return _ifs.fail();
+    }
+
     void File::nextLine()
     {
         std::string line;
