@@ -51,8 +51,9 @@ namespace cc
     {
     public:
         File(std::string path);
-        ~File() = default;
+        ~File();
 
+        const bool fail() const;
     public:
         void nextLine();
         const char nextChar();

@@ -1,53 +1,50 @@
 #include "lcc.hpp"
-#include <string>
+#include "ProgramOptions.hpp"
 
-const char* g_path;
+std::string g_path;
 
-void parseOpt(int argc, char** argv)
+#define FATAL_ERROR(msg) \
+    std::cout << po::red << "Fatal error: " << po::light_gray << msg << std::endl
+
+static bool parseOpt(int argc, char** argv)
 {
-    for(int i = 0; i < argc; i++)
+    po::parser parser;
+
+    auto& help = parser["help"]
+        .abbreviation('?')
+        .description("show all available options")
+        .callback([&]{ 
+            std::cout << parser << '\n';
+            });
+
+    auto& file = parser[""]
+        .single()
+        .callback([&](std::string const& x){
+            g_path = std::move(x);
+            });
+    
+    if(!parser(argc, argv)) return false;
+
+    if(help.was_set()) return false;
+
+    if(file.size() < 1)
     {
-        std::string s(argv[i]);
-        if(s.find(".cpp") != std::string::npos)
-            g_path = argv[i];
+        FATAL_ERROR("No input file specified");
+        return false;
     }
+
+    return true;
 }
 
 int main(int argc, char** argv)
 {
-    parseOpt(argc, argv);
+    if(!parseOpt(argc, argv)) return 0;
     cc::File* file = new cc::File(g_path);
+    if(file->fail()) 
+    {
+        FATAL_ERROR(g_path << ": No such file or directory");
+        return 0;
+    }
     cc::Lexer* lexer = new cc::Lexer(file);
     lexer->run();
 }
-
-// int main()
-// {
-//     // unit test
-//     cc::CharBuffer buffer;
-//     buffer.append('i');
-//     buffer.append('n');
-//     buffer.append('t');
-
-//     printf("%s\n", (buffer == "int" ? "True" : "False"));
-
-//     buffer.append('e');
-
-//     printf("%s\n", (buffer == "int" ? "True" : "False"));
-
-//     buffer.append('g');
-//     buffer.append('e');
-//     buffer.append('r');
-
-//     buffer.reserve(200);
-
-//     printf("%s\n", (buffer == "inte" ? "True" : "False"));
-//     printf("%s\n", (buffer == "integer" ? "True" : "False"));
-// }
-
-// int main()
-// {
-//     std::string test = "abcd";
-//     printf("%d\n", test.size());
-//     printf("%d\n", (int)test[test.size() + 1]);
-// }
