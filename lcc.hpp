@@ -132,7 +132,7 @@ namespace cc
         Lexer(File* file);
         ~Lexer() = default;
 
-        void run(const bool shouldDumpTokens, std::string outPath);
+        std::vector<Token*> run(const bool shouldDumpTokens, const std::string outPath);
 
     private:
         bool ignoreSpaces();
@@ -178,5 +178,6 @@ namespace cc
 
     //utils
     bool isSpace(const char c);
-    json jsonifyToken(const Token& token);
+    json jsonifyTokens(const std::vector<Token*>& tokens);
+    bool dumpJson(const json j, const std::string outPath);
 }

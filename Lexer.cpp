@@ -84,32 +84,23 @@ namespace cc
         else retractChar();
     }
 
-    void Lexer::run(const bool shouldDumpTokens, std::string outPath)
+    std::vector<Token*> Lexer::run(const bool shouldDumpTokens, const std::string outPath)
     {
-        json j = json::array();
-        while(true)
+        std::vector<Token*> tokens;
+        Token* token = nullptr;
+
+        do
         {
-            Token* token = nextToken();
-            json result = jsonifyToken(*token);
-            if(!result.empty()) j.push_back(result);
-            if(token->type == TokenType::TOKEN_EOF) break;
-        }
+            token = nextToken();
+            tokens.push_back(token);
+        } while (token->type != TokenType::TOKEN_EOF);
 
         if(shouldDumpTokens)
         {
-            if(outPath.empty())
-            {
-                FATAL_ERROR("Dump file path not specified.");
-                return;
-            }
-            
-            std::ofstream ofs(outPath);
-            ofs << j.dump(2) << std::endl;
-            ofs.close();
-            INFO("Tokens have been dumped to " << outPath);
+            dumpJson(jsonifyTokens(tokens), outPath);
         }
-        else
-            std::cout << j.dump(2) << std::endl;
+
+        return tokens;
     }
 
     Token* Lexer::makeGeneralToken(Token token) const
