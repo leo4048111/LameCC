@@ -1,14 +1,12 @@
 #include "lcc.hpp"
-
 #include <string>
 
 const char* g_path;
 
-static void parseOpt(int argc, char** argv)
+void parseOpt(int argc, char** argv)
 {
     for(int i = 0; i < argc; i++)
     {
-        printf("%s\n", argv[i]);
         std::string s(argv[i]);
         if(s.find(".cpp") != std::string::npos)
             g_path = argv[i];

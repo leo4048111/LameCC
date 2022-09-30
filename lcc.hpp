@@ -5,6 +5,10 @@
 #include <string>
 #include <unordered_map>
 
+#include <json.hpp>
+
+using json = nlohmann::json;
+
 namespace cc
 {
     // im using this instead of std::string

@@ -86,38 +86,47 @@ namespace cc
 
     void Lexer::run()
     {
+        json j = json::array();
         while(true)
         {
             Token* token = nextToken();
+            json tmp;
             switch (token->type)
             {
             case TokenType::TOKEN_NEWLINE:
-                printf("id:%d, row:%d, col:%d, newline\n",token->count, token->pos.line, token->pos.column);
                 break;
             case TokenType::TOKEN_IDENTIFIER:
-                printf("id:%d, row:%d, col:%d, %s\n",token->count,  token->pos.line, token->pos.column, token->pchar);
+                tmp["id"] = token->count;
+                tmp["type"] = "TOKEN_IDENTIFIER";
+                tmp["content"] = token->pchar;
+                tmp["position"] = {token->pos.line, token->pos.column};
+                j.push_back(tmp);
                 break;
             case TokenType::TOKEN_EOF:
-                printf("id:%d, row:%d, col:%d, END\n",token->count,  token->pos.line, token->pos.column);
                 break;
             case TokenType::TOKEN_WHITESPACE:
-                printf("id:%d, row:%d, col:%d, WS\n",token->count,  token->pos.line, token->pos.column);
                 break;
             case TokenType::TOKEN_INVALID:
-                printf("id:%d, row:%d, col:%d, ?\n",token->count,  token->pos.line, token->pos.column);
                 break;
             case TokenType::TOKEN_KEYWORD:
-                printf("id:%d, row:%d, col:%d, %c\n",token->count,  token->pos.line, token->pos.column, token->id);
+                tmp["id"] = token->count;
+                tmp["type"] = "TOKEN_KEYWORD";
+                tmp["content"] = (std::string("") + (char)token->id).c_str();
+                tmp["position"] = {token->pos.line, token->pos.column};
+                j.push_back(tmp);
                 break;
             case TokenType::TOKEN_STRING:
             case TokenType::TOKEN_NUMBER:
             case TokenType::TOKEN_CHAR:
-                printf("id:%d, row:%d, col:%d, %s\n",token->count, token->pos.line, token->pos.column, token->pchar);
                 break;
             #define keyword(name, disc) \
             case TokenType::name: \
-            printf("id:%d, row:%d, col:%d, %s\n",token->count, token->pos.line, token->pos.column, disc); \
-            break;
+                tmp["id"] = token->count; \
+                tmp["type"] = #name; \
+                tmp["content"] = disc; \
+                tmp["position"] = {token->pos.line, token->pos.column}; \
+                j.push_back(tmp); \
+                break;
             #define operator(name, disc) keyword(name, disc)
             #include "TokenType.inc"
             #undef operator
@@ -126,36 +135,10 @@ namespace cc
             default:
                 break;
             }
-
             if(token->type == TokenType::TOKEN_EOF) break;
         }
 
-        // while(true)
-        // {
-        //     Token* token = nextToken();
-        //     switch (token->type)
-        //     {
-        //     case TokenType::TOKEN_NEWLINE:
-        //         printf("\n");
-        //         break;
-        //     case TokenType::TOKEN_IDENTIFIER:
-        //         printf("%s", token->pchar);
-        //         break;
-        //     case TokenType::TOKEN_EOF:
-        //         printf("END\n");
-        //         break;
-        //     case TokenType::TOKEN_WHITESPACE:
-        //         printf(" ");
-        //         break;
-        //     case TokenType::TOKEN_INVALID:
-        //         printf("?");
-        //         break;
-        //     default:
-        //         break;
-        //     }
-
-        //     if(token->type == TokenType::TOKEN_EOF) break;
-        // }
+        std::cout << j.dump(1) << std::endl;
     }
 
     Token* Lexer::makeGeneralToken(Token token) const
