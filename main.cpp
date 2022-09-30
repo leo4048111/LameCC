@@ -44,9 +44,7 @@ static bool parseOpt(int argc, char** argv)
     }
 
     if(O.was_set())
-    {
         g_out_path = O.get().string;
-    }
 
     if(T.was_set())
     {
