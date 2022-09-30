@@ -13,6 +13,9 @@ using json = nlohmann::json;
 
 #include <ProgramOptions.hpp>
 
+#define INFO(msg) \
+    std::cout << po::green << "Info: " << po::light_gray << msg << std::endl
+
 #define FATAL_ERROR(msg) \
     std::cout << po::red << "Fatal error: " << po::light_gray << msg << std::endl
 
