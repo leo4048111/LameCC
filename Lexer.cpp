@@ -3,13 +3,20 @@
 namespace cc
 {
     Lexer::Lexer(File* file):
-        _file(file)
+        _file(file), _tokenCnt(0)
     {
         #define keyword(name, disc) _keywordMap.insert(std::make_pair(disc, TokenType::name));
         #define operator(name, disc) 
         #include "TokenType.inc"
         #undef operator
         #undef keyword
+
+        nextLine();
+    }
+
+    void Lexer::nextLine()
+    {
+        _file->nextLine();
     }
 
     const char Lexer::nextChar()
@@ -43,8 +50,11 @@ namespace cc
         if(!isSpace(peekChar()))
             return false;
 
-        while(isSpace(nextChar()));
-        retractChar();
+        do
+        {
+            nextChar();
+        } while (isSpace(peekChar()));
+        
         return true;
     }
 
@@ -66,6 +76,7 @@ namespace cc
             do
             {
                 c = nextChar();
+                if(c == '\n') nextLine();
                 if(c == '/' && isLastStar) break;
                 isLastStar = (c == '*');
             } while (c != EOF);
@@ -81,31 +92,31 @@ namespace cc
             switch (token->type)
             {
             case TokenType::TOKEN_NEWLINE:
-                printf("row:%d, col:%d, newline\n", token->pos.line, token->pos.column);
+                printf("id:%d, row:%d, col:%d, newline\n",token->count, token->pos.line, token->pos.column);
                 break;
             case TokenType::TOKEN_IDENTIFIER:
-                printf("row:%d, col:%d, %s\n", token->pos.line, token->pos.column, token->pchar);
+                printf("id:%d, row:%d, col:%d, %s\n",token->count,  token->pos.line, token->pos.column, token->pchar);
                 break;
             case TokenType::TOKEN_EOF:
-                printf("row:%d, col:%d, END\n", token->pos.line, token->pos.column);
+                printf("id:%d, row:%d, col:%d, END\n",token->count,  token->pos.line, token->pos.column);
                 break;
             case TokenType::TOKEN_WHITESPACE:
-                printf("row:%d, col:%d, WS\n", token->pos.line, token->pos.column);
+                printf("id:%d, row:%d, col:%d, WS\n",token->count,  token->pos.line, token->pos.column);
                 break;
             case TokenType::TOKEN_INVALID:
-                printf("row:%d, col:%d, ?\n", token->pos.line, token->pos.column);
+                printf("id:%d, row:%d, col:%d, ?\n",token->count,  token->pos.line, token->pos.column);
                 break;
             case TokenType::TOKEN_KEYWORD:
-                printf("row:%d, col:%d, %c\n", token->pos.line, token->pos.column, token->id);
+                printf("id:%d, row:%d, col:%d, %c\n",token->count,  token->pos.line, token->pos.column, token->id);
                 break;
             case TokenType::TOKEN_STRING:
             case TokenType::TOKEN_NUMBER:
             case TokenType::TOKEN_CHAR:
-                printf("row:%d, col:%d, %s\n", token->pos.line, token->pos.column, token->pchar);
+                printf("id:%d, row:%d, col:%d, %s\n",token->count, token->pos.line, token->pos.column, token->pchar);
                 break;
             #define keyword(name, disc) \
             case TokenType::name: \
-            printf("row:%d, col:%d, %s\n", token->pos.line, token->pos.column, disc); \
+            printf("id:%d, row:%d, col:%d, %s\n",token->count, token->pos.line, token->pos.column, disc); \
             break;
             #define operator(name, disc) keyword(name, disc)
             #include "TokenType.inc"
@@ -147,12 +158,12 @@ namespace cc
         // }
     }
 
-    Token* Lexer::makeGeneralToken(Token *token) const
+    Token* Lexer::makeGeneralToken(Token token) const
     {
-        Token* pToken = new Token(*token);
+        Token* pToken = new Token(std::move(token));
         pToken->pos = _curTokenPos;
         pToken->file = _file;
-        pToken->count = _file->getTokenCnt();
+        pToken->count = _tokenCnt;
         return pToken;
     }
 
@@ -160,28 +171,28 @@ namespace cc
     {
         Token token;
         token.type = TokenType::TOKEN_WHITESPACE;
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::makeEOFToken() const
     {
         Token token;
         token.type = TokenType::TOKEN_EOF;
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::makeNewlineToken() const
     {
         Token token;
         token.type = TokenType::TOKEN_NEWLINE;
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::makeInvalidToken() const
     {
         Token token;
         token.type = TokenType::TOKEN_INVALID;
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::makeIdentifierToken(CharBuffer& buffer) const
@@ -190,7 +201,7 @@ namespace cc
         token.type = TokenType::TOKEN_IDENTIFIER;
         token.pchar = buffer.new_c_str();
         token.length = buffer.size();
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::makeCharToken(CharBuffer& buffer)
@@ -199,7 +210,7 @@ namespace cc
         token.type = TokenType::TOKEN_CHAR;
         token.pchar = buffer.new_c_str();
         token.length = buffer.size();
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType)
@@ -293,7 +304,7 @@ namespace cc
     {
         Token token;
         token.type = keywordType;
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::makeKeywordToken(int id) const
@@ -301,7 +312,7 @@ namespace cc
         Token token;
         token.type = TokenType::TOKEN_KEYWORD;
         token.id = id;
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::makeStringToken(CharBuffer& buffer) const
@@ -310,7 +321,7 @@ namespace cc
         token.type = TokenType::TOKEN_STRING;
         token.pchar = buffer.new_c_str();
         token.length = buffer.size();
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::makeNumberToken(CharBuffer& buffer) const
@@ -319,7 +330,7 @@ namespace cc
         token.type = TokenType::TOKEN_NUMBER;
         token.pchar = buffer.new_c_str();
         token.length = buffer.size();
-        return makeGeneralToken(&token);
+        return makeGeneralToken(token);
     }
 
     Token* Lexer::nextToken()
@@ -328,10 +339,15 @@ namespace cc
         _curTokenPos = _file->getPosition();
         if(ignoreSpaces()) return makeSpaceToken();
         char ch = nextChar();
+        _tokenCnt++;
         switch(ch)
         {
         case '\n':
-            return makeNewlineToken();
+        {
+            Token* token = makeNewlineToken();
+            nextLine();
+            return token;
+        }
         case 'a' ... 'z': case 'A' ... 'Z': case '_': case '$':
         case 0x80 ... 0xFD:
             return readIdentifier(ch);
