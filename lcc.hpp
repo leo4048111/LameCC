@@ -49,13 +49,13 @@ namespace cc
         File(std::string path);
         ~File() = default;
 
-    public:    
+    public:
+        void nextLine();
         const char nextChar();
         void retractChar();
         const char peekChar();
     
         // getters
-        const int getTokenCnt() const { return _tokenCnt; };
         const Position getPosition() const { return _pos; };
 
     private:
@@ -64,7 +64,6 @@ namespace cc
 
         Position _pos;
         int _curIdx{0};
-        int _tokenCnt{0};
     };
     
     enum class TokenType
@@ -93,7 +92,7 @@ namespace cc
         Position pos; // token position in file
         bool space;  // whether this token has a leading space
         bool bol;    // whether this token is at the beginning of a line
-        int count;   // token number in a file
+        unsigned int count;   // token number in a file
 
         union 
         {
@@ -129,7 +128,7 @@ namespace cc
         Token* readChar();
 
         // token makers
-        Token* makeGeneralToken(Token *token) const;
+        Token* makeGeneralToken(Token token) const;
         Token* makeSpaceToken() const;
         Token* makeEOFToken() const;
         Token* makeNewlineToken() const;
@@ -142,6 +141,7 @@ namespace cc
         Token* makeCharToken(CharBuffer& buffer);
 
         // wrapper for file methods
+        void nextLine();
         const char nextChar();
         void retractChar();
         const char peekChar();
@@ -154,6 +154,7 @@ namespace cc
     private:
         File* _file;
         Position _curTokenPos;
+        unsigned int _tokenCnt;
         std::unordered_map<const char*, TokenType> _keywordMap;
     };
 
