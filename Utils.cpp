@@ -34,7 +34,16 @@ namespace cc
             break;
         case TokenType::TOKEN_STRING:
         case TokenType::TOKEN_NUMBER:
+            j["id"] = token.count;
+            j["type"] = "TOKEN_NUMBER";
+            j["content"] = token.pchar;
+            j["position"] = {token.pos.line, token.pos.column};
+            break;
         case TokenType::TOKEN_CHAR:
+            j["id"] = token.count;
+            j["type"] = "TOKEN_CHAR";
+            j["content"] = token.pchar;
+            j["position"] = {token.pos.line, token.pos.column};
             break;
         #define keyword(name, disc) \
         case TokenType::name: \

@@ -1,5 +1,7 @@
 #include "lcc.hpp"
 
+#define DEFAULT_DUMP_PATH "a.dump"
+
 std::string g_in_path;
 std::string g_out_path;
 bool g_shouldDumpTokens = false;
@@ -30,7 +32,7 @@ static bool parseOpt(int argc, char** argv)
     auto& T = parser["dump-tokens"]
         .abbreviation('T')
         .description("Dump tokens in json format");
-    
+
     if(!parser(argc, argv)) return false;
 
     if(help.was_set()) return false;
@@ -49,7 +51,11 @@ static bool parseOpt(int argc, char** argv)
     if(T.was_set())
     {
         g_shouldDumpTokens = true;
-        g_out_path = g_out_path.empty() ? "a.json" : g_out_path;
+        if(g_out_path.empty())
+        {
+            WARNING("Dump file path not specified, assuming " << DEFAULT_DUMP_PATH);
+            g_out_path = DEFAULT_DUMP_PATH;
+        }
         return true;
     }
 

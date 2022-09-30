@@ -16,6 +16,9 @@ using json = nlohmann::json;
 #define FATAL_ERROR(msg) \
     std::cout << po::red << "Fatal error: " << po::light_gray << msg << std::endl
 
+#define WARNING(msg) \
+    std::cout << po::yellow << "Warning: " << po::light_gray << msg << std::endl
+
 namespace cc
 {
     // im using this instead of std::string

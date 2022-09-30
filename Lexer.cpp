@@ -94,7 +94,6 @@ namespace cc
             if(!result.empty()) j.push_back(result);
             if(token->type == TokenType::TOKEN_EOF) break;
         }
-        std::cout << j.dump(2) << std::endl;
 
         if(shouldDumpTokens)
         {
@@ -108,6 +107,8 @@ namespace cc
             ofs << j.dump(2) << std::endl;
             ofs.close();
         }
+        else
+            std::cout << j.dump(2) << std::endl;
     }
 
     Token* Lexer::makeGeneralToken(Token token) const
