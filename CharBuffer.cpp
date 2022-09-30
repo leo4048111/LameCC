@@ -3,7 +3,9 @@
 
 #define CHARBUFFER_INITSIZE 8
 
+#ifndef ZeroMemory
 #define ZeroMemory(addr, size) memset((void*)addr, 0, size)
+#endif
 
 namespace cc
 {
