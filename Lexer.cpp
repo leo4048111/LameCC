@@ -84,61 +84,30 @@ namespace cc
         else retractChar();
     }
 
-    void Lexer::run()
+    void Lexer::run(const bool shouldDumpTokens, std::string outPath)
     {
         json j = json::array();
         while(true)
         {
             Token* token = nextToken();
-            json tmp;
-            switch (token->type)
-            {
-            case TokenType::TOKEN_NEWLINE:
-                break;
-            case TokenType::TOKEN_IDENTIFIER:
-                tmp["id"] = token->count;
-                tmp["type"] = "TOKEN_IDENTIFIER";
-                tmp["content"] = token->pchar;
-                tmp["position"] = {token->pos.line, token->pos.column};
-                j.push_back(tmp);
-                break;
-            case TokenType::TOKEN_EOF:
-                break;
-            case TokenType::TOKEN_WHITESPACE:
-                break;
-            case TokenType::TOKEN_INVALID:
-                break;
-            case TokenType::TOKEN_KEYWORD:
-                tmp["id"] = token->count;
-                tmp["type"] = "TOKEN_KEYWORD";
-                tmp["content"] = (std::string("") + (char)token->id).c_str();
-                tmp["position"] = {token->pos.line, token->pos.column};
-                j.push_back(tmp);
-                break;
-            case TokenType::TOKEN_STRING:
-            case TokenType::TOKEN_NUMBER:
-            case TokenType::TOKEN_CHAR:
-                break;
-            #define keyword(name, disc) \
-            case TokenType::name: \
-                tmp["id"] = token->count; \
-                tmp["type"] = #name; \
-                tmp["content"] = disc; \
-                tmp["position"] = {token->pos.line, token->pos.column}; \
-                j.push_back(tmp); \
-                break;
-            #define operator(name, disc) keyword(name, disc)
-            #include "TokenType.inc"
-            #undef operator
-            #undef keyword
-
-            default:
-                break;
-            }
+            json result = jsonifyToken(*token);
+            if(!result.empty()) j.push_back(result);
             if(token->type == TokenType::TOKEN_EOF) break;
         }
+        std::cout << j.dump(2) << std::endl;
 
-        std::cout << j.dump(1) << std::endl;
+        if(shouldDumpTokens)
+        {
+            if(outPath.empty())
+            {
+                FATAL_ERROR("Dump file path not specified.");
+                return;
+            }
+            
+            std::ofstream ofs(outPath);
+            ofs << j.dump(2) << std::endl;
+            ofs.close();
+        }
     }
 
     Token* Lexer::makeGeneralToken(Token token) const
