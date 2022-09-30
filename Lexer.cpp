@@ -346,6 +346,7 @@ namespace cc
         case '/': return makeKeywordToken(TokenType::TOKEN_OPDIV);
         case '{': case '}': 
         case '[': case ']':
+        case '(': case ')': // this isn't the best way to deal with brackets!
         case ';':
             return makeKeywordToken((int)ch);
         case '\"':
