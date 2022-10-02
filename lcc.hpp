@@ -146,7 +146,7 @@ namespace cc
         Token* readChar();
 
         // token makers
-        Token* makeGeneralToken(Token token) const;
+        Token* makeGeneralToken(const Token& token) const;
         Token* makeSpaceToken() const;
         Token* makeEOFToken() const;
         Token* makeNewlineToken() const;
