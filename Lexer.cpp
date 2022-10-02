@@ -103,9 +103,10 @@ namespace cc
         return tokens;
     }
 
-    Token* Lexer::makeGeneralToken(Token token) const
+    Token* Lexer::makeGeneralToken(const Token& token) const
     {
-        Token* pToken = new Token(std::move(token));
+        Token* pToken = (Token*)malloc(sizeof(Token));
+        memcpy(pToken, &token, sizeof(Token));
         pToken->pos = _curTokenPos;
         pToken->file = _file;
         pToken->count = _tokenCnt;
@@ -305,9 +306,10 @@ namespace cc
         case '-': return makeKeywordToken(TokenType::TOKEN_OPMINUS);
         case '*': return makeKeywordToken(TokenType::TOKEN_OPTIMES);
         case '/': return makeKeywordToken(TokenType::TOKEN_OPDIV);
+        case '(': return makeKeywordToken(TokenType::TOKEN_OPLBRACKET);
+        case ')': return makeKeywordToken(TokenType::TOKEN_OPRBRACKET);
         case '{': case '}': 
         case '[': case ']':
-        case '(': case ')': // this isn't the best way to deal with brackets!
         case ';':
             return makeKeywordToken((int)ch);
         case '\"':
