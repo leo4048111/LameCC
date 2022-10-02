@@ -1,12 +1,11 @@
 keyword(TOKEN_KWINT, "int")
 keyword(TOKEN_KWVOID, "void")
+keyword(TOKEN_KWFLOAT, "float")
+keyword(TOKEN_KWCHAR, "char")
 keyword(TOKEN_KWIF, "if")
 keyword(TOKEN_KWELSE, "else")
 keyword(TOKEN_KWWHILE, "while")
 keyword(TOKEN_KWRETURN, "return")
-keyword(TOKEN_KWBOOL, "bool")
-keyword(TOKEN_KWFLOAT, "float")
-keyword(TOKEN_KWCHAR, "char")
 
 operator(TOKEN_OPASSIGN, "=")
 operator(TOKEN_OPEQ, "==")
@@ -19,3 +18,7 @@ operator(TOKEN_OPADD, "+")
 operator(TOKEN_OPMINUS, "-")
 operator(TOKEN_OPTIMES, "*")
 operator(TOKEN_OPDIV, "/")
+operator(TOKEN_OPLBRACKET, "(")
+operator(TOKEN_OPRBRACKET, ")")
+
+
