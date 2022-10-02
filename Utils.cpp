@@ -73,7 +73,7 @@ namespace cc
         return std::move(arr);
     }
 
-    bool dumpJson(const json j, const std::string outPath)
+    bool dumpJson(const json& j, const std::string outPath)
     {
         if(outPath.empty())
         {

@@ -179,5 +179,5 @@ namespace cc
     //utils
     bool isSpace(const char c);
     json jsonifyTokens(const std::vector<Token*>& tokens);
-    bool dumpJson(const json j, const std::string outPath);
+    bool dumpJson(const json& j, const std::string outPath);
 }

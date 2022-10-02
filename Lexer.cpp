@@ -92,6 +92,8 @@ namespace cc
         do
         {
             token = nextToken();
+            if(token->type == TokenType::TOKEN_INVALID)
+                WARNING("Find invalid token at " << token->pos.line << ", " << token->pos.column);
             tokens.push_back(token);
         } while (token->type != TokenType::TOKEN_EOF);
 
