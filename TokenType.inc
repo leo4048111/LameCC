@@ -21,4 +21,3 @@ operator(TOKEN_OPDIV, "/")
 operator(TOKEN_OPLBRACKET, "(")
 operator(TOKEN_OPRBRACKET, ")")
 
-

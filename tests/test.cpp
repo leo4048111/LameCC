@@ -1,14 +1,23 @@
 int main()
 {
-	/*dasdasdasdasd
-asdasddddddddddddddddasass
-	*/
-    int a = 0; // some comment
-    int b = 1; //some other commebnt
-    int c = 2;
-	int d = a + b;
-	int e = b + c;
-	char f = d + e;
-	double num = 0.1;
-	return (int)f;
+    // some comments
+    int num = 1;
+    int num2 = 11;
+    if(num == 1)
+    {
+        return num;
+    }
+    else
+    {
+        while(num <= 10)
+        {
+            num = num + 1;
+        }
+
+        while(num2 >= 10)
+        {
+            num2 = num2 - 1;
+        }
+        return num;
+    }
 }
