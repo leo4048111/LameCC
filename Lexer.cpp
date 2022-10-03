@@ -108,6 +108,7 @@ namespace cc
     Token* Lexer::makeGeneralToken(const Token& token) const
     {
         Token* pToken = (Token*)malloc(sizeof(Token));
+        ZeroMemory(pToken, sizeof(Token));
         memcpy(pToken, &token, sizeof(Token));
         pToken->pos = _curTokenPos;
         pToken->file = _file;
@@ -220,15 +221,18 @@ namespace cc
     {
         CharBuffer buffer;
         buffer.append(c);
+        char last = c;
         while(true)
         {
             c = nextChar();
-            if(c < '0' || c > '9')
+            bool isFloat = strchr("eEpP", last) && strchr("+-", c); // accepts scientific notation and p-notation(hexadecimal)
+            if(!isalpha(c) && !isdigit(c) && !isFloat && c != '.')
             {
                 retractChar();
                 break;
             }
             buffer.append(c);
+            last = c;
         }
 
         return makeNumberToken(buffer);
@@ -301,6 +305,9 @@ namespace cc
             return readIdentifier(ch);
         case '0' ... '9':
             return readNumber(ch);
+        case '.':
+            if(isdigit(peekChar())) return readNumber(ch);
+            return makeKeywordToken((int)ch);
         case '=': return forwardSearch('=', TokenType::TOKEN_OPEQ, TokenType::TOKEN_OPASSIGN);
         case '<': return forwardSearch('=', TokenType::TOKEN_OPLEQ, TokenType::TOKEN_OPLESS);
         case '>': return forwardSearch('=', TokenType::TOKEN_OPGEQ, TokenType::TOKEN_OPGREATER);
