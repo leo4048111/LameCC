@@ -114,7 +114,7 @@ namespace cc
 
         union 
         {
-            // token's keyword id if token is a keyword
+            // token's keyword id if token type is TOKEN_KEYWORD
             int id;
             // string, char, number and identifier name
             struct
@@ -179,5 +179,6 @@ namespace cc
     //utils
     bool isSpace(const char c);
     json jsonifyTokens(const std::vector<Token*>& tokens);
+    void freeToken(Token*& token);
     bool dumpJson(const json& j, const std::string outPath);
 }

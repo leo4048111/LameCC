@@ -70,5 +70,6 @@ int main(int argc, char** argv)
         return 0;
     }
     cc::Lexer* lexer = new cc::Lexer(file);
-    lexer->run(g_shouldDumpTokens, g_out_path);
+    auto tokens = lexer->run(g_shouldDumpTokens, g_out_path);
+    for(auto& token: tokens) cc::freeToken(token);
 }
