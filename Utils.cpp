@@ -7,6 +7,17 @@ namespace cc
         return (c == ' ' || c == '\t' || c == '\f' || c == '\v');    
     }
 
+    void freeToken(Token*& token)
+    {
+        if(token->type != TokenType::TOKEN_KEYWORD)
+        {
+            if(token->pchar != nullptr) free((void*)token->pchar);
+        }
+
+        free(token);
+        token = nullptr;
+    }
+
     json jsonifyTokens(const std::vector<Token*>& tokens)
     {
         json arr = json::array();
