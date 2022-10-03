@@ -3,6 +3,7 @@ int main()
     // some comments
     int num = 1;
     int num2 = 11;
+    float f = 0x1fe.ap+10;
     if(num == 1)
     {
         return num;
