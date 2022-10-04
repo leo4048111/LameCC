@@ -1,24 +1,28 @@
 int main()
 {
-    // some comments
+    // some line comments
+    /*
+    some block comments
+    */
     int num = 1;
-    int num2 = 11;
     float f = 0x1fe.ap+10;
-    if(num == 1)
+    float f2 = 1.2f;
+    float f3 = 1.2e+10;
+    char c = 'x';
+    if(c == 'x')
     {
-        return num;
+        return c;
     }
     else
     {
-        while(num <= 10)
+        while(1 >= 2)
         {
             num = num + 1;
+            num = num * 2;
+            num = num / 3;
+            return num;
         }
-
-        while(num2 >= 10)
-        {
-            num2 = num2 - 1;
-        }
-        return num;
     }
+
+    return num;
 }
