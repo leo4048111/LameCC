@@ -9,11 +9,7 @@ namespace cc
 
     void freeToken(Token*& token)
     {
-        if(token->type != TokenType::TOKEN_KEYWORD)
-        {
-            if(token->pchar != nullptr) free((void*)token->pchar);
-        }
-
+        if(token->pContent != nullptr) free((void*)token->pContent);
         free(token);
         token = nullptr;
     }
@@ -31,7 +27,7 @@ namespace cc
                 case TokenType::TOKEN_IDENTIFIER:
                     j["id"] = token->count;
                     j["type"] = "TOKEN_IDENTIFIER";
-                    j["content"] = token->pchar;
+                    j["content"] = token->pContent;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
                 case TokenType::TOKEN_EOF:
@@ -40,28 +36,22 @@ namespace cc
                     break;
                 case TokenType::TOKEN_INVALID:
                     break;
-                case TokenType::TOKEN_KEYWORD:
-                    j["id"] = token->count;
-                    j["type"] = "TOKEN_KEYWORD";
-                    j["content"] = (std::string("") + (char)token->id).c_str();
-                    j["position"] = {token->pos.line, token->pos.column};
-                    break;
                 case TokenType::TOKEN_STRING:
                     j["id"] = token->count;
                     j["type"] = "TOKEN_STRING";
-                    j["content"] = token->pchar;
+                    j["content"] = token->pContent;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
                 case TokenType::TOKEN_NUMBER:
                     j["id"] = token->count;
                     j["type"] = "TOKEN_NUMBER";
-                    j["content"] = token->pchar;
+                    j["content"] = token->pContent;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
                 case TokenType::TOKEN_CHAR:
                     j["id"] = token->count;
                     j["type"] = "TOKEN_CHAR";
-                    j["content"] = token->pchar;
+                    j["content"] = token->pContent;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
                 #define keyword(name, disc) \
@@ -72,7 +62,9 @@ namespace cc
                     j["position"] = {token->pos.line, token->pos.column}; \
                     break;
                 #define operator(name, disc) keyword(name, disc)
+                #define punctuator(name, disc) keyword(name, disc)
                 #include "TokenType.inc"
+                #undef punctuator
                 #undef operator
                 #undef keyword
 

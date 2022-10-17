@@ -87,7 +87,6 @@ namespace cc
     enum class TokenType
     {
         TOKEN_WHITESPACE,
-        TOKEN_KEYWORD, // single ch keywords are marked by this enum
         TOKEN_NEWLINE,
         TOKEN_IDENTIFIER,
         TOKEN_NUMBER,
@@ -97,7 +96,9 @@ namespace cc
         TOKEN_INVALID,
         #define keyword(name, disc) name,
         #define operator(name, disc) name,
+        #define punctuator(name, disc) name,
         #include "TokenType.inc"
+        #undef punctuator
         #undef operator
         #undef keyword    
     };
@@ -108,21 +109,9 @@ namespace cc
         TokenType type;
         File* file;
         Position pos; // token position in file
-        bool space;  // whether this token has a leading space
-        bool bol;    // whether this token is at the beginning of a line
         unsigned int count;   // token number in a file
-
-        union 
-        {
-            // token's keyword id if token type is TOKEN_KEYWORD
-            int id;
-            // string, char, number and identifier name
-            struct
-            {
-                const char* pchar;
-                int length;
-            };
-        };
+        const char* pContent; // content of this token 
+        
     } Token;
 
     // Lexer class
@@ -153,7 +142,6 @@ namespace cc
         Token* makeInvalidToken() const;
         Token* makeIdentifierToken(CharBuffer& buffer) const;
         Token* makeKeywordToken(TokenType keywordType) const;
-        Token* makeKeywordToken(int id) const;
         Token* makeStringToken(CharBuffer& buffer) const;
         Token* makeNumberToken(CharBuffer& buffer) const;
         Token* makeCharToken(CharBuffer& buffer);

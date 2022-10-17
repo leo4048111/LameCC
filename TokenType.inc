@@ -1,3 +1,5 @@
+// a subset of https://github.com/stuartcarnie/clang/blob/master/include/clang/Basic/TokenKinds.def
+
 keyword(TOKEN_KWINT, "int")
 keyword(TOKEN_KWVOID, "void")
 keyword(TOKEN_KWFLOAT, "float")
@@ -18,6 +20,12 @@ operator(TOKEN_OPADD, "+")
 operator(TOKEN_OPMINUS, "-")
 operator(TOKEN_OPTIMES, "*")
 operator(TOKEN_OPDIV, "/")
-operator(TOKEN_OPLBRACKET, "(")
-operator(TOKEN_OPRBRACKET, ")")
 
+punctuator(TOKEN_LSQUARE, "[")
+punctuator(TOKEN_RSQUARE, "]")
+punctuator(TOKEN_LPAREN, "(")
+punctuator(TOKEN_RPAREN, ")")
+punctuator(TOKEN_LBRACE, "{")
+punctuator(TOKEN_RBRACE, "}")
+punctuator(TOKEN_SEMI, ";")
+punctuator(TOKEN_PERIOD, ".")

@@ -7,7 +7,9 @@ namespace cc
     {
         #define keyword(name, disc) _keywordMap.insert(std::make_pair(disc, TokenType::name));
         #define operator(name, disc) 
+        #define punctuator(name, disc)
         #include "TokenType.inc"
+        #undef punctuator
         #undef operator
         #undef keyword
 
@@ -148,8 +150,7 @@ namespace cc
     {
         Token token;
         token.type = TokenType::TOKEN_IDENTIFIER;
-        token.pchar = buffer.new_c_str();
-        token.length = buffer.size();
+        token.pContent = buffer.new_c_str();
         return makeGeneralToken(token);
     }
 
@@ -157,8 +158,7 @@ namespace cc
     {
         Token token;
         token.type = TokenType::TOKEN_CHAR;
-        token.pchar = buffer.new_c_str();
-        token.length = buffer.size();
+        token.pContent = buffer.new_c_str();
         return makeGeneralToken(token);
     }
 
@@ -259,20 +259,11 @@ namespace cc
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::makeKeywordToken(int id) const
-    {
-        Token token;
-        token.type = TokenType::TOKEN_KEYWORD;
-        token.id = id;
-        return makeGeneralToken(token);
-    }
-
     Token* Lexer::makeStringToken(CharBuffer& buffer) const
     {
         Token token;
         token.type = TokenType::TOKEN_STRING;
-        token.pchar = buffer.new_c_str();
-        token.length = buffer.size();
+        token.pContent = buffer.new_c_str();
         return makeGeneralToken(token);
     }
 
@@ -280,8 +271,7 @@ namespace cc
     {
         Token token;
         token.type = TokenType::TOKEN_NUMBER;
-        token.pchar = buffer.new_c_str();
-        token.length = buffer.size();
+        token.pContent = buffer.new_c_str();
         return makeGeneralToken(token);
     }
 
@@ -307,7 +297,7 @@ namespace cc
             return readNumber(ch);
         case '.':
             if(isdigit(peekChar())) return readNumber(ch);
-            return makeKeywordToken((int)ch);
+            return makeKeywordToken(TokenType::TOKEN_PERIOD);
         case '=': return forwardSearch('=', TokenType::TOKEN_OPEQ, TokenType::TOKEN_OPASSIGN);
         case '<': return forwardSearch('=', TokenType::TOKEN_OPLEQ, TokenType::TOKEN_OPLESS);
         case '>': return forwardSearch('=', TokenType::TOKEN_OPGEQ, TokenType::TOKEN_OPGREATER);
@@ -315,12 +305,13 @@ namespace cc
         case '-': return makeKeywordToken(TokenType::TOKEN_OPMINUS);
         case '*': return makeKeywordToken(TokenType::TOKEN_OPTIMES);
         case '/': return makeKeywordToken(TokenType::TOKEN_OPDIV);
-        case '(': return makeKeywordToken(TokenType::TOKEN_OPLBRACKET);
-        case ')': return makeKeywordToken(TokenType::TOKEN_OPRBRACKET);
-        case '{': case '}': 
-        case '[': case ']':
-        case ';':
-            return makeKeywordToken((int)ch);
+        case '(': return makeKeywordToken(TokenType::TOKEN_LPAREN);
+        case ')': return makeKeywordToken(TokenType::TOKEN_RPAREN);
+        case '{': return makeKeywordToken(TokenType::TOKEN_LBRACE);
+        case '}': return makeKeywordToken(TokenType::TOKEN_RBRACE);
+        case '[': return makeKeywordToken(TokenType::TOKEN_LSQUARE);
+        case ']': return makeKeywordToken(TokenType::TOKEN_RSQUARE);
+        case ';': return makeKeywordToken(TokenType::TOKEN_SEMI);
         case '\"':
             return readString();
         case '\'':
