@@ -294,6 +294,25 @@ namespace cc
     // Expressions
     namespace AST
     {
+        // Binary operator types
+        enum class BinaryOperatorType
+        {
+        #define BINARY_OPERATION(name, disc) BO_##name,
+        #define UNARY_OPERATION(name, disc)
+        #include "OperationType.inc"
+        #undef UNARY_OPERATION
+        #undef BINARY_OPERATION
+        };
+
+        enum class UnaryOperatorType
+        {
+        #define BINARY_OPERATION(name, disc)
+        #define UNARY_OPERATION(name, disc) UO_##name,
+        #include "OperationType.inc"
+        #undef BINARY_OPERATION
+        #undef BINARY_OPERATION
+        };
+
         // Expr base class
         class Expr : public ASTNode
         {
@@ -331,6 +350,8 @@ namespace cc
 
             const std::string name() const { return _name; };
         };
+
+        // 
     }
 
 }
