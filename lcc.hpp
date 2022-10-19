@@ -295,7 +295,7 @@ namespace cc
     namespace AST
     {
         // Binary operator types
-        enum class BinaryOperatorType
+        enum class BinaryOpType
         {
         #define BINARY_OPERATION(name, disc) BO_##name,
         #define UNARY_OPERATION(name, disc)
@@ -304,7 +304,7 @@ namespace cc
         #undef BINARY_OPERATION
         };
 
-        enum class UnaryOperatorType
+        enum class UnaryOpType
         {
         #define BINARY_OPERATION(name, disc)
         #define UNARY_OPERATION(name, disc) UO_##name,
@@ -351,7 +351,20 @@ namespace cc
             const std::string name() const { return _name; };
         };
 
-        // 
+        // Binary operator type expression
+        class BinaryOperator : public Expr
+        {
+        protected:
+            BinaryOpType _type;
+            std::unique_ptr<Expr> _lhs, _rhs;
+
+        public:
+            BinaryOperator(BinaryOpType type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs);
+
+            bool isAssignment() const;
+
+            BinaryOpType type() const { return _type; };
+        };
     }
 
 }
