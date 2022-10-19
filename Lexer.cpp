@@ -2,8 +2,9 @@
 
 namespace cc
 {
-    Lexer::Lexer(File* file):
-        _file(file), _tokenCnt(0)
+    std::unique_ptr<Lexer> Lexer::_inst;
+
+    Lexer::Lexer()
     {
         #define keyword(name, disc) _keywordMap.insert(std::make_pair(disc, TokenType::name));
         #define operator(name, disc) 
@@ -12,7 +13,13 @@ namespace cc
         #undef punctuator
         #undef operator
         #undef keyword
+    }
 
+    void Lexer::install(File* file)
+    {
+        _file = file;
+        _tokenCnt = 0;
+        _curTokenPos = _file->getPosition();
         nextLine();
     }
 
@@ -304,7 +311,7 @@ namespace cc
         case '.':
             if(isdigit(peekChar())) return readNumber(ch);
             return makeKeywordToken(TokenType::TOKEN_PERIOD);
-        case '=': return forwardSearch('=', TokenType::TOKEN_OPEQ, TokenType::TOKEN_OPASSIGN);
+        case '=': return forwardSearch('=', TokenType::TOKEN_OPEQEQ, TokenType::TOKEN_OPEQ);
         case '<': return forwardSearch('=', TokenType::TOKEN_OPLEQ, TokenType::TOKEN_OPLESS);
         case '>': return forwardSearch('=', TokenType::TOKEN_OPGEQ, TokenType::TOKEN_OPGREATER);
         case '+': return makeKeywordToken(TokenType::TOKEN_OPADD);

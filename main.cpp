@@ -69,7 +69,12 @@ int main(int argc, char** argv)
         FATAL_ERROR(g_in_path << ": No such file or directory");
         return 0;
     }
-    cc::Lexer* lexer = new cc::Lexer(file);
-    auto tokens = lexer->run(g_shouldDumpTokens, g_out_path);
+
+    cc::Lexer::getInstance()->install(file);
+    auto tokens = cc::Lexer::getInstance()->run(g_shouldDumpTokens, g_out_path);
+    
+    //cc::Parser::getInstance()->run(tokens);
+
+    // cleanup
     for(auto& token: tokens) cc::freeToken(token);
 }

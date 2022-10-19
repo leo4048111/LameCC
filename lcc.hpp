@@ -118,10 +118,25 @@ namespace cc
     class Lexer
     {
     public:
-        Lexer(File* file);
         ~Lexer() = default;
+        Lexer(const Lexer&) = delete;
+        Lexer& operator= (const Lexer&) = delete;
 
+    private:
+        Lexer();
+
+    public:
+        static Lexer* getInstance() {
+            if(_inst.get() == nullptr) _inst.reset(new Lexer);
+
+            return _inst.get();
+        }
+
+        void install(File* file);
         std::vector<Token*> run(const bool shouldDumpTokens, const std::string outPath);
+    
+    private:
+        static std::unique_ptr<Lexer> _inst;
 
     private:
         bool ignoreSpaces();
@@ -168,8 +183,7 @@ namespace cc
     class Parser
     {
     private:
-        static std::unique_ptr<Parser> _inst;
-        Parser();
+        Parser() = default;
         Parser(const Parser&) = delete;
         Parser& operator=(const Parser&) = delete;
 
@@ -180,10 +194,13 @@ namespace cc
             return _inst.get();
         }
 
-    public:
-        void setup(const std::vector<Token*> tokens); 
+    private:
+        static std::unique_ptr<Parser> _inst;
 
-        void run();
+    public:
+        void setup(const std::vector<Token*>& tokens); 
+
+        void run(const std::vector<Token*>& tokens);
 
     private:
         void nextToken();   
@@ -198,4 +215,122 @@ namespace cc
     json jsonifyTokens(const std::vector<Token*>& tokens);
     void freeToken(Token*& token);
     bool dumpJson(const json& j, const std::string outPath);
+}
+
+// #define NONCOPYABLE(classname) \
+// public: \
+//     classname(const classname&) = delete; \
+//     classname& operator=(const classname&) = delete;
+
+// AST
+namespace cc
+{
+    namespace AST
+    {
+        // AST node base class
+        class ASTNode
+        {
+        };
+
+        class Decl;
+        class TranslationUnitDecl;
+        class NamedDecl;
+        class VarDecl;
+
+        class Expr;
+        class IntegerLiteral;
+    }
+
+    // Declarations
+    namespace AST
+    {
+        // Decl base class
+        class Decl : public ASTNode
+        {
+
+        };
+
+        // root node for AST 
+        class TranslationUnitDecl : public Decl
+        {
+        protected:
+            std::vector<std::unique_ptr<Decl>> _decls;
+
+        public:
+            TranslationUnitDecl(std::vector<std::unique_ptr<Decl>> decls) :
+            _decls(std::move(decls)) {};
+            ~TranslationUnitDecl() = default;
+        };
+
+        // This represents a decl that may have a name
+        class NamedDecl : public Decl
+        {
+        protected:
+            std::string _name;
+
+        public:
+            NamedDecl(const std::string name) : _name(name) {};
+            ~NamedDecl() = default;
+
+            const std::string name() const { return _name; };
+        };
+
+        // Represents a variable declaration or definition. 
+        class VarDecl : public NamedDecl
+        {
+        protected:
+            std::string _type; 
+            bool _isInitialized;
+            std::unique_ptr<Expr> _value;
+
+        public:
+            VarDecl(const std::string name, const std::string type, 
+            bool isInitialized = false, std::unique_ptr<Expr> value = nullptr) :
+            NamedDecl(name), _type(type), _isInitialized(isInitialized), _value(std::move(value))
+            {};
+        };
+    }
+
+    // Expressions
+    namespace AST
+    {
+        // Expr base class
+        class Expr : public ASTNode
+        {
+        protected:
+            bool _isConstant{ false };
+            bool _isLValue{ false };
+
+        public:
+            bool isConstant() const { return _isConstant; };
+            bool isLValue() const { return _isLValue; };
+        };
+
+        // Integer literal value
+        class IntegerLiteral : public Expr
+        {
+        protected:
+            int _value;
+        
+        public: 
+            IntegerLiteral(int value) : _value(value) {};
+            int value() const { return _value; };
+        };
+
+        // A reference to a declared variable, function, enum, etc.
+        class DeclRefExpr : public Expr
+        {
+        protected:
+            std::string _name;
+            bool _isCall;
+
+        public:
+            DeclRefExpr(const std::string name, bool isCall = false) :
+            _name(name), _isCall(isCall)
+            {};
+
+            const std::string name() const { return _name; };
+        };
+    }
+
 }
