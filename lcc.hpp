@@ -110,7 +110,7 @@ namespace cc
         File* file;
         Position pos; // token position in file
         unsigned int count;   // token number in a file
-        const char* pContent; // content of this token 
+        const char* pContent { nullptr }; // content of this token 
         
     } Token;
 
@@ -162,6 +162,35 @@ namespace cc
         Position _curTokenPos;
         unsigned int _tokenCnt;
         std::unordered_map<const char*, TokenType> _keywordMap;
+    };
+
+    // Parser class
+    class Parser
+    {
+    private:
+        static std::unique_ptr<Parser> _inst;
+        Parser();
+        Parser(const Parser&) = delete;
+        Parser& operator=(const Parser&) = delete;
+
+    public:    
+        static Parser* getInstance() {
+            if(_inst.get() == nullptr) _inst.reset(new Parser);
+
+            return _inst.get();
+        }
+
+    public:
+        void setup(const std::vector<Token*> tokens); 
+
+        void run();
+
+    private:
+        void nextToken();   
+
+    private:
+        std::vector<Token*> _tokens;
+        std::vector<Token*>::iterator _pCurToken;
     };
 
     //utils

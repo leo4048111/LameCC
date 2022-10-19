@@ -96,7 +96,8 @@ namespace cc
             token = nextToken();
             if(token->type == TokenType::TOKEN_INVALID)
                 WARNING("Find invalid token at " << token->pos.line << ", " << token->pos.column);
-            tokens.push_back(token);
+            else if(token->type != TokenType::TOKEN_WHITESPACE && token->type != TokenType::TOKEN_NEWLINE)            
+                tokens.push_back(token);
         } while (token->type != TokenType::TOKEN_EOF);
 
         if(shouldDumpTokens)
@@ -122,6 +123,7 @@ namespace cc
     {
         Token token;
         token.type = TokenType::TOKEN_WHITESPACE;
+        token.pContent = nullptr;
         return makeGeneralToken(token);
     }
 
@@ -129,6 +131,7 @@ namespace cc
     {
         Token token;
         token.type = TokenType::TOKEN_EOF;
+        token.pContent = nullptr;
         return makeGeneralToken(token);
     }
 
@@ -136,6 +139,7 @@ namespace cc
     {
         Token token;
         token.type = TokenType::TOKEN_NEWLINE;
+        token.pContent = nullptr;
         return makeGeneralToken(token);
     }
 
@@ -143,6 +147,7 @@ namespace cc
     {
         Token token;
         token.type = TokenType::TOKEN_INVALID;
+        token.pContent = nullptr;
         return makeGeneralToken(token);
     }
 
@@ -256,6 +261,7 @@ namespace cc
     {
         Token token;
         token.type = keywordType;
+        token.pContent = nullptr;
         return makeGeneralToken(token);
     }
 

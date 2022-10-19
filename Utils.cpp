@@ -31,6 +31,10 @@ namespace cc
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
                 case TokenType::TOKEN_EOF:
+                    j["id"] = token->count;
+                    j["type"] = "TOKEN_EOF";
+                    j["content"] = "EOF";
+                    j["position"] = {token->pos.line, token->pos.column};
                     break;
                 case TokenType::TOKEN_WHITESPACE:
                     break;
