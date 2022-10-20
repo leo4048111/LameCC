@@ -34,7 +34,7 @@ namespace cc
                     break;
 
                 default:
-                    FATAL_ERROR(CURTOKEN_INFO << "Invalid top level token.");
+                    FATAL_ERROR(CURTOKEN_INFO << "Invalid top level token");
                     return nullptr;
             }
         }
@@ -49,7 +49,7 @@ namespace cc
         
         if(_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
         {
-            FATAL_ERROR(CURTOKEN_INFO << "Expected identifier.");
+            FATAL_ERROR(CURTOKEN_INFO << "Expected identifier");
         }
 
         return nullptr;

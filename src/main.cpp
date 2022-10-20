@@ -70,8 +70,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    cc::Lexer::getInstance()->install(file);
-    auto tokens = cc::Lexer::getInstance()->run(g_shouldDumpTokens, g_out_path);
+    auto tokens = cc::Lexer::getInstance()->run(file, g_shouldDumpTokens, g_out_path);
     
     cc::Parser::getInstance()->run(tokens);
 

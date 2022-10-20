@@ -349,8 +349,7 @@ namespace cc
             return _inst.get();
         }
 
-        void install(File* file);
-        std::vector<Token*> run(const bool shouldDumpTokens, const std::string outPath);
+        std::vector<Token*> run(File* file, const bool shouldDumpTokens, const std::string outPath);
     
     private:
         static std::unique_ptr<Lexer> _inst;

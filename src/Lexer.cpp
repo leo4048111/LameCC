@@ -15,14 +15,6 @@ namespace cc
         #undef keyword
     }
 
-    void Lexer::install(File* file)
-    {
-        _file = file;
-        _tokenCnt = 0;
-        _curTokenPos = _file->getPosition();
-        nextLine();
-    }
-
     void Lexer::nextLine()
     {
         _file->nextLine();
@@ -93,8 +85,13 @@ namespace cc
         else retractChar();
     }
 
-    std::vector<Token*> Lexer::run(const bool shouldDumpTokens, const std::string outPath)
+    std::vector<Token*> Lexer::run(File* file, const bool shouldDumpTokens, const std::string outPath)
     {
+        _file = file;
+        _tokenCnt = 0;
+        _curTokenPos = _file->getPosition();
+        nextLine();
+
         std::vector<Token*> tokens;
         Token* token = nullptr;
 
