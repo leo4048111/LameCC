@@ -3,7 +3,7 @@
 namespace cc
 {
     File::File(std::string path):
-    _pos({0, 1})
+    _pos({0, 1}), _path(path)
     {
         _ifs = std::ifstream(path);
     }

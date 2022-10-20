@@ -73,7 +73,7 @@ int main(int argc, char** argv)
     cc::Lexer::getInstance()->install(file);
     auto tokens = cc::Lexer::getInstance()->run(g_shouldDumpTokens, g_out_path);
     
-    //cc::Parser::getInstance()->run(tokens);
+    cc::Parser::getInstance()->run(tokens);
 
     // cleanup
     for(auto& token: tokens) cc::freeToken(token);

@@ -176,17 +176,17 @@ namespace cc
 
     Token* Lexer::forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType)
     {
-        if(isNextChar(possibleCh)) return makeKeywordToken(possibleType);
+        if(isNextChar(possibleCh)) return makePunctuatorToken(possibleType);
 
-        return makeKeywordToken(defaultType);
+        return makePunctuatorToken(defaultType);
     }
 
     Token* Lexer::forwardSearch(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType)
     {
-        if(isNextChar(possibleCh1)) return makeKeywordToken(possibleType1);
-        else if(isNextChar(possibleCh2)) return makeKeywordToken(possibleType2);
+        if(isNextChar(possibleCh1)) return makePunctuatorToken(possibleType1);
+        else if(isNextChar(possibleCh2)) return makePunctuatorToken(possibleType2);
 
-        return makeKeywordToken(defaultType);
+        return makePunctuatorToken(defaultType);
     }   
 
     Token* Lexer::readIdentifier(char c)
@@ -206,7 +206,7 @@ namespace cc
             // determine whether this identifier is a keyword
             for(auto& pair: _keywordMap)
             {
-                if(buffer == pair.first) return makeKeywordToken(pair.second);
+                if(buffer == pair.first) return makeKeywordToken(pair.second, buffer);
             }
 
             return makeIdentifierToken(buffer);
@@ -264,10 +264,18 @@ namespace cc
         return makeCharToken(buffer);
     }
 
-    Token* Lexer::makeKeywordToken(TokenType keywordType) const
+    Token* Lexer::makeKeywordToken(TokenType keywordType, CharBuffer& buffer) const
     {
         Token token;
         token.type = keywordType;
+        token.pContent = buffer.new_c_str();
+        return makeGeneralToken(token);
+    }
+
+    Token* Lexer::makePunctuatorToken(TokenType punctuatorType) const
+    {
+        Token token;
+        token.type = punctuatorType;
         token.pContent = nullptr;
         return makeGeneralToken(token);
     }
@@ -310,21 +318,21 @@ namespace cc
             return readNumber(ch);
         case '.':
             if(isdigit(peekChar())) return readNumber(ch);
-            return makeKeywordToken(TokenType::TOKEN_PERIOD);
+            return makePunctuatorToken(TokenType::TOKEN_PERIOD);
         case '=': return forwardSearch('=', TokenType::TOKEN_OPEQEQ, TokenType::TOKEN_OPEQ);
         case '<': return forwardSearch('=', TokenType::TOKEN_OPLEQ, TokenType::TOKEN_OPLESS);
         case '>': return forwardSearch('=', TokenType::TOKEN_OPGEQ, TokenType::TOKEN_OPGREATER);
-        case '+': return makeKeywordToken(TokenType::TOKEN_OPADD);
-        case '-': return makeKeywordToken(TokenType::TOKEN_OPMINUS);
-        case '*': return makeKeywordToken(TokenType::TOKEN_OPTIMES);
-        case '/': return makeKeywordToken(TokenType::TOKEN_OPDIV);
-        case '(': return makeKeywordToken(TokenType::TOKEN_LPAREN);
-        case ')': return makeKeywordToken(TokenType::TOKEN_RPAREN);
-        case '{': return makeKeywordToken(TokenType::TOKEN_LBRACE);
-        case '}': return makeKeywordToken(TokenType::TOKEN_RBRACE);
-        case '[': return makeKeywordToken(TokenType::TOKEN_LSQUARE);
-        case ']': return makeKeywordToken(TokenType::TOKEN_RSQUARE);
-        case ';': return makeKeywordToken(TokenType::TOKEN_SEMI);
+        case '+': return makePunctuatorToken(TokenType::TOKEN_OPADD);
+        case '-': return makePunctuatorToken(TokenType::TOKEN_OPMINUS);
+        case '*': return makePunctuatorToken(TokenType::TOKEN_OPTIMES);
+        case '/': return makePunctuatorToken(TokenType::TOKEN_OPDIV);
+        case '(': return makePunctuatorToken(TokenType::TOKEN_LPAREN);
+        case ')': return makePunctuatorToken(TokenType::TOKEN_RPAREN);
+        case '{': return makePunctuatorToken(TokenType::TOKEN_LBRACE);
+        case '}': return makePunctuatorToken(TokenType::TOKEN_RBRACE);
+        case '[': return makePunctuatorToken(TokenType::TOKEN_LSQUARE);
+        case ']': return makePunctuatorToken(TokenType::TOKEN_RSQUARE);
+        case ';': return makePunctuatorToken(TokenType::TOKEN_SEMI);
         case '\"':
             return readString();
         case '\'':
