@@ -309,7 +309,6 @@ namespace cc
             return token;
         }
         case 'a' ... 'z': case 'A' ... 'Z': case '_': case '$':
-        case 0x80 ... 0xFD:
             return readIdentifier(ch);
         case '0' ... '9':
             return readNumber(ch);
