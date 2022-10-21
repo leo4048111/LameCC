@@ -138,6 +138,7 @@ namespace cc
         // Binary operator types
         enum class BinaryOpType
         {
+        BO_UNDEFINED = 0,
         #define BINARY_OPERATION(name, disc) BO_##name,
         #define UNARY_OPERATION(name, disc)
         #include "OperationType.inc"
@@ -147,6 +148,7 @@ namespace cc
 
         enum class UnaryOpType
         {
+        UO_UNDEFINED = 0,
         #define BINARY_OPERATION(name, disc)
         #define UNARY_OPERATION(name, disc) UO_##name,
         #include "OperationType.inc"
@@ -550,6 +552,10 @@ namespace cc
         std::unique_ptr<AST::Expr> nextUnaryOperator();
         std::unique_ptr<AST::Expr> nextBinaryOperator();
         std::unique_ptr<AST::Expr> nextRValue();
+        std::unique_ptr<AST::Expr> nextPrimaryExpr();
+        std::unique_ptr<AST::Expr> nextVarRefOrFuncCall();
+        std::unique_ptr<AST::Expr> nextNumber();
+        std::unique_ptr<AST::Expr> nextParenExpr();
 
     private:
         std::vector<Token*> _tokens;

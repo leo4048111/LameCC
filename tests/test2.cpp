@@ -7,5 +7,9 @@ int main()
     b += 2;
     a = b + 4;
     b *= 3.f;
+    b++;
+    a--;
+    ++a;
+    --b;
     return 0;
 }

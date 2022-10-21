@@ -316,8 +316,8 @@ namespace cc
         case '=': return forwardSearch('=', TokenType::TOKEN_EQEQ, TokenType::TOKEN_EQ);
         case '<': return forwardSearch('=', TokenType::TOKEN_LESSEQ, TokenType::TOKEN_LESS);
         case '>': return forwardSearch('=', TokenType::TOKEN_GREATEREQ, TokenType::TOKEN_GREATER);
-        case '+': return forwardSearch('=', TokenType::TOKEN_PLUSEQ, TokenType::TOKEN_PLUS);
-        case '-': return forwardSearch('=', TokenType::TOKEN_MINUSEQ, TokenType::TOKEN_MINUS);
+        case '+': return forwardSearch('=', TokenType::TOKEN_PLUSEQ, '+', TokenType::TOKEN_PLUSPLUS, TokenType::TOKEN_PLUS);
+        case '-': return forwardSearch('=', TokenType::TOKEN_MINUSEQ, '-', TokenType::TOKEN_MINUSMINUS,TokenType::TOKEN_MINUS);
         case '*': return forwardSearch('=', TokenType::TOKEN_STAREQ, TokenType::TOKEN_STAR);
         case '/': return forwardSearch('=', TokenType::TOKEN_SLASHEQ, TokenType::TOKEN_SLASH);
         case '(': return makePunctuatorToken(TokenType::TOKEN_LPAREN);

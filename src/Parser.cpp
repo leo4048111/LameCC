@@ -4,6 +4,23 @@
 
 namespace cc
 {
+    static AST::UnaryOpType TokenTypeToUnaryOpType(TokenType tokenType)
+    {
+        switch(tokenType)
+        {
+            case TokenType::TOKEN_PLUS:
+                return AST::UnaryOpType::UO_Plus;
+            case TokenType::TOKEN_MINUS:
+                return AST::UnaryOpType::UO_Minus;
+            case TokenType::TOKEN_TILDE:
+                return AST::UnaryOpType::UO_Not;
+            case TokenType::TOKEN_EXCLAIM:
+                return AST::UnaryOpType::UO_LNot;
+            default:
+                return AST::UnaryOpType::UO_UNDEFINED;
+        }
+    }
+
     std::unique_ptr<Parser> Parser::_inst;
 
     void Parser::nextToken()
@@ -215,9 +232,141 @@ namespace cc
 
     }
 
+    // VarRefOrFuncCall
+    // ::= CallExpr '(' params ')'
+    // ::= DeclRefExpr
+    // params
+    // ::= Expr
+    // ::= Expr ',' params
+    std::unique_ptr<AST::Expr> Parser::nextVarRefOrFuncCall()
+    {
+        std::string name = _pCurToken->pContent;
+        nextToken(); // eat name
+        switch (_pCurToken->type)
+        {
+        case TokenType::TOKEN_LPAREN:
+        {
+            Token* pLParen = _pCurToken;
+            nextToken(); // eat '('
+            std::vector<std::unique_ptr<AST::Expr>> params;
+            do
+            {
+                params.push_back(nextRValue());
+                switch (_pCurToken->type)
+                {
+                case TokenType::TOKEN_COMMA:
+                    nextToken(); // eat ','
+                case TokenType::TOKEN_RPAREN:
+                    break;
+                default:
+                    FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ) to match ( at " << pLParen->pos.line << ", " << pLParen->pos.column);
+                    return nullptr;
+                }
+            }while(_pCurToken->type != TokenType::TOKEN_RPAREN);
+
+            nextToken(); // eat ')'
+            return std::make_unique<AST::CallExpr>(std::make_unique<AST::DeclRefExpr>(name), params);
+        }
+        default:
+            return std::make_unique<AST::DeclRefExpr>(name);
+        }
+    }
+
+    std::unique_ptr<AST::Expr> Parser::nextNumber()
+    {
+        // TODO float literal
+        std::string number = _pCurToken->pContent;
+        nextToken(); // eat number
+        return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
+    }
+
+    std::unique_ptr<AST::Expr> Parser::nextParenExpr()
+    {
+        Token* pLParen = _pCurToken;
+        nextToken(); // eat '('
+        std::unique_ptr<AST::Expr> subExpr = nextExpression();
+        if(subExpr == nullptr) return nullptr;
+        switch(_pCurToken->type)
+        {
+            case TokenType::TOKEN_RPAREN:
+                nextToken(); // eat ')'
+                return std::make_unique<AST::ParenExpr>(std::move(subExpr));
+            default:
+                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ) to match ( at " << pLParen->pos.line << ", " << pLParen->pos.column);
+                return nullptr;
+        }
+    }
+
+    // PrimaryExpr
+    // ::= VarRefOrFuncCall
+    // ::= Number
+    // ::= ParenExpr
+    std::unique_ptr<AST::Expr> Parser::nextPrimaryExpr()
+    {
+        switch(_pCurToken->type)
+        {
+            case TokenType::TOKEN_IDENTIFIER:
+                return nextVarRefOrFuncCall();
+            case TokenType::TOKEN_NUMBER:
+                return nextNumber();
+            case TokenType::TOKEN_LPAREN:
+                return nextParenExpr();
+            default:
+                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Unsupported expression");
+                return nullptr;
+        }
+    }
+
     std::unique_ptr<AST::Expr> Parser::nextUnaryOperator()
     {
+        switch(_pCurToken->type)
+        {
+            case TokenType::TOKEN_EXCLAIM:
+            case TokenType::TOKEN_TILDE:
+            case TokenType::TOKEN_PLUS:
+            case TokenType::TOKEN_MINUS:
+            case TokenType::TOKEN_PLUSPLUS:
+            case TokenType::TOKEN_MINUSMINUS:
+            {
+                AST::UnaryOpType opType;
+                switch(_pCurToken->type)
+                {
+                    case TokenType::TOKEN_PLUSPLUS:
+                        opType = AST::UnaryOpType::UO_PreInc;
+                        break;
+                    case TokenType::TOKEN_MINUSMINUS:
+                        opType = AST::UnaryOpType::UO_PreDec;
+                        break;
+                    default:
+                        opType = TokenTypeToUnaryOpType(_pCurToken->type);
+                        break;
+                }
 
+                if(opType == AST::UnaryOpType::UO_UNDEFINED) // unary op type check
+                {
+                    FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Undefined unary operator");
+                    return nullptr;
+                }
+
+                nextToken(); // eat current operator
+                return std::make_unique<AST::UnaryOperator>(opType, nextUnaryOperator());
+            }
+            default:
+            {
+                std::unique_ptr<AST::Expr> body = nextPrimaryExpr();
+                switch (_pCurToken->type)
+                {
+                case TokenType::TOKEN_PLUSPLUS:
+                    nextToken(); // eat '++'
+                    return std::make_unique<AST::UnaryOperator>(AST::UnaryOpType::UO_PostInc, std::move(body));
+                case TokenType::TOKEN_MINUSMINUS:
+                    nextToken(); // eat '--'
+                    return std::make_unique<AST::UnaryOperator>(AST::UnaryOpType::UO_PostDec, std::move(body));
+                default:
+                    return std::move(body);
+                }
+            }
+        }
     }
 
     std::unique_ptr<AST::Expr> Parser::nextBinaryOperator()
@@ -230,7 +379,7 @@ namespace cc
 
     std::unique_ptr<AST::Expr> Parser::nextExpression()
     {
-        
+        return nextBinaryOperator();
     }
 
     std::unique_ptr<AST::Expr> Parser::nextRValue()
