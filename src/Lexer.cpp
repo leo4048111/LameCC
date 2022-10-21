@@ -7,11 +7,9 @@ namespace cc
     Lexer::Lexer()
     {
         #define keyword(name, disc) _keywordMap.insert(std::make_pair(disc, TokenType::name));
-        #define operator(name, disc) 
         #define punctuator(name, disc)
         #include "TokenType.inc"
         #undef punctuator
-        #undef operator
         #undef keyword
     }
 
@@ -315,13 +313,13 @@ namespace cc
         case '.':
             if(isdigit(peekChar())) return readNumber(ch);
             return makePunctuatorToken(TokenType::TOKEN_PERIOD);
-        case '=': return forwardSearch('=', TokenType::TOKEN_OPEQEQ, TokenType::TOKEN_OPEQ);
-        case '<': return forwardSearch('=', TokenType::TOKEN_OPLEQ, TokenType::TOKEN_OPLESS);
-        case '>': return forwardSearch('=', TokenType::TOKEN_OPGEQ, TokenType::TOKEN_OPGREATER);
-        case '+': return makePunctuatorToken(TokenType::TOKEN_OPADD);
-        case '-': return makePunctuatorToken(TokenType::TOKEN_OPMINUS);
-        case '*': return makePunctuatorToken(TokenType::TOKEN_OPTIMES);
-        case '/': return makePunctuatorToken(TokenType::TOKEN_OPDIV);
+        case '=': return forwardSearch('=', TokenType::TOKEN_EQEQ, TokenType::TOKEN_EQ);
+        case '<': return forwardSearch('=', TokenType::TOKEN_LESSEQ, TokenType::TOKEN_LESS);
+        case '>': return forwardSearch('=', TokenType::TOKEN_GREATEREQ, TokenType::TOKEN_GREATER);
+        case '+': return forwardSearch('=', TokenType::TOKEN_PLUSEQ, TokenType::TOKEN_PLUS);
+        case '-': return forwardSearch('=', TokenType::TOKEN_MINUSEQ, TokenType::TOKEN_MINUS);
+        case '*': return forwardSearch('=', TokenType::TOKEN_STAREQ, TokenType::TOKEN_STAR);
+        case '/': return forwardSearch('=', TokenType::TOKEN_SLASHEQ, TokenType::TOKEN_SLASH);
         case '(': return makePunctuatorToken(TokenType::TOKEN_LPAREN);
         case ')': return makePunctuatorToken(TokenType::TOKEN_RPAREN);
         case '{': return makePunctuatorToken(TokenType::TOKEN_LBRACE);

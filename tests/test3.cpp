@@ -1,4 +1,3 @@
-void 123()
-{
-    
-}
+void testFunc();
+
+void testFunc2();

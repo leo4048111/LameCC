@@ -431,11 +431,9 @@ namespace cc
         TOKEN_EOF,
         TOKEN_INVALID,
         #define keyword(name, disc) name,
-        #define operator(name, disc) name,
         #define punctuator(name, disc) name,
         #include "TokenType.inc"
         #undef punctuator
-        #undef operator
         #undef keyword    
     };
 
@@ -533,13 +531,25 @@ namespace cc
         static std::unique_ptr<Parser> _inst;
 
     public:
-        std::unique_ptr<AST::TranslationUnitDecl> run(const std::vector<Token*>& tokens);
+        std::unique_ptr<AST::Decl> run(const std::vector<Token*>& tokens);
 
     private:
         void nextToken();  
 
     private:
-        std::unique_ptr<AST::Decl> genTopLevelDecl(); 
+        // decl parsers
+        std::unique_ptr<AST::Decl> nextTopLevelDecl(); 
+        // stmt parsers
+        std::unique_ptr<AST::Stmt> nextCompoundStmt();
+        std::unique_ptr<AST::Stmt> nextStmt();
+        std::unique_ptr<AST::Stmt> nextNullStmt();
+        std::unique_ptr<AST::Stmt> nextWhileStmt();
+        std::unique_ptr<AST::Stmt> nextIfStmt();
+        // expr parsers
+        std::unique_ptr<AST::Expr> nextExpression();
+        std::unique_ptr<AST::Expr> nextUnaryOperator();
+        std::unique_ptr<AST::Expr> nextBinaryOperator();
+        std::unique_ptr<AST::Expr> nextRValue();
 
     private:
         std::vector<Token*> _tokens;

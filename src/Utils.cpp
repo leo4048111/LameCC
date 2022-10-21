@@ -65,11 +65,9 @@ namespace cc
                     j["content"] = disc; \
                     j["position"] = {token->pos.line, token->pos.column}; \
                     break;
-                #define operator(name, disc) keyword(name, disc)
                 #define punctuator(name, disc) keyword(name, disc)
                 #include "TokenType.inc"
                 #undef punctuator
-                #undef operator
                 #undef keyword
 
                 default:

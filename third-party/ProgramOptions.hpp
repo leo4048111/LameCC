@@ -113,7 +113,7 @@ namespace po {
 			assert(m_console != INVALID_HANDLE_VALUE);
 			CONSOLE_SCREEN_BUFFER_INFO info;
 			const BOOL result = GetConsoleScreenBufferInfo(m_console, &info);
-			assert(result);
+			//assert(result);
 			(void)result;
 			m_old_attributes = info.wAttributes;
 			WORD attribute = 0;
