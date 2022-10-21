@@ -330,6 +330,7 @@ namespace cc
         case '[': return makePunctuatorToken(TokenType::TOKEN_LSQUARE);
         case ']': return makePunctuatorToken(TokenType::TOKEN_RSQUARE);
         case ';': return makePunctuatorToken(TokenType::TOKEN_SEMI);
+        case ',': return makePunctuatorToken(TokenType::TOKEN_COMMA);
         case '\"':
             return readString();
         case '\'':

@@ -22,7 +22,7 @@ using json = nlohmann::json;
 #define WARNING(msg) \
     std::cout << po::yellow << "Warning: " << po::light_gray << msg << std::endl
 
-// AST
+// AST nodes 
 namespace cc
 {
     namespace AST
@@ -37,6 +37,7 @@ namespace cc
         class TranslationUnitDecl;
         class NamedDecl;
         class VarDecl;
+        class FunctionDecl;
 
         // Exprs
         class Expr;
@@ -48,6 +49,16 @@ namespace cc
         class CallExpr;
         class CastExpr;
         class ImplicitCastExpr;
+
+        // Stmts
+        class Stmt;
+        class NullStmt;
+        class ValueStmt;
+        class IfStmt;
+        class WhileStmt;
+        class DeclStmt;
+        class CompoundStmt;
+        class ReturnStmt;
     }
 
     // Declarations
@@ -78,7 +89,8 @@ namespace cc
             std::string _name;
 
         public:
-            NamedDecl(const std::string name) : _name(name) {};
+            NamedDecl(const std::string& name) : 
+            _name(name) {};
             ~NamedDecl() = default;
 
             const std::string name() const { return _name; };
@@ -93,12 +105,32 @@ namespace cc
             std::unique_ptr<Expr> _value;
 
         public:
-            VarDecl(const std::string name, const std::string type, 
+            VarDecl(const std::string& name, const std::string& type, 
             bool isInitialized = false, std::unique_ptr<Expr> value = nullptr) :
-            NamedDecl(name), _type(type), _isInitialized(isInitialized), _value(std::move(value))
+            NamedDecl(name), _type(type), _isInitialized(isInitialized), _value(std::move(value)) {};
+        };
+
+        // Represents a parameter to a function.
+        class ParmVarDecl : public VarDecl
+        {
+        public:
+            ParmVarDecl(const std::string& name, const std::string& type) : VarDecl(name, type)
             {};
         };
-    }
+        
+        // Represents a function declaration or definition.
+        class FunctionDecl : public NamedDecl
+        {
+        protected:
+            std::string _type;
+            std::vector<std::unique_ptr<ParmVarDecl>> _params;
+            std::unique_ptr<Stmt> _body;
+
+        public:
+            FunctionDecl(const std::string& name, const std::string& type, std::vector<std::unique_ptr<ParmVarDecl>>& params, std::unique_ptr<Stmt> body) :
+            NamedDecl(name), _type(type), _params(std::move(params)), _body(std::move(body)) {};
+        };
+    } // Decl end
 
     // Expressions
     namespace AST
@@ -141,7 +173,8 @@ namespace cc
             int _value;
         
         public: 
-            IntegerLiteral(int value) : _value(value) {};
+            IntegerLiteral(int value) : 
+            _value(value) {};
             int value() const { return _value; };
         };
 
@@ -153,9 +186,8 @@ namespace cc
             bool _isCall;
 
         public:
-            DeclRefExpr(const std::string name, bool isCall = false) :
-            _name(name), _isCall(isCall)
-            {};
+            DeclRefExpr(const std::string& name, bool isCall = false) :
+            _name(name), _isCall(isCall) {};
 
             const std::string name() const { return _name; };
         };
@@ -184,7 +216,8 @@ namespace cc
 
         public:
             UnaryOperator(UnaryOpType type, std::unique_ptr<Expr> body) :
-            _type(type), _body(std::move(body)) {};
+            _type(type), _body(std::move(body)) 
+            {};
 
             UnaryOpType type() const { return _type; };
         };
@@ -201,7 +234,7 @@ namespace cc
             {
                 _isConstant = _subExpr->isConstant();
                 _isLValue = _subExpr->isLValue();
-            }
+            };
         };
 
         // Represents a function call (C99 6.5.2.2, C++ [expr.call]).
@@ -233,8 +266,93 @@ namespace cc
         class ImplicitCastExpr : public CastExpr
         {
         public:
-            ImplicitCastExpr(std::unique_ptr<Expr> expr, const std::string type): 
+            ImplicitCastExpr(std::unique_ptr<Expr> expr, const std::string& type): 
                 CastExpr(std::move(expr), type){};
+        };
+    } // Expr end
+
+    // Statements
+    namespace AST
+    {
+        // Stmt base class
+        class Stmt : public ASTNode
+        {
+
+        };
+
+        // This is the null statement ";": C99 6.8.3p3.
+        class NullStmt : public Stmt
+        {
+            // TODO...
+        };
+
+        // Represents a statement that could possibly have a value and type.
+        class ValueStmt : public Stmt
+        {
+        protected:
+            std::unique_ptr<Expr> _expr;
+        
+        public:
+            ValueStmt(std::unique_ptr<Expr> expr) :
+            _expr(std::move(expr)){};
+        };
+
+        // This represents an if/then/else.
+        class IfStmt : public Stmt
+        {
+        protected:
+            std::unique_ptr<Expr> _condition;
+            std::unique_ptr<Stmt> _body;
+            std::unique_ptr<Stmt> _elseBody;
+
+        public:
+            IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body, std::unique_ptr<Stmt> elseBody = nullptr) :
+            _condition(std::move(condition)), _body(std::move(body)), _elseBody(std::move(elseBody)){};
+        };
+
+        // This represents a 'while' stmt.
+        class WhileStmt : public Stmt
+        {
+        protected:
+            std::unique_ptr<Expr> _condition;
+            std::unique_ptr<Stmt> _body;
+
+        public:
+            WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body) :
+            _condition(std::move(condition)), _body(std::move(body)) {};
+        };
+
+        // Adaptor class for mixing declarations with statements and expressions.
+        class DeclStmt : public Stmt
+        {
+        protected:
+            std::vector<std::unique_ptr<Decl>> _decls;
+
+        public:
+            DeclStmt(std::vector<std::unique_ptr<Decl>>& decls) : 
+            _decls(std::move(decls)) {};
+        };
+
+        // This represents a group of statements like { stmt stmt }.
+        class CompoundStmt : public Stmt
+        {
+        protected:
+            std::vector<std::unique_ptr<Stmt>> _body;
+
+        public:
+            CompoundStmt(std::vector<std::unique_ptr<Stmt>>& body) :
+            _body(std::move(body)) {};
+        };
+
+        // This represents a return, optionally of an expression: return; return 4;. 
+        class ReturnStmt : public Stmt
+        {
+        protected:
+            std::unique_ptr<Expr> _value;
+
+        public:
+            ReturnStmt(std::unique_ptr<Expr> value) :
+            _value(std::move(value)) {};
         };
     }
 } // AST end
