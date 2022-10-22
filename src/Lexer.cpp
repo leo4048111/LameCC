@@ -320,6 +320,7 @@ namespace cc
         case '-': return forwardSearch('=', TokenType::TOKEN_MINUSEQ, '-', TokenType::TOKEN_MINUSMINUS,TokenType::TOKEN_MINUS);
         case '*': return forwardSearch('=', TokenType::TOKEN_STAREQ, TokenType::TOKEN_STAR);
         case '/': return forwardSearch('=', TokenType::TOKEN_SLASHEQ, TokenType::TOKEN_SLASH);
+        case '%': return forwardSearch('=', TokenType::TOKEN_PERCENTEQ, TokenType::TOKEN_PERCENT);
         case '(': return makePunctuatorToken(TokenType::TOKEN_LPAREN);
         case ')': return makePunctuatorToken(TokenType::TOKEN_RPAREN);
         case '{': return makePunctuatorToken(TokenType::TOKEN_LBRACE);
