@@ -302,6 +302,7 @@ namespace cc
         {
         case '\n':
         {
+            _tokenCnt--; // make sure newline isn't counted
             Token* token = makeNewlineToken();
             nextLine();
             return token;
@@ -321,6 +322,7 @@ namespace cc
         case '*': return forwardSearch('=', TokenType::TOKEN_STAREQ, TokenType::TOKEN_STAR);
         case '/': return forwardSearch('=', TokenType::TOKEN_SLASHEQ, TokenType::TOKEN_SLASH);
         case '%': return forwardSearch('=', TokenType::TOKEN_PERCENTEQ, TokenType::TOKEN_PERCENT);
+        case '^': return forwardSearch('=', TokenType::TOKEN_CARETEQ, TokenType::TOKEN_CARET);
         case '(': return makePunctuatorToken(TokenType::TOKEN_LPAREN);
         case ')': return makePunctuatorToken(TokenType::TOKEN_RPAREN);
         case '{': return makePunctuatorToken(TokenType::TOKEN_LBRACE);

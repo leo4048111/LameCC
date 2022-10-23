@@ -160,11 +160,9 @@ namespace cc
         class Expr : public ASTNode
         {
         protected:
-            bool _isConstant{ false };
             bool _isLValue{ false };
 
         public:
-            bool isConstant() const { return _isConstant; };
             bool isLValue() const { return _isLValue; };
         };
 
@@ -176,7 +174,7 @@ namespace cc
         
         public: 
             IntegerLiteral(int value) : 
-            _value(value) {};
+            _value(value) { _isLValue = true; };
             int value() const { return _value; };
         };
 
@@ -189,7 +187,7 @@ namespace cc
 
         public:
             DeclRefExpr(const std::string& name, bool isCall = false) :
-            _name(name), _isCall(isCall) {};
+            _name(name), _isCall(isCall) { _isLValue = !isCall; };
 
             const std::string name() const { return _name; };
         };
@@ -197,6 +195,26 @@ namespace cc
         // Binary operator type expression
         class BinaryOperator : public Expr
         {
+        public:
+            // https://en.cppreference.com/w/cpp/language/operator_precedence
+            enum class Precedence
+            {
+                UNDEFINED = 0,
+                COMMA = 1, // ,
+                ASSIGNMENT = 2, // =, +=, -=, *=, /=, %=, <<=M >>=, &=, ^=, |=
+                LOGICALOR = 3, // ||
+                LOGICALAND = 4, // &&
+                BITWISEOR = 5, // | 
+                BITWISEXOR = 6, // ^
+                BITWISEAND = 7, // &
+                EQUALITY = 8, // == !=
+                RELATIONAL = 9, // < <= > >=
+                SPACESHIP = 10, // <=>
+                BITWISESHIFT = 11, // << >> 
+                ADDITIVE = 12, // + -
+                MULTIPLICATIVE = 13 // * / %
+            };
+
         protected:
             BinaryOpType _type;
             std::unique_ptr<Expr> _lhs, _rhs;
@@ -234,7 +252,6 @@ namespace cc
             ParenExpr(std::unique_ptr<Expr> expr) :
             _subExpr(std::move(expr))
             {
-                _isConstant = _subExpr->isConstant();
                 _isLValue = _subExpr->isLValue();
             };
         };
@@ -353,7 +370,7 @@ namespace cc
             std::unique_ptr<Expr> _value;
 
         public:
-            ReturnStmt(std::unique_ptr<Expr> value) :
+            ReturnStmt(std::unique_ptr<Expr> value = nullptr) :
             _value(std::move(value)) {};
         };
     }
@@ -541,12 +558,17 @@ namespace cc
     private:
         // decl parsers
         std::unique_ptr<AST::Decl> nextTopLevelDecl(); 
+        std::unique_ptr<AST::Decl> nextFunctionDecl(const std::string name, const std::string type);
+        std::unique_ptr<AST::Decl> nextVarDecl(const std::string name, const std::string type);
         // stmt parsers
         std::unique_ptr<AST::Stmt> nextCompoundStmt();
         std::unique_ptr<AST::Stmt> nextStmt();
         std::unique_ptr<AST::Stmt> nextNullStmt();
         std::unique_ptr<AST::Stmt> nextWhileStmt();
         std::unique_ptr<AST::Stmt> nextIfStmt();
+        std::unique_ptr<AST::Stmt> nextReturnStmt();
+        std::unique_ptr<AST::Stmt> nextDeclStmt();
+        std::unique_ptr<AST::Stmt> nextValueStmt();
         // expr parsers
         std::unique_ptr<AST::Expr> nextExpression();
         std::unique_ptr<AST::Expr> nextUnaryOperator();
@@ -556,6 +578,7 @@ namespace cc
         std::unique_ptr<AST::Expr> nextVarRefOrFuncCall();
         std::unique_ptr<AST::Expr> nextNumber();
         std::unique_ptr<AST::Expr> nextParenExpr();
+        std::unique_ptr<AST::Expr> nextRHSExpr(std::unique_ptr<AST::Expr> lhs, AST::BinaryOperator::Precedence lastBiOpPrec);
 
     private:
         std::vector<Token*> _tokens;
