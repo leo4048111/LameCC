@@ -484,7 +484,7 @@ namespace cc
             return _inst.get();
         }
 
-        std::vector<Token*> run(File* file, const bool shouldDumpTokens, const std::string outPath);
+        std::vector<Token*> run(File* file);
     
     private:
         static std::unique_ptr<Lexer> _inst;

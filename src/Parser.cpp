@@ -167,7 +167,7 @@ namespace cc
                 break;
 
             default:
-                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Invalid top level token");
+                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Invalid top level declaration");
                 return nullptr;
             }
         }
@@ -198,12 +198,12 @@ namespace cc
 
             std::string paramType = _pCurToken->pContent;
             std::string paramName;
-            nextToken();
+            nextToken(); // eat type
             // next token should be identifier
             if(_pCurToken->type == TokenType::TOKEN_IDENTIFIER)
             {
                 paramName = _pCurToken->pContent;
-                nextToken();
+                nextToken(); // eat name
             }
             else 
             {
@@ -332,6 +332,7 @@ namespace cc
                 decls.push_back(std::move(funcDecl));
                 if(_pCurToken->type == TokenType::TOKEN_COMMA) 
                     nextToken(); // eat ','
+                break;
             }
             case TokenType::TOKEN_EQ:
             {
@@ -339,6 +340,7 @@ namespace cc
                 decls.push_back(std::move(varDecl));
                 if(_pCurToken->type == TokenType::TOKEN_COMMA) 
                     nextToken(); // eat ','
+                break;
             }
             case TokenType::TOKEN_SEMI: // uninitialized varDecl
             case TokenType::TOKEN_COMMA:
@@ -346,6 +348,7 @@ namespace cc
                 if(_pCurToken->type == TokenType::TOKEN_COMMA) nextToken(); // eat ','
                 std::unique_ptr<AST::Decl> varDecl = std::make_unique<AST::VarDecl>(name, type);
                 decls.push_back(std::move(varDecl));
+                break;
             }
             default:
                 FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ;");

@@ -83,7 +83,7 @@ namespace cc
         else retractChar();
     }
 
-    std::vector<Token*> Lexer::run(File* file, const bool shouldDumpTokens, const std::string outPath)
+    std::vector<Token*> Lexer::run(File* file)
     {
         _file = file;
         _tokenCnt = 0;
@@ -101,11 +101,6 @@ namespace cc
             else if(token->type != TokenType::TOKEN_WHITESPACE && token->type != TokenType::TOKEN_NEWLINE)            
                 tokens.push_back(token);
         } while (token->type != TokenType::TOKEN_EOF);
-
-        if(shouldDumpTokens)
-        {
-            dumpJson(jsonifyTokens(tokens), outPath);
-        }
 
         return tokens;
     }
