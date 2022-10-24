@@ -167,7 +167,7 @@ namespace cc
                 break;
 
             default:
-                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Invalid top level declaration");
+                FATAL_ERROR("Parsing failed, abort...");
                 return nullptr;
             }
         }
@@ -175,6 +175,11 @@ namespace cc
         return std::make_unique<AST::TranslationUnitDecl>(topLevelDecls);
     }
 
+    // FunctionDecl
+    // ::= type name '(' params ')'
+    // ::= type name '(' params ')' '{' CompoundStmt '}'
+    // params
+    // ::= ParmVarDecl, params
     std::unique_ptr<AST::Decl> Parser::nextFunctionDecl(const std::string name, const std::string type)
     {
         Token* pLParen = _pCurToken;
@@ -229,18 +234,26 @@ namespace cc
         {
             case TokenType::TOKEN_LBRACE: // function definition
                 body = nextCompoundStmt();
+                if(body == nullptr) return nullptr;
+                if(_pCurToken->type == TokenType::TOKEN_SEMI) 
+                {
+                    WARNING(TOKEN_INFO(_pCurToken) << "Ignored ; after function definition");
+                    nextToken(); // eat ';'
+                }
                 break;
             case TokenType::TOKEN_SEMI: // function declaration
                 nextToken(); // eat ';'
                 break;
             default:
-                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ; or function body");
+                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ;");
                 return nullptr;
         }
 
         return std::make_unique<AST::FunctionDecl>(name, type, params, std::move(body));
     }
 
+    // VarDecl
+    // ::= '=' BinaryOperator ';'
     std::unique_ptr<AST::Decl> Parser::nextVarDecl(const std::string name, const std::string type)
     {
         nextToken(); // eat '='
@@ -275,6 +288,8 @@ namespace cc
         std::string name = _pCurToken->pContent; // function or var name
         nextToken(); // eat name
 
+        std::unique_ptr<AST::Decl> topLevelDecl = nullptr;
+
         // parse top level function decl
         switch (_pCurToken->type)
         {
@@ -286,9 +301,11 @@ namespace cc
             nextToken(); // eat ';'
             return std::make_unique<AST::VarDecl>(name, type);
         default:
-            FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ;");
+            FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Unexpected top level declaration");
             return nullptr;
         }
+
+        return nullptr;
     }
 
     std::unique_ptr<AST::Stmt> Parser::nextCompoundStmt()
@@ -304,6 +321,12 @@ namespace cc
             body.push_back(std::move(stmt));
         }
 
+        if(_pCurToken->type != TokenType::TOKEN_RBRACE)
+        {
+            FATAL_ERROR(TOKEN_INFO(_pCurToken) << "No matching rbrace found for lbrace at " << pLBrace->pos.line << ", " << pLBrace->pos.column);
+            return nullptr;
+        }
+        nextToken(); // eat '}'
         return std::make_unique<AST::CompoundStmt>(body);
     }
 
@@ -319,45 +342,42 @@ namespace cc
 
         std::vector<std::unique_ptr<AST::Decl>> decls;
 
-        do
+        std::string name = _pCurToken->pContent; // function or var name
+        nextToken(); // eat name
+
+        // TODO support comma declaration
+        switch (_pCurToken->type)
         {
-            std::string name = _pCurToken->pContent; // function or var name
-            nextToken(); // eat name
+        case TokenType::TOKEN_LPAREN:
+        {
+            std::unique_ptr<AST::Decl> funcDecl = nextFunctionDecl(name, type);
+            decls.push_back(std::move(funcDecl));
+            if(_pCurToken->type == TokenType::TOKEN_COMMA) 
+                nextToken(); // eat ','
+            break;
+        }
+        case TokenType::TOKEN_EQ:
+        {
+            std::unique_ptr<AST::Decl> varDecl = nextVarDecl(name, type);
+            decls.push_back(std::move(varDecl));
+            if(_pCurToken->type == TokenType::TOKEN_COMMA) 
+                nextToken(); // eat ','
+            break;
+        }
+        case TokenType::TOKEN_SEMI: // uninitialized varDecl
+        case TokenType::TOKEN_COMMA:
+        {
+            if(_pCurToken->type == TokenType::TOKEN_COMMA) nextToken(); // eat ','
+            std::unique_ptr<AST::Decl> varDecl = std::make_unique<AST::VarDecl>(name, type);
+            decls.push_back(std::move(varDecl));
+            break;
+        }
+        default:
+            FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ;");
+            return nullptr;
+        }
 
-            switch (_pCurToken->type)
-            {
-            case TokenType::TOKEN_LPAREN:
-            {
-                std::unique_ptr<AST::Decl> funcDecl = nextFunctionDecl(name, type);
-                decls.push_back(std::move(funcDecl));
-                if(_pCurToken->type == TokenType::TOKEN_COMMA) 
-                    nextToken(); // eat ','
-                break;
-            }
-            case TokenType::TOKEN_EQ:
-            {
-                std::unique_ptr<AST::Decl> varDecl = nextVarDecl(name, type);
-                decls.push_back(std::move(varDecl));
-                if(_pCurToken->type == TokenType::TOKEN_COMMA) 
-                    nextToken(); // eat ','
-                break;
-            }
-            case TokenType::TOKEN_SEMI: // uninitialized varDecl
-            case TokenType::TOKEN_COMMA:
-            {
-                if(_pCurToken->type == TokenType::TOKEN_COMMA) nextToken(); // eat ','
-                std::unique_ptr<AST::Decl> varDecl = std::make_unique<AST::VarDecl>(name, type);
-                decls.push_back(std::move(varDecl));
-                break;
-            }
-            default:
-                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ;");
-                return nullptr;
-            }
-
-        } while (_pCurToken->type != TokenType::TOKEN_SEMI);
-        
-        nextToken(); // eat ';'
+        //nextToken(); // eat ';'
         return std::make_unique<AST::DeclStmt>(decls);
     }
 
