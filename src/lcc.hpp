@@ -30,6 +30,8 @@ namespace cc
         // AST node base class
         class ASTNode
         {
+        public:
+            virtual json asJson() const = 0;
         };
 
         // Cecls
@@ -37,6 +39,7 @@ namespace cc
         class TranslationUnitDecl;
         class NamedDecl;
         class VarDecl;
+        class ParmVarDecl;
         class FunctionDecl;
 
         // Exprs
@@ -80,6 +83,8 @@ namespace cc
             TranslationUnitDecl(std::vector<std::unique_ptr<Decl>>& decls) :
             _decls(std::move(decls)) {};
             ~TranslationUnitDecl() = default;
+
+            virtual json asJson() const override;
         };
 
         // This represents a decl that may have a name
@@ -92,6 +97,8 @@ namespace cc
             NamedDecl(const std::string& name) : 
             _name(name) {};
             ~NamedDecl() = default;
+
+            virtual json asJson() const override;
 
             const std::string name() const { return _name; };
         };
@@ -108,6 +115,8 @@ namespace cc
             VarDecl(const std::string& name, const std::string& type, 
             bool isInitialized = false, std::unique_ptr<Expr> value = nullptr) :
             NamedDecl(name), _type(type), _isInitialized(isInitialized), _value(std::move(value)) {};
+            
+            virtual json asJson() const override;
         };
 
         // Represents a parameter to a function.
@@ -116,6 +125,8 @@ namespace cc
         public:
             ParmVarDecl(const std::string& name, const std::string& type) : VarDecl(name, type)
             {};
+
+            virtual json asJson() const override;
         };
         
         // Represents a function declaration or definition.
@@ -129,6 +140,8 @@ namespace cc
         public:
             FunctionDecl(const std::string& name, const std::string& type, std::vector<std::unique_ptr<ParmVarDecl>>& params, std::unique_ptr<Stmt> body) :
             NamedDecl(name), _type(type), _params(std::move(params)), _body(std::move(body)) {};
+
+            virtual json asJson() const override;
         };
     } // Decl end
 

@@ -1,0 +1,59 @@
+#include "lcc.hpp"
+
+namespace cc
+{
+    namespace AST
+    {
+        json TranslationUnitDecl::asJson() const
+        {
+            json j;
+            j["type"] = "TranslationUnitDecl";
+            j["children"] = json::array();
+            for(const auto & decl : _decls)
+                j["children"].emplace_back(decl->asJson());
+            return j;
+        }
+
+        json NamedDecl::asJson() const
+        {
+            json j;
+            j["type"] = "NamedDecl";
+            j["name"] = _name;
+            return j;
+        }
+
+        json VarDecl::asJson() const
+        {
+            json j;
+            j["type"] = "VarDecl";
+            j["name"] = _name;
+            if(_isInitialized)
+                j["init"] = json::array({ _value->asJson() });
+            else 
+                j["init"] = false;
+            return j;
+        }
+
+        json ParmVarDecl::asJson() const
+        {
+            json j;
+            j["type"] = "ParmVarDecl";
+            j["name"] = _name;
+            return j;
+        }
+
+        json FunctionDecl::asJson() const
+        {
+            json j;
+            j["type"] = "FunctionDecl";
+            j["returns"] = _type;
+            j["params"] = json::array();
+            for(const auto & param : _params)
+                j["params"].emplace_back(param->asJson());
+            if(_body != nullptr)
+                j["body"] = json::array({ _body->asJson() });
+            else j["body"] = "empty";
+            return j;
+        }
+    }
+}
