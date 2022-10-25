@@ -188,6 +188,9 @@ namespace cc
         public: 
             IntegerLiteral(int value) : 
             _value(value) { _isLValue = true; };
+
+            virtual json asJson() const override;
+
             int value() const { return _value; };
         };
 
@@ -201,6 +204,8 @@ namespace cc
         public:
             DeclRefExpr(const std::string& name, bool isCall = false) :
             _name(name), _isCall(isCall) { _isLValue = !isCall; };
+            
+            virtual json asJson() const override;
 
             const std::string name() const { return _name; };
         };
@@ -234,6 +239,8 @@ namespace cc
 
         public:
             BinaryOperator(BinaryOpType type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs);
+            
+            virtual json asJson() const override;
 
             bool isAssignment() const;
 
@@ -252,6 +259,8 @@ namespace cc
             _type(type), _body(std::move(body)) 
             {};
 
+            virtual json asJson() const override;
+
             UnaryOpType type() const { return _type; };
         };
 
@@ -267,6 +276,8 @@ namespace cc
             {
                 _isLValue = _subExpr->isLValue();
             };
+
+            virtual json asJson() const override;
         };
 
         // Represents a function call (C99 6.5.2.2, C++ [expr.call]).
@@ -280,6 +291,8 @@ namespace cc
             CallExpr(std::unique_ptr<DeclRefExpr> function, std::vector<std::unique_ptr<Expr>>& params) :
             _functionExpr(std::move(function)), _params(std::move(params))
             {};
+
+            virtual json asJson() const override;
         };
 
         // Base class for type casts, including both implicit casts (ImplicitCastExpr) and explicit casts 
@@ -292,6 +305,8 @@ namespace cc
         public:
             CastExpr(std::unique_ptr<Expr> expr, const std::string type):
                 _subExpr(std::move(expr)), _kind(type){};
+
+            virtual json asJson() const override;
         };
 
         // Allows us to explicitly represent implicit type conversions
@@ -300,6 +315,8 @@ namespace cc
         public:
             ImplicitCastExpr(std::unique_ptr<Expr> expr, const std::string& type): 
                 CastExpr(std::move(expr), type){};
+                
+            virtual json asJson() const override;
         };
     } // Expr end
 
