@@ -117,6 +117,8 @@ namespace cc
             NamedDecl(name), _type(type), _isInitialized(isInitialized), _value(std::move(value)) {};
             
             virtual json asJson() const override;
+
+            const std::string type() const { return _type; };
         };
 
         // Represents a parameter to a function.
@@ -165,7 +167,7 @@ namespace cc
         #define BINARY_OPERATION(name, disc)
         #define UNARY_OPERATION(name, disc) UO_##name,
         #include "OperationType.inc"
-        #undef BINARY_OPERATION
+        #undef UNARY_OPERATION
         #undef BINARY_OPERATION
         };
 
@@ -332,7 +334,8 @@ namespace cc
         // This is the null statement ";": C99 6.8.3p3.
         class NullStmt : public Stmt
         {
-            // TODO...
+        public:
+            virtual json asJson() const override;
         };
 
         // Represents a statement that could possibly have a value and type.
@@ -344,6 +347,8 @@ namespace cc
         public:
             ValueStmt(std::unique_ptr<Expr> expr) :
             _expr(std::move(expr)){};
+
+            virtual json asJson() const override;
         };
 
         // This represents an if/then/else.
@@ -357,6 +362,8 @@ namespace cc
         public:
             IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body, std::unique_ptr<Stmt> elseBody = nullptr) :
             _condition(std::move(condition)), _body(std::move(body)), _elseBody(std::move(elseBody)){};
+
+            virtual json asJson() const override;
         };
 
         // This represents a 'while' stmt.
@@ -369,6 +376,8 @@ namespace cc
         public:
             WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body) :
             _condition(std::move(condition)), _body(std::move(body)) {};
+
+            virtual json asJson() const override;
         };
 
         // Adaptor class for mixing declarations with statements and expressions.
@@ -380,6 +389,8 @@ namespace cc
         public:
             DeclStmt(std::vector<std::unique_ptr<Decl>>& decls) : 
             _decls(std::move(decls)) {};
+
+            virtual json asJson() const override;
         };
 
         // This represents a group of statements like { stmt stmt }.
@@ -391,6 +402,8 @@ namespace cc
         public:
             CompoundStmt(std::vector<std::unique_ptr<Stmt>>& body) :
             _body(std::move(body)) {};
+
+            virtual json asJson() const override;
         };
 
         // This represents a return, optionally of an expression: return; return 4;. 
@@ -402,6 +415,8 @@ namespace cc
         public:
             ReturnStmt(std::unique_ptr<Expr> value = nullptr) :
             _value(std::move(value)) {};
+
+            virtual json asJson() const override;
         };
     }
 } // AST end

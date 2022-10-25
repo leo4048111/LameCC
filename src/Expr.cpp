@@ -8,7 +8,7 @@ namespace cc
         {
             switch(type)
             {
-            #define BINARY_OPERATION(name, disc) case BO_##name: return disc;
+            #define BINARY_OPERATION(name, disc) case BinaryOpType::BO_##name: return disc;
             #define UNARY_OPERATION(name, disc)
             #include "OperationType.inc"
             #undef UNARY_OPERATION
@@ -23,7 +23,7 @@ namespace cc
             switch(type)
             {
             #define BINARY_OPERATION(name, disc)
-            #define UNARY_OPERATION(name, disc) case UO_##name: return disc;
+            #define UNARY_OPERATION(name, disc) case UnaryOpType::UO_##name: return disc;
             #include "OperationType.inc"
             #undef UNARY_OPERATION
             #undef BINARY_OPERATION

@@ -46,7 +46,19 @@ namespace cc
         {
             json j;
             j["type"] = "FunctionDecl";
-            j["returns"] = _type;
+            std::string functionType;
+            functionType += _type; // ret value type
+            functionType += '(';
+            bool isBegin = true;
+            for(const auto & param : _params)
+            {
+                if(!isBegin)
+                    functionType += ", ";
+                functionType += param->type();
+                isBegin = false;
+            }
+            functionType += ')';
+            j["functionType"] = functionType;
             j["params"] = json::array();
             for(const auto & param : _params)
                 j["params"].emplace_back(param->asJson());

@@ -89,7 +89,6 @@ namespace cc
         std::ofstream ofs(outPath);
         ofs << j.dump(2) << std::endl;
         ofs.close();
-        INFO("Tokens have been dumped to " << outPath);
         return true;
     }
 }

@@ -108,11 +108,20 @@ int main(int argc, char** argv)
     }
 
     auto tokens = cc::Lexer::getInstance()->run(file);
+    
+    auto astRoot = cc::Parser::getInstance()->run(tokens);
 
     if(g_shouldDumpTokens)
+    {
         cc::dumpJson(cc::jsonifyTokens(tokens), g_dump_token_out_path);
-    
-    cc::Parser::getInstance()->run(tokens);
+        INFO("Tokens have been dumped to " << g_dump_token_out_path);
+    }
+
+    if(g_shouldDumpAST)
+    {
+        cc::dumpJson(astRoot->asJson(), g_dump_ast_out_path);
+        INFO("AST has been dumped to " << g_dump_ast_out_path);
+    }
 
     // cleanup
     for(auto& token: tokens) cc::freeToken(token);
