@@ -73,7 +73,7 @@ namespace cc
                 default:
                     break;
             }
-            if(!j.empty()) arr.push_back(j);
+            if(!j.empty()) arr.emplace_back(j);
         }
         return arr;
     }
@@ -87,7 +87,7 @@ namespace cc
         }
             
         std::ofstream ofs(outPath);
-        ofs << j.dump(2) << std::endl;
+        ofs << j.dump(4) << std::endl;
         ofs.close();
         return true;
     }
