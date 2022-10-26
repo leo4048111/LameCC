@@ -59,6 +59,7 @@ namespace cc
             }
             functionType += ')';
             j["functionType"] = functionType;
+            j["name"] = name();
             j["params"] = json::array();
             for(const auto & param : _params)
                 j["params"].emplace_back(param->asJson());
