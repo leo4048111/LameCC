@@ -189,7 +189,7 @@ namespace cc
         
         public: 
             IntegerLiteral(int value) : 
-            _value(value) { _isLValue = false; };
+            _value(value) { _isLValue = false; }; // Integer literal should be LValue instead of RValue 
 
             virtual json asJson() const override;
 
