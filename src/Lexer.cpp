@@ -288,6 +288,7 @@ namespace cc
 
     Token* Lexer::nextToken()
     {
+        // preprocess
         ignoreComments();
         _curTokenPos = _file->getPosition();
         if(ignoreSpaces()) return makeSpaceToken();
