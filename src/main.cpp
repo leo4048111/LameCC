@@ -8,8 +8,10 @@ std::string g_in_path;
 std::string g_out_path;
 std::string g_dump_token_out_path;
 std::string g_dump_ast_out_path;
+std::string g_lr1_grammar_path = "D:\\Projects\\CPP\\Homework\\LameCC\\tests\\production.json";
 bool g_shouldDumpTokens = false;
 bool g_shouldDumpAST = false;
+bool g_shouldUseLR1Parser = false;
 
 static bool parseOpt(int argc, char** argv)
 {
@@ -43,6 +45,11 @@ static bool parseOpt(int argc, char** argv)
     auto& A = parser["dump-ast"]
         .abbreviation('A')
         .description("Dump AST Nodes in json format")
+        .type(po::string)
+        .single();
+
+    auto& LR1 = parser["LR1"]
+        .description("Specify grammar with a json file and use LR(1) parser")
         .type(po::string)
         .single();
 
@@ -94,6 +101,11 @@ static bool parseOpt(int argc, char** argv)
         }
     }
 
+    if(LR1.was_set())
+    {
+        g_shouldUseLR1Parser = true;
+    }
+
     return true;
 }
 
@@ -109,7 +121,13 @@ int main(int argc, char** argv)
 
     auto tokens = cc::Lexer::getInstance()->run(file);
     
-    auto astRoot = cc::Parser::getInstance()->run(tokens);
+    std::unique_ptr<cc::AST::Decl> astRoot = nullptr;
+    if(g_shouldUseLR1Parser)
+        astRoot = cc::LR1Parser::getInstance()->run(tokens, g_lr1_grammar_path);
+    else
+        astRoot = cc::Parser::getInstance()->run(tokens);
+
+    if(astRoot == nullptr) WARNING("Parsed empty AST");
 
     if(g_shouldDumpTokens)
     {
@@ -117,7 +135,7 @@ int main(int argc, char** argv)
         INFO("Tokens have been dumped to " << g_dump_token_out_path);
     }
 
-    if(g_shouldDumpAST)
+    if(g_shouldDumpAST && astRoot)
     {
         cc::dumpJson(astRoot->asJson(), g_dump_ast_out_path);
         INFO("AST has been dumped to " << g_dump_ast_out_path);

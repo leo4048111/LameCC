@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <set>
 
 #include <json.hpp>
 
@@ -629,6 +630,89 @@ namespace cc
         std::vector<Token*> _tokens;
         int _curTokenIdx{ 0 };
         Token* _pCurToken{ nullptr };
+    };
+
+    // LR1 Parser class
+    class LR1Parser
+    {
+    enum class SymbolType
+    {
+        Terminal = 0,
+        NonTerminal
+    };
+
+    class Symbol
+    {
+    public: 
+        virtual SymbolType type() const = 0;
+        virtual std::string name() const = 0;
+    };
+
+    class Terminal : public Symbol
+    {
+    private:
+        std::string _name;
+    public:
+        virtual SymbolType type() const override { return SymbolType::Terminal; };
+        virtual std::string name() const override { return _name; };
+        Terminal(const std::string& name) : _name(name) {};
+    };
+
+    class NonTerminal : public Symbol
+    {
+    private:
+        std::string _name;
+    public:
+        virtual SymbolType type() const override { return SymbolType::NonTerminal; };
+        virtual std::string name() const override { return _name; };
+        NonTerminal(const std::string& name) : _name(name) {};
+    };
+
+    // production is an expression which looks like this: lhs -> rhs[0] rhs[1] ... rhs[n]
+    typedef struct 
+    {
+        std::shared_ptr<NonTerminal> lhs;
+        std::vector<std::shared_ptr<Symbol>> rhs;
+    }Production;
+    
+    private:
+        LR1Parser() = default;
+        LR1Parser(const LR1Parser&) = delete;
+        LR1Parser& operator=(const LR1Parser&) = delete;
+
+    public:    
+        static LR1Parser* getInstance() {
+            if(_inst.get() == nullptr) _inst.reset(new LR1Parser);
+
+            return _inst.get();
+        }
+
+    private:
+        static std::unique_ptr<LR1Parser> _inst;
+
+    public:
+        std::unique_ptr<AST::Decl> run(const std::vector<Token*>& tokens, const std::string& productionFilePath);
+
+    private:
+        void parseProductionsFromJson(const std::string& productionFilePath);
+
+        void findFirstSetForSymbols();
+
+        // some helpers
+        bool isTerminal(const std::shared_ptr<Symbol>& symbol) const {
+            return symbol->type() == SymbolType::Terminal;
+        }
+
+        bool isNonTerminal(const std::shared_ptr<Symbol>& symbol) const {
+            return symbol->type() == SymbolType::NonTerminal;
+        }
+
+    private:
+        std::set<std::shared_ptr<Terminal>> _terminals;
+        std::set<std::shared_ptr<NonTerminal>> _nonTerminals;
+        std::vector<Production> _productions;
+        std::map<std::string, std::set<std::string>> _first; // FIRST
+        std::map<std::string, std::set<std::string>> _follow; // FOLLOW
     };
 
     // utils
