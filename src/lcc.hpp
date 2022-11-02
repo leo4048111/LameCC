@@ -707,12 +707,33 @@ namespace cc
             return symbol->type() == SymbolType::NonTerminal;
         }
 
+        bool isEpsilon(const std::shared_ptr<Symbol>& symbol) {
+            return symbol->name() == "$";
+        }
+
+        bool doSafeInsert(std::set<std::shared_ptr<Symbol>>& first, std::shared_ptr<Symbol> symbol) {
+            bool isDuplicated = false;
+            for(auto& s : first)
+            {
+                if(s->name() == symbol->name()) {
+                    isDuplicated = true;
+                    break;
+                }
+            }
+            if(!isDuplicated) {
+                first.insert(symbol);
+                return true;
+            } 
+
+            return false;
+        }
+
     private:
         std::set<std::shared_ptr<Terminal>> _terminals;
         std::set<std::shared_ptr<NonTerminal>> _nonTerminals;
         std::vector<Production> _productions;
-        std::map<std::string, std::set<std::string>> _first; // FIRST
-        std::map<std::string, std::set<std::string>> _follow; // FOLLOW
+        std::map<std::string, std::set<std::shared_ptr<Symbol>>> _first; // FIRST
+        std::map<std::string, std::set<std::shared_ptr<Symbol>>> _follow; // FOLLOW
     };
 
     // utils
