@@ -74,19 +74,23 @@ namespace cc
         bool shouldBail = true;
         do
         {
+            shouldBail = true;
             // traverse every production, check whether first symbol is a terminal
             for(auto& production : _productions)
             {
                 std::set<std::shared_ptr<Symbol>>& curLhsFirst = _first[production.lhs->name()];
                 // if the first symbol is a terminal, add to FIRST(lhs)
-                if(isTerminal(production.rhs[0]) && !isEpsilon(production.rhs[0])) 
-                    shouldBail = !doSafeInsert(curLhsFirst, production.rhs[0]);
+                if(isTerminal(production.rhs[0]) || isEpsilon(production.rhs[0])) 
+                {
+                    if(doSafeInsert(curLhsFirst, production.rhs[0])) shouldBail = false;
+                }
                 else // if current symbol is a nonTerminal, and it produces epsilon, then add its FIRST set to FIRST(lhs)
                 {
                     int curRhsIdx = 0;
-                    bool shouldTraverseNext = false;
+                    bool shouldTraverseNext = true;
                     while(shouldTraverseNext && curRhsIdx < production.rhs.size())
                     {
+                        shouldTraverseNext = false;
                         std::shared_ptr<Symbol> curRhs = production.rhs[curRhsIdx];
                         std::set<std::shared_ptr<Symbol>>& curRhsFirst = _first[curRhs->name()];
 
@@ -97,16 +101,15 @@ namespace cc
                                 curRhsIdx++;
                             }
                             else {
-                                shouldBail = !doSafeInsert(curLhsFirst, symbol);
+                                if(doSafeInsert(curLhsFirst, symbol)) shouldBail = false;
                             }
                         }
                     }
                 }
             }
-        } while (!shouldBail);
+        } while (!shouldBail); // Need fix later! 
 
-//#ifdef _DEBUG
-        // TODO: DEBUG Print
+
         for(auto& symbol : _terminals)
         {
             std::cout << symbol->name() << ": ";
@@ -122,6 +125,5 @@ namespace cc
             for(auto & s : first) std::cout << s->name() << " ";
             std::cout << std::endl;
         }
-//#endif
     }
 }
