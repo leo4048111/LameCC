@@ -674,6 +674,22 @@ namespace cc
         std::shared_ptr<NonTerminal> lhs;
         std::vector<std::shared_ptr<Symbol>> rhs;
     }Production;
+
+    // LR(1) item
+    typedef struct 
+    {
+        Production production;
+        int dotPos;
+        std::shared_ptr<Terminal> lookahead;
+    }LR1Item;
+
+    // canonical collection of LR(1) items
+    typedef struct 
+    {
+        int id;
+        std::vector<LR1Item> items;
+        std::map<std::string, int> transitions;
+    }CanonicalCollection;
     
     private:
         LR1Parser() = default;
@@ -697,6 +713,8 @@ namespace cc
         void parseProductionsFromJson(const std::string& productionFilePath);
 
         void findFirstSetForSymbols();
+
+        void constructDFAAndLR1ItemSets();
 
         // some helpers
         bool isTerminal(const std::shared_ptr<Symbol>& symbol) const {
@@ -731,7 +749,7 @@ namespace cc
     private:
         std::set<std::shared_ptr<Terminal>> _terminals;
         std::set<std::shared_ptr<NonTerminal>> _nonTerminals;
-        std::vector<Production> _productions;
+        std::map<std::string, std::vector<Production>> _productions;
         std::map<std::string, std::set<std::shared_ptr<Symbol>>> _first; // FIRST
         std::map<std::string, std::set<std::shared_ptr<Symbol>>> _follow; // FOLLOW
     };

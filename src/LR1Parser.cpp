@@ -57,7 +57,7 @@ namespace cc
                     }
             }
 
-            _productions.push_back(p);
+            _productions[p.lhs->name()].push_back(p);
         }
     }
 
@@ -65,43 +65,42 @@ namespace cc
     {
         // for all terminals, their first sets are themselves
         for(auto& symbol : _terminals)
-        {
-            std::set<std::shared_ptr<Symbol>> tf;
-            tf.insert(symbol);
-            _first.insert(std::make_pair(symbol->name(), tf));
-        }
+            _first[symbol->name()].insert(symbol);
 
         bool shouldBail = true;
         do
         {
             shouldBail = true;
             // traverse every production, check whether first symbol is a terminal
-            for(auto& production : _productions)
+            for(auto& pair : _productions)
             {
-                std::set<std::shared_ptr<Symbol>>& curLhsFirst = _first[production.lhs->name()];
-                // if the first symbol is a terminal, add to FIRST(lhs)
-                if(isTerminal(production.rhs[0]) || isEpsilon(production.rhs[0])) 
+                for(auto& production : pair.second)
                 {
-                    if(doSafeInsert(curLhsFirst, production.rhs[0])) shouldBail = false;
-                }
-                else // if current symbol is a nonTerminal, and it produces epsilon, then add its FIRST set to FIRST(lhs)
-                {
-                    int curRhsIdx = 0;
-                    bool shouldTraverseNext = true;
-                    while(shouldTraverseNext && curRhsIdx < production.rhs.size())
+                    std::set<std::shared_ptr<Symbol>>& curLhsFirst = _first[production.lhs->name()];
+                    // if the first symbol is a terminal, add to FIRST(lhs)
+                    if(isTerminal(production.rhs[0]) || isEpsilon(production.rhs[0])) 
                     {
-                        shouldTraverseNext = false;
-                        std::shared_ptr<Symbol> curRhs = production.rhs[curRhsIdx];
-                        std::set<std::shared_ptr<Symbol>>& curRhsFirst = _first[curRhs->name()];
-
-                        for(auto& symbol : curRhsFirst)
+                        if(doSafeInsert(curLhsFirst, production.rhs[0])) shouldBail = false;
+                    }
+                    else // if current symbol is a nonTerminal, and it produces epsilon, then add its FIRST set to FIRST(lhs)
+                    {
+                        int curRhsIdx = 0;
+                        bool shouldTraverseNext = true;
+                        while(shouldTraverseNext && curRhsIdx < production.rhs.size())
                         {
-                            if(isEpsilon(symbol)) { // epsilon shouldn't be added to FIRST(lhs)
-                                shouldTraverseNext = true;
-                                curRhsIdx++;
-                            }
-                            else {
-                                if(doSafeInsert(curLhsFirst, symbol)) shouldBail = false;
+                            shouldTraverseNext = false;
+                            std::shared_ptr<Symbol> curRhs = production.rhs[curRhsIdx];
+                            std::set<std::shared_ptr<Symbol>>& curRhsFirst = _first[curRhs->name()];
+
+                            for(auto& symbol : curRhsFirst)
+                            {
+                                if(isEpsilon(symbol)) { // epsilon shouldn't be added to FIRST(lhs)
+                                    shouldTraverseNext = true;
+                                    curRhsIdx++;
+                                }
+                                else {
+                                    if(doSafeInsert(curLhsFirst, symbol)) shouldBail = false;
+                                }
                             }
                         }
                     }
@@ -125,5 +124,10 @@ namespace cc
             for(auto & s : first) std::cout << s->name() << " ";
             std::cout << std::endl;
         }
+    }
+
+    void LR1Parser::constructDFAAndLR1ItemSets()
+    {
+
     }
 }
