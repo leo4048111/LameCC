@@ -688,7 +688,7 @@ namespace cc
 
             return *lhs < *rhs;
         };
-    }SharedPtrComp;
+    }SharedPtrComp; // this is implemented so as to do pointer comparisons
     
     // production is an expression which looks like this: lhs -> rhs[0] rhs[1] ... rhs[n]
     typedef struct _Production

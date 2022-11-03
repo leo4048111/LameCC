@@ -196,14 +196,14 @@ namespace cc
 
     void LR1Parser::printItemSet(LR1ItemSet& itemSet)
     {
-        printf("------------------------I%d------------------------\n", itemSet.id);
+        printf("------------------------I%d---------------------------------------------\n", itemSet.id);
         for(auto& item : itemSet.items)
         {
             printProduction(item.production, true, item.dotPos);
             printf("    %s", item.lookahead->name().c_str());
             printf("\n");
         }
-        printf("---------------------------------------------------\n");
+        printf("------------------------------------------------------------------------\n");
     }
 
     void LR1Parser::printProduction(const Production& production, bool shouldAddDot, int dotPos)
