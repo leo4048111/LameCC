@@ -114,21 +114,21 @@ namespace cc
         } while (!shouldBail);
 
 
-        for(auto& symbol : _terminals)
-        {
-            std::cout << symbol->name() << ": ";
-            auto& first = _first[symbol->name()];
-            for(auto & s : first) std::cout << s->name() << " ";
-            std::cout << std::endl;
-        }
+        // for(auto& symbol : _terminals)
+        // {
+        //     std::cout << symbol->name() << ": ";
+        //     auto& first = _first[symbol->name()];
+        //     for(auto & s : first) std::cout << s->name() << " ";
+        //     std::cout << std::endl;
+        // }
 
-        for(auto& symbol : _nonTerminals)
-        {
-            std::cout << symbol->name() << ": ";
-            auto& first = _first[symbol->name()];
-            for(auto & s : first) std::cout << s->name() << " ";
-            std::cout << std::endl;
-        }
+        // for(auto& symbol : _nonTerminals)
+        // {
+        //     std::cout << symbol->name() << ": ";
+        //     auto& first = _first[symbol->name()];
+        //     for(auto & s : first) std::cout << s->name() << " ";
+        //     std::cout << std::endl;
+        // }
     }
 
     void LR1Parser::constructCanonicalCollections()
