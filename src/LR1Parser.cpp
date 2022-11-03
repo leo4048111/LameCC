@@ -126,7 +126,7 @@ namespace cc
         }
     }
 
-    void LR1Parser::constructDFAAndLR1ItemSets()
+    void LR1Parser::constructCanonicalCollections()
     {
 
     }

@@ -714,7 +714,7 @@ namespace cc
 
         void findFirstSetForSymbols();
 
-        void constructDFAAndLR1ItemSets();
+        void constructCanonicalCollections();
 
         // some helpers
         bool isTerminal(const std::shared_ptr<Symbol>& symbol) const {
