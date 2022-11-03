@@ -646,6 +646,17 @@ namespace cc
     public: 
         virtual SymbolType type() const = 0;
         virtual std::string name() const = 0;
+        bool operator==(const Symbol& symbol) const{
+            return (this->type() == symbol.type()) && (this->name() == symbol.name());
+        }
+
+        bool operator<(const Symbol& symbol) const{
+            if(*this == symbol) return false;
+
+            if(this->type() != symbol.type()) return this->type() < symbol.type();
+
+            return this->name() < symbol.name();
+        }
     };
 
     class Terminal : public Symbol
@@ -671,12 +682,13 @@ namespace cc
     typedef struct
     {
         template<typename T>
-        bool operator()(std::shared_ptr<T> lhs, std::shared_ptr<T> rhs) const
+        bool operator()(const std::shared_ptr<T>& lhs, const std::shared_ptr<T>& rhs) const
         {
-            static_assert(std::is_same<Symbol, T>::value || std::is_same<Terminal, T>::value || std::is_same<NonTerminal, T>::value);
-            return !(lhs->name() == rhs->name()); 
+            if(*lhs == *rhs) return false; 
+
+            return *lhs < *rhs;
         };
-    }SymbolComp;
+    }SharedPtrComp;
     
     // production is an expression which looks like this: lhs -> rhs[0] rhs[1] ... rhs[n]
     typedef struct _Production
@@ -690,22 +702,78 @@ namespace cc
             }
             return *this;
         }
+
+        bool operator==(const _Production& p) const {
+            if(!(*lhs == *p.lhs)) return false;
+            if(rhs.size() != p.rhs.size()) return false;
+            for(int i = 0; i < rhs.size(); i++)
+                if(!(*rhs[i] == *p.rhs[i])) return false;
+
+            return true;
+        }
+
+        bool operator<(const _Production& p) const {
+            if(*this == p) return false;
+            if(!(*lhs == *p.lhs)) return *lhs < *p.lhs;
+            if(rhs.size() != p.rhs.size()) return rhs.size() < p.rhs.size();
+            for(int i = 0; i < rhs.size(); i++)
+                if(!(*rhs[i] == *p.rhs[i])) return *rhs[i] < *p.rhs[i];
+            
+            return false;
+        }
     }Production;
 
     // LR(1) item
-    typedef struct 
+    typedef struct _LR1Item
     {
         Production production;
         int dotPos;
-        std::shared_ptr<Terminal> lookahead;
+        std::shared_ptr<Symbol> lookahead;
+
+        bool operator==(const _LR1Item& item) const
+        {
+            return (production == item.production) && (dotPos == item.dotPos) && (*lookahead == *item.lookahead);
+        }
+
+        bool operator <(const _LR1Item& item) const
+        {
+            if(*this == item) return false;
+
+            if(!(production == item.production)) return production < item.production;
+            if(!(dotPos == item.dotPos)) return dotPos < item.dotPos;
+            
+            return *lookahead < *item.lookahead;
+        }
     }LR1Item;
 
     // LR(1) item set
-    typedef struct
+    typedef struct _LR1ItemSet
     {
         int id;
-        std::vector<LR1Item> items;
+        std::set<LR1Item> items;
         std::map<std::string, int> transitions;
+        bool operator==(const _LR1ItemSet& itemSet) const
+        {
+            if(items.size() != itemSet.items.size()) return false;
+            for(auto i = items.begin(), j = itemSet.items.begin(); i != items.end() && j != itemSet.items.end();i++, j++)
+            {
+                if(!(*i == *j)) return false;
+            }
+
+            return true;
+        }
+
+        bool operator <(const _LR1ItemSet& itemSet) const
+        {
+            if(*this == itemSet) return false;
+            if(this->items.size() != itemSet.items.size()) return this->items.size() < itemSet.items.size();
+            for(auto i = items.begin(), j = itemSet.items.begin(); i != items.end() && j != itemSet.items.end();i++, j++)
+            {
+                if(!(*i == *j)) return *i < *j;
+            }
+
+            return false;
+        }
     }LR1ItemSet;
     
     private:
@@ -756,14 +824,16 @@ namespace cc
             return lastSize != s.size();
         }
 
+        void printItemSet(LR1ItemSet& itemSet);
+        void printProduction(const Production& production, bool shouldAddDot = false, int dotPos = 0);
+
     private:
         std::shared_ptr<Terminal> _endSymbol;
-        std::set<std::shared_ptr<Terminal>, SymbolComp> _terminals;
-        std::set<std::shared_ptr<NonTerminal>, SymbolComp> _nonTerminals;
+        std::set<std::shared_ptr<Terminal>, SharedPtrComp> _terminals;
+        std::set<std::shared_ptr<NonTerminal>, SharedPtrComp> _nonTerminals;
         std::map<std::string, std::vector<Production>> _productions;
-        std::map<std::string, std::set<std::shared_ptr<Symbol>, SymbolComp>> _first; // FIRST
-        std::map<std::string, std::set<std::shared_ptr<Symbol>, SymbolComp>> _follow; // FOLLOW
-        std::vector<LR1ItemSet> _canonicalCollections;
+        std::map<std::string, std::set<std::shared_ptr<Symbol>, SharedPtrComp>> _first; // FIRST
+        std::set<LR1ItemSet> _canonicalCollections;
     };
 
     // utils

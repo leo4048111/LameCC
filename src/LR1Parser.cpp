@@ -137,9 +137,12 @@ namespace cc
 
         LR1ItemSet I0;
         I0.id = 0;
-        I0.items.push_back(firstItem);
+        I0.items.insert(firstItem);
+        I0.items.insert(firstItem);
 
         closure(I0); // calculate CLOSURE(I0)
+
+        printItemSet(I0);
     }
 
     void LR1Parser::closure(LR1ItemSet& itemSet)
@@ -152,10 +155,65 @@ namespace cc
             {
                 if(item.dotPos < item.production.rhs.size()) // if current LR1Item is a shift item
                 {
-
+                    auto B = item.production.rhs[item.dotPos];
+                    if(isNonTerminal(B)) // A -> a.Bb
+                    {
+                        std::set<std::shared_ptr<Symbol>, SharedPtrComp> followB;
+                        int idx = item.dotPos + 1;
+                        bool canNextSymbolProduceEpsilon = false;
+                        do // find FOLLOW(B) with current production
+                        {
+                            canNextSymbolProduceEpsilon = false;
+                            if(idx >= item.production.rhs.size()) followB.insert(item.lookahead); // No symbols after B
+                            else {
+                                auto& nextSymbol = item.production.rhs[idx];
+                                if(isTerminal(nextSymbol) || isEpsilon(nextSymbol)) followB.insert(nextSymbol); // Next symbol is terminal
+                                else // Next symbol is NonTerminal
+                                {
+                                    for(auto& symbol : _first[nextSymbol->name()])
+                                    {
+                                        if(isEpsilon(symbol)) canNextSymbolProduceEpsilon = true; // next symbol can produce epsilon
+                                        else followB.insert(symbol);
+                                    }
+                                }
+                            }
+                            idx++;
+                        } while (canNextSymbolProduceEpsilon);
+                        
+                        for(auto& production : _productions[B->name()]) // for every production whose lhs is B, eg. B -> ...
+                        {
+                            for(auto& lookAheadSymbol : followB)
+                            {
+                                LR1Item newItem = {production, 0, lookAheadSymbol};
+                                if(doInsert(itemSet.items, newItem)) shouldBail = false;
+                            }
+                        }
+                    }
                 }
             }
         } while (!shouldBail);
-        
+    }
+
+    void LR1Parser::printItemSet(LR1ItemSet& itemSet)
+    {
+        printf("------------------------I%d------------------------\n", itemSet.id);
+        for(auto& item : itemSet.items)
+        {
+            printProduction(item.production, true, item.dotPos);
+            printf("    %s", item.lookahead->name().c_str());
+            printf("\n");
+        }
+        printf("---------------------------------------------------\n");
+    }
+
+    void LR1Parser::printProduction(const Production& production, bool shouldAddDot, int dotPos)
+    {
+        printf("%s ->", production.lhs->name().c_str());
+        for(auto& symbol : production.rhs)
+        {
+            if(shouldAddDot && (dotPos == 0)) printf(" .");
+            printf(" %s", symbol->name().c_str());
+            dotPos--;
+        }
     }
 }
