@@ -8,7 +8,7 @@ std::string g_in_path;
 std::string g_out_path;
 std::string g_dump_token_out_path;
 std::string g_dump_ast_out_path;
-std::string g_lr1_grammar_path = "D:\\Projects\\CPP\\Homework\\LameCC\\tests\\production.json";
+std::string g_lr1_grammar_path = "D:\\Projects\\CPP\\Homework\\LameCC\\tests\\production4.json";
 bool g_shouldDumpTokens = false;
 bool g_shouldDumpAST = false;
 bool g_shouldUseLR1Parser = false;

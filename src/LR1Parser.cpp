@@ -141,8 +141,43 @@ namespace cc
         I0.items.insert(firstItem);
 
         closure(I0); // calculate CLOSURE(I0)
+        _canonicalCollections.insert(I0); // add to canonical collections 
 
-        printItemSet(I0);
+        std::queue<LR1ItemSet> qSets;
+        qSets.push(I0);
+        while(!qSets.empty())
+        {
+            auto In = qSets.front();
+            qSets.pop();
+            std::map<std::string, bool> isVisited;
+            for(auto& item : In.items)
+            {
+                if(item.dotPos < item.production.rhs.size()) // if there is a symbol after dot
+                {
+                    auto symbol = item.production.rhs[item.dotPos];
+                    if(isVisited[symbol->name()]) continue;
+                    else isVisited[symbol->name()] = true;
+                    auto newItemSet = go(In, symbol);
+                    newItemSet.id = _canonicalCollections.size();
+                    if(!doInsert(_canonicalCollections, newItemSet)) // if this new item set already exists
+                    {
+                        for(auto i = _canonicalCollections.begin(); i != _canonicalCollections.end(); i++)
+                        {
+                            if(*i == newItemSet) {
+                                newItemSet.id = (*i).id;
+                                break;
+                            }
+                        }
+                    }
+                    else qSets.push(newItemSet);
+
+                    In.transitions.insert(std::make_pair(symbol->name(), newItemSet.id));
+                }
+            }
+        }
+
+        for(auto In : _canonicalCollections)
+            printItemSet(In);
     }
 
     void LR1Parser::closure(LR1ItemSet& itemSet)
@@ -194,6 +229,27 @@ namespace cc
         } while (!shouldBail);
     }
 
+    LR1Parser::LR1ItemSet LR1Parser::go(LR1ItemSet& itemSet, std::shared_ptr<Symbol> symbol)
+    {
+        LR1ItemSet newItemSet;
+        for(auto& item : itemSet.items)
+        {
+            if(item.dotPos < item.production.rhs.size()) // if there is a symbol after dot
+            {
+                auto s = item.production.rhs[item.dotPos];
+                if(s->name() == symbol->name())
+                {
+                    LR1Item newItem = item;
+                    newItem.dotPos++;
+                    newItemSet.items.insert(newItem);
+                }
+            }
+        }
+
+        closure(newItemSet); // Calculate CLOSURE(In) before go returns
+        return newItemSet;
+    } 
+
     void LR1Parser::printItemSet(LR1ItemSet& itemSet)
     {
         printf("------------------------I%d---------------------------------------------\n", itemSet.id);
@@ -215,5 +271,6 @@ namespace cc
             printf(" %s", symbol->name().c_str());
             dotPos--;
         }
+        if(shouldAddDot && (dotPos == 0)) printf(" .");
     }
 }

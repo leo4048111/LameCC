@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <set>
+#include <queue>
 
 #include <json.hpp>
 
@@ -803,6 +804,8 @@ namespace cc
 
         void closure(LR1ItemSet& itemSet);
 
+        LR1ItemSet go(LR1ItemSet& itemSet, std::shared_ptr<Symbol> symbol);
+
         // some helpers
         bool isTerminal(const std::shared_ptr<Symbol>& symbol) const {
             return symbol->type() == SymbolType::Terminal;
@@ -836,7 +839,7 @@ namespace cc
         std::set<LR1ItemSet> _canonicalCollections;
     };
 
-    // utils
+    // some util funcs
     bool isSpace(const char c);
     json jsonifyTokens(const std::vector<Token*>& tokens);
     void freeToken(Token*& token);
