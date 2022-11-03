@@ -668,11 +668,28 @@ namespace cc
         NonTerminal(const std::string& name) : _name(name) {};
     };
 
+    typedef struct
+    {
+        template<typename T>
+        bool operator()(std::shared_ptr<T> lhs, std::shared_ptr<T> rhs) const
+        {
+            static_assert(std::is_same<Symbol, T>::value || std::is_same<Terminal, T>::value || std::is_same<NonTerminal, T>::value);
+            return !(lhs->name() == rhs->name()); 
+        };
+    }SymbolComp;
+    
     // production is an expression which looks like this: lhs -> rhs[0] rhs[1] ... rhs[n]
-    typedef struct 
+    typedef struct _Production
     {
         std::shared_ptr<NonTerminal> lhs;
         std::vector<std::shared_ptr<Symbol>> rhs;
+        _Production& operator=(const _Production& p) {
+            if(this != &p) {
+                this->lhs = p.lhs;
+                this->rhs = p.rhs;
+            }
+            return *this;
+        }
     }Production;
 
     // LR(1) item
@@ -683,13 +700,13 @@ namespace cc
         std::shared_ptr<Terminal> lookahead;
     }LR1Item;
 
-    // canonical collection of LR(1) items
-    typedef struct 
+    // LR(1) item set
+    typedef struct
     {
         int id;
         std::vector<LR1Item> items;
         std::map<std::string, int> transitions;
-    }CanonicalCollection;
+    }LR1ItemSet;
     
     private:
         LR1Parser() = default;
@@ -716,6 +733,8 @@ namespace cc
 
         void constructCanonicalCollections();
 
+        void closure(LR1ItemSet& itemSet);
+
         // some helpers
         bool isTerminal(const std::shared_ptr<Symbol>& symbol) const {
             return symbol->type() == SymbolType::Terminal;
@@ -729,29 +748,22 @@ namespace cc
             return symbol->name() == "$";
         }
 
-        bool doSafeInsert(std::set<std::shared_ptr<Symbol>>& first, std::shared_ptr<Symbol> symbol) {
-            bool isDuplicated = false;
-            for(auto& s : first)
-            {
-                if(s->name() == symbol->name()) {
-                    isDuplicated = true;
-                    break;
-                }
-            }
-            if(!isDuplicated) {
-                first.insert(symbol);
-                return true;
-            } 
-
-            return false;
+        template<typename T, typename _Pr=std::less<T>>
+        bool doInsert(std::set<T, _Pr>& s, T elem) // if insertion is successful return true
+        {
+            auto lastSize = s.size();
+            s.insert(elem);
+            return lastSize != s.size();
         }
 
     private:
-        std::set<std::shared_ptr<Terminal>> _terminals;
-        std::set<std::shared_ptr<NonTerminal>> _nonTerminals;
+        std::shared_ptr<Terminal> _endSymbol;
+        std::set<std::shared_ptr<Terminal>, SymbolComp> _terminals;
+        std::set<std::shared_ptr<NonTerminal>, SymbolComp> _nonTerminals;
         std::map<std::string, std::vector<Production>> _productions;
-        std::map<std::string, std::set<std::shared_ptr<Symbol>>> _first; // FIRST
-        std::map<std::string, std::set<std::shared_ptr<Symbol>>> _follow; // FOLLOW
+        std::map<std::string, std::set<std::shared_ptr<Symbol>, SymbolComp>> _first; // FIRST
+        std::map<std::string, std::set<std::shared_ptr<Symbol>, SymbolComp>> _follow; // FOLLOW
+        std::vector<LR1ItemSet> _canonicalCollections;
     };
 
     // utils

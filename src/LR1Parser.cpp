@@ -8,6 +8,7 @@ namespace cc
     {
         parseProductionsFromJson(productionFilePath);
         findFirstSetForSymbols();
+        constructCanonicalCollections();
 
         // TODO
         return nullptr;
@@ -21,6 +22,8 @@ namespace cc
         
         for(auto& symbol : j["NonTerminals"]) _nonTerminals.insert(std::make_shared<NonTerminal>(symbol.get<std::string>()));
         for(auto& symbol : j["Terminals"]) _terminals.insert(std::make_shared<Terminal>(symbol.get<std::string>()));
+
+        _endSymbol = std::make_shared<Terminal>("#");
 
         for(auto& production : j["Productions"])
         {
@@ -67,6 +70,8 @@ namespace cc
         for(auto& symbol : _terminals)
             _first[symbol->name()].insert(symbol);
 
+        _first[_endSymbol->name()].insert(_endSymbol);
+
         bool shouldBail = true;
         do
         {
@@ -76,11 +81,11 @@ namespace cc
             {
                 for(auto& production : pair.second)
                 {
-                    std::set<std::shared_ptr<Symbol>>& curLhsFirst = _first[production.lhs->name()];
+                    auto& curLhsFirst = _first[production.lhs->name()];
                     // if the first symbol is a terminal, add to FIRST(lhs)
                     if(isTerminal(production.rhs[0]) || isEpsilon(production.rhs[0])) 
                     {
-                        if(doSafeInsert(curLhsFirst, production.rhs[0])) shouldBail = false;
+                        if(doInsert(curLhsFirst, production.rhs[0])) shouldBail = false;
                     }
                     else // if current symbol is a nonTerminal, and it produces epsilon, then add its FIRST set to FIRST(lhs)
                     {
@@ -90,7 +95,7 @@ namespace cc
                         {
                             shouldTraverseNext = false;
                             std::shared_ptr<Symbol> curRhs = production.rhs[curRhsIdx];
-                            std::set<std::shared_ptr<Symbol>>& curRhsFirst = _first[curRhs->name()];
+                            auto& curRhsFirst = _first[curRhs->name()];
 
                             for(auto& symbol : curRhsFirst)
                             {
@@ -99,20 +104,20 @@ namespace cc
                                     curRhsIdx++;
                                 }
                                 else {
-                                    if(doSafeInsert(curLhsFirst, symbol)) shouldBail = false;
+                                    if(doInsert(curLhsFirst, symbol)) shouldBail = false;
                                 }
                             }
                         }
                     }
                 }
             }
-        } while (!shouldBail); // Need fix later! 
+        } while (!shouldBail);
 
 
         for(auto& symbol : _terminals)
         {
             std::cout << symbol->name() << ": ";
-            std::set<std::shared_ptr<Symbol>> first = _first[symbol->name()];
+            auto& first = _first[symbol->name()];
             for(auto & s : first) std::cout << s->name() << " ";
             std::cout << std::endl;
         }
@@ -120,7 +125,7 @@ namespace cc
         for(auto& symbol : _nonTerminals)
         {
             std::cout << symbol->name() << ": ";
-            std::set<std::shared_ptr<Symbol>> first = _first[symbol->name()];
+            auto& first = _first[symbol->name()];
             for(auto & s : first) std::cout << s->name() << " ";
             std::cout << std::endl;
         }
@@ -128,6 +133,29 @@ namespace cc
 
     void LR1Parser::constructCanonicalCollections()
     {
+        LR1Item firstItem = {_productions["S'"][0], 0, _endSymbol}; // S' -> .S
 
+        LR1ItemSet I0;
+        I0.id = 0;
+        I0.items.push_back(firstItem);
+
+        closure(I0); // calculate CLOSURE(I0)
+    }
+
+    void LR1Parser::closure(LR1ItemSet& itemSet)
+    {
+        bool shouldBail = true;
+        do
+        {
+            shouldBail = true;
+            for(auto& item : itemSet.items)
+            {
+                if(item.dotPos < item.production.rhs.size()) // if current LR1Item is a shift item
+                {
+
+                }
+            }
+        } while (!shouldBail);
+        
     }
 }
