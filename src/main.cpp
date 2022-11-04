@@ -8,7 +8,7 @@ std::string g_in_path;
 std::string g_out_path;
 std::string g_dump_token_out_path;
 std::string g_dump_ast_out_path;
-std::string g_lr1_grammar_path = "D:\\Projects\\CPP\\Homework\\LameCC\\tests\\production4.json";
+std::string g_lr1_grammar_path;
 bool g_shouldDumpTokens = false;
 bool g_shouldDumpAST = false;
 bool g_shouldUseLR1Parser = false;
@@ -104,6 +104,12 @@ static bool parseOpt(int argc, char** argv)
     if(LR1.was_set())
     {
         g_shouldUseLR1Parser = true;
+        g_lr1_grammar_path = LR1.get().string;
+        if(g_lr1_grammar_path.empty())
+        {
+            FATAL_ERROR("No LR1 grammar file specified");
+            return false;
+        }
     }
 
     return true;

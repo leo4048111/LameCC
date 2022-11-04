@@ -776,6 +776,22 @@ namespace cc
             return false;
         }
     }LR1ItemSet;
+
+    // ACTION table action definitions
+    enum class ActionType
+    {
+        INVALID = 0,
+        ACC,
+        SHIFT, // s
+        REDUCE // r
+    };
+
+    typedef struct 
+    {
+        ActionType type;
+        int id;
+    }Action;
+    
     
     private:
         LR1Parser() = default;
@@ -802,6 +818,8 @@ namespace cc
 
         void constructCanonicalCollections();
 
+        void constructLR1ParseTable();
+
         void closure(LR1ItemSet& itemSet);
 
         LR1ItemSet go(LR1ItemSet& itemSet, std::shared_ptr<Symbol> symbol);
@@ -827,16 +845,22 @@ namespace cc
             return lastSize != s.size();
         }
 
-        void printItemSet(LR1ItemSet& itemSet);
-        void printProduction(const Production& production, bool shouldAddDot = false, int dotPos = 0);
+        void printItemSet(LR1ItemSet& itemSet) const;
+        void printProduction(const Production& production, bool shouldAddDot = false, int dotPos = 0) const;
+        void printActionAndGotoTable() const;
 
     private:
-        std::shared_ptr<Terminal> _endSymbol;
+        std::shared_ptr<Terminal> _endSymbol; // #
+        std::shared_ptr<Terminal> _epsilonSymbol; // $
+        std::shared_ptr<NonTerminal> _extensiveStartSymbol; // S'
         std::set<std::shared_ptr<Terminal>, SharedPtrComp> _terminals;
         std::set<std::shared_ptr<NonTerminal>, SharedPtrComp> _nonTerminals;
         std::map<std::string, std::vector<Production>> _productions;
         std::map<std::string, std::set<std::shared_ptr<Symbol>, SharedPtrComp>> _first; // FIRST
-        std::set<LR1ItemSet> _canonicalCollections;
+        std::vector<LR1ItemSet> _canonicalCollections;
+
+        std::vector<std::map<std::string, Action>> _actionTable; // ACTION
+        std::vector<std::map<std::string, int>> _gotoTable; // GOTO 
     };
 
     // some util funcs
