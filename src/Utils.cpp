@@ -7,14 +7,7 @@ namespace cc
         return (c == ' ' || c == '\t' || c == '\f' || c == '\v');    
     }
 
-    void freeToken(Token*& token)
-    {
-        if(token->pContent != nullptr) free((void*)token->pContent);
-        free(token);
-        token = nullptr;
-    }
-
-    json jsonifyTokens(const std::vector<Token*>& tokens)
+    json jsonifyTokens(const std::vector<std::shared_ptr<Token>>& tokens)
     {
         json arr = json::array();
         for(auto& token : tokens)
@@ -27,7 +20,7 @@ namespace cc
                 case TokenType::TOKEN_IDENTIFIER:
                     j["id"] = token->count;
                     j["type"] = "TOKEN_IDENTIFIER";
-                    j["content"] = token->pContent;
+                    j["content"] = token->content;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
                 case TokenType::TOKEN_EOF:
@@ -43,19 +36,19 @@ namespace cc
                 case TokenType::TOKEN_STRING:
                     j["id"] = token->count;
                     j["type"] = "TOKEN_STRING";
-                    j["content"] = token->pContent;
+                    j["content"] = token->content;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
                 case TokenType::TOKEN_NUMBER:
                     j["id"] = token->count;
                     j["type"] = "TOKEN_NUMBER";
-                    j["content"] = token->pContent;
+                    j["content"] = token->content;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
                 case TokenType::TOKEN_CHAR:
                     j["id"] = token->count;
                     j["type"] = "TOKEN_CHAR";
-                    j["content"] = token->pContent;
+                    j["content"] = token->content;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
                 #define keyword(name, disc) \

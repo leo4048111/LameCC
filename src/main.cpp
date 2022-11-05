@@ -92,7 +92,7 @@ static bool parseOpt(int argc, char** argv)
     if(A.was_set())
     {
         g_shouldDumpAST = true;
-        g_dump_ast_out_path = T.get().string;
+        g_dump_ast_out_path = A.get().string;
 
         if(g_dump_ast_out_path.empty())
         {
@@ -148,5 +148,4 @@ int main(int argc, char** argv)
     }
     
     // cleanup
-    for(auto& token: tokens) cc::freeToken(token);
 }

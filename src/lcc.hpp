@@ -425,34 +425,6 @@ namespace cc
 
 namespace cc
 {
-    // im using this instead of std::string for lexing
-    class CharBuffer
-    {
-    public:
-        CharBuffer();
-        ~CharBuffer();
-
-    public:
-        const char charAt(unsigned int idx);
-        void append(const char c);
-        void pop();
-        void reserve(size_t newSize);
-        const size_t size() const { return _size; };
-        const char* c_str();
-        // note that this method is different from cc::CharBuffer::c_str()
-        // because it allocates memory on heap
-        const char* new_c_str() const;
-        char* begin(){ return &_buffer[0]; };
-        char* end() {return &_buffer[_size - 1];};
-
-        // implement this method here to make things easier
-        bool operator == (const char* s);
-    private:
-        char* _buffer;
-        size_t _size;
-        size_t _capacity;
-    };
-
     // A simple vec2 struct for marking position
     typedef struct _Position
     {
@@ -510,7 +482,8 @@ namespace cc
         File* file;
         Position pos; // token position in file
         unsigned int count;   // token number in a file
-        const char* pContent { nullptr }; // content of this token 
+        std::string content; // content of this token
+
     } Token;
 
     // Lexer class
@@ -531,7 +504,7 @@ namespace cc
             return _inst.get();
         }
 
-        std::vector<Token*> run(File* file);
+        std::vector<std::shared_ptr<Token>> run(File* file);
     
     private:
         static std::unique_ptr<Lexer> _inst;
@@ -541,24 +514,24 @@ namespace cc
         void ignoreComments();
 
         // readers
-        Token* nextToken();
-        Token* readIdentifier(char c);
-        Token* readString();
-        Token* readNumber(char c);
-        Token* readChar();
+        std::shared_ptr<Token> nextToken();
+        std::shared_ptr<Token> readIdentifier(char c);
+        std::shared_ptr<Token> readString();
+        std::shared_ptr<Token> readNumber(char c);
+        std::shared_ptr<Token> readChar();
 
         // token makers
-        Token* makeGeneralToken(const Token& token) const;
-        Token* makeSpaceToken() const;
-        Token* makeEOFToken() const;
-        Token* makeNewlineToken() const;
-        Token* makeInvalidToken() const;
-        Token* makeIdentifierToken(CharBuffer& buffer) const;
-        Token* makeKeywordToken(TokenType keywordType, CharBuffer& buffer) const;
-        Token* makePunctuatorToken(TokenType punctuatorType) const;
-        Token* makeStringToken(CharBuffer& buffer) const;
-        Token* makeNumberToken(CharBuffer& buffer) const;
-        Token* makeCharToken(CharBuffer& buffer);
+        std::shared_ptr<Token> makeGeneralToken(const Token& token) const;
+        std::shared_ptr<Token> makeSpaceToken() const;
+        std::shared_ptr<Token> makeEOFToken() const;
+        std::shared_ptr<Token> makeNewlineToken() const;
+        std::shared_ptr<Token> makeInvalidToken() const;
+        std::shared_ptr<Token> makeIdentifierToken(std::string& buffer) const;
+        std::shared_ptr<Token> makeKeywordToken(TokenType keywordType, std::string& buffer) const;
+        std::shared_ptr<Token> makePunctuatorToken(TokenType punctuatorType) const;
+        std::shared_ptr<Token> makeStringToken(std::string& buffer) const;
+        std::shared_ptr<Token> makeNumberToken(std::string& buffer) const;
+        std::shared_ptr<Token> makeCharToken(std::string& buffer);
 
         // wrapper for file methods
         void nextLine();
@@ -568,14 +541,14 @@ namespace cc
 
         // functional
         bool isNextChar(const char c);
-        Token* forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType);
-        Token* forwardSearch(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType);
+        std::shared_ptr<Token> forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType);
+        std::shared_ptr<Token> forwardSearch(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType);
 
     private:
         File* _file;
         Position _curTokenPos;
         unsigned int _tokenCnt;
-        std::unordered_map<const char*, TokenType> _keywordMap;
+        std::unordered_map<std::string, TokenType> _keywordMap;
     };
 
     // Parser class
@@ -597,7 +570,7 @@ namespace cc
         static std::unique_ptr<Parser> _inst;
 
     public:
-        std::unique_ptr<AST::Decl> run(const std::vector<Token*>& tokens);
+        std::unique_ptr<AST::Decl> run(const std::vector<std::shared_ptr<Token>>& tokens);
 
     private:
         void nextToken();  
@@ -628,9 +601,9 @@ namespace cc
         std::unique_ptr<AST::Expr> nextRHSExpr(std::unique_ptr<AST::Expr> lhs, AST::BinaryOperator::Precedence lastBiOpPrec);
 
     private:
-        std::vector<Token*> _tokens;
+        std::vector<std::shared_ptr<Token>> _tokens;
         int _curTokenIdx{ 0 };
-        Token* _pCurToken{ nullptr };
+        std::shared_ptr<Token> _pCurToken{ nullptr };
     };
 
     // LR1 Parser class
@@ -664,20 +637,22 @@ namespace cc
     {
     private:
         std::string _name;
+        std::shared_ptr<Token> _token;
     public:
         virtual SymbolType type() const override { return SymbolType::Terminal; };
         virtual std::string name() const override { return _name; };
-        Terminal(const std::string& name) : _name(name) {};
+        Terminal(const std::string& name, std::shared_ptr<Token> token = nullptr) : _name(name), _token(token) {};
     };
 
     class NonTerminal : public Symbol
     {
     private:
         std::string _name;
+        std::unique_ptr<AST::ASTNode> _node;
     public:
         virtual SymbolType type() const override { return SymbolType::NonTerminal; };
         virtual std::string name() const override { return _name; };
-        NonTerminal(const std::string& name) : _name(name) {};
+        NonTerminal(const std::string& name, std::unique_ptr<AST::ASTNode> node = nullptr) : _name(name), _node(std::move(node)) {};
     };
 
     typedef struct
@@ -694,10 +669,12 @@ namespace cc
     // production is an expression which looks like this: lhs -> rhs[0] rhs[1] ... rhs[n]
     typedef struct _Production
     {
+        int id;
         std::shared_ptr<NonTerminal> lhs;
         std::vector<std::shared_ptr<Symbol>> rhs;
         _Production& operator=(const _Production& p) {
             if(this != &p) {
+                this->id = p.id;
                 this->lhs = p.lhs;
                 this->rhs = p.rhs;
             }
@@ -705,6 +682,7 @@ namespace cc
         }
 
         bool operator==(const _Production& p) const {
+            if(!(this->id == p.id)) return false;
             if(!(*lhs == *p.lhs)) return false;
             if(rhs.size() != p.rhs.size()) return false;
             for(int i = 0; i < rhs.size(); i++)
@@ -715,6 +693,7 @@ namespace cc
 
         bool operator<(const _Production& p) const {
             if(*this == p) return false;
+            if(!(this->id == p.id)) return this->id < p.id;
             if(!(*lhs == *p.lhs)) return *lhs < *p.lhs;
             if(rhs.size() != p.rhs.size()) return rhs.size() < p.rhs.size();
             for(int i = 0; i < rhs.size(); i++)
@@ -752,7 +731,7 @@ namespace cc
     {
         int id;
         std::set<LR1Item> items;
-        std::map<std::string, int> transitions;
+        std::map<std::shared_ptr<Symbol>, int> transitions;
         bool operator==(const _LR1ItemSet& itemSet) const
         {
             if(items.size() != itemSet.items.size()) return false;
@@ -809,7 +788,7 @@ namespace cc
         static std::unique_ptr<LR1Parser> _inst;
 
     public:
-        std::unique_ptr<AST::Decl> run(const std::vector<Token*>& tokens, const std::string& productionFilePath);
+        std::unique_ptr<AST::Decl> run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath);
 
     private:
         void parseProductionsFromJson(const std::string& productionFilePath);
@@ -823,6 +802,8 @@ namespace cc
         void closure(LR1ItemSet& itemSet);
 
         LR1ItemSet go(LR1ItemSet& itemSet, std::shared_ptr<Symbol> symbol);
+
+        std::unique_ptr<AST::Decl> parse(const std::vector<std::shared_ptr<Token>>& tokens);
 
         // some helpers
         bool isTerminal(const std::shared_ptr<Symbol>& symbol) const {
@@ -865,7 +846,6 @@ namespace cc
 
     // some util funcs
     bool isSpace(const char c);
-    json jsonifyTokens(const std::vector<Token*>& tokens);
-    void freeToken(Token*& token);
+    json jsonifyTokens(const std::vector<std::shared_ptr<Token>>& tokens);
     bool dumpJson(const json& j, const std::string outPath);
 }

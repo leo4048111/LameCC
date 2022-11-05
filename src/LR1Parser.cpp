@@ -4,13 +4,19 @@ namespace cc
 {
     std::unique_ptr<LR1Parser> LR1Parser::_inst;
 
-    std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<Token*>& tokens, const std::string& productionFilePath)
+    std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
     {
         parseProductionsFromJson(productionFilePath);
         findFirstSetForSymbols();
         constructCanonicalCollections();
         constructLR1ParseTable();
-        // TODO
+
+        auto root = parse(tokens);
+        return root;
+    }
+
+    std::unique_ptr<AST::Decl> LR1Parser::parse(const std::vector<std::shared_ptr<Token>>& tokens)
+    {
         return nullptr;
     }
 
@@ -28,9 +34,12 @@ namespace cc
         _terminals.insert(_endSymbol);
         _extensiveStartSymbol = std::make_shared<NonTerminal>("S'");
 
+        int cnt = 1;
         for(auto& production : j["Productions"])
         {
             Production p;
+            p.id = cnt;
+            cnt++;
             std::string lhs = production["lhs"].get<std::string>();
             if(lhs == "S'") p.lhs = _extensiveStartSymbol;
             else
@@ -189,7 +198,7 @@ namespace cc
                         _canonicalCollections[newItemSet.id] = newItemSet;
                         qSets.push(newItemSet.id);
                     }
-                    In.transitions.insert(std::make_pair(symbol->name(), newItemSet.id));
+                    In.transitions.insert(std::make_pair(symbol, newItemSet.id));
                 }
             }
             _canonicalCollections[InID] = In;
@@ -205,9 +214,35 @@ namespace cc
 
         for(auto& In : _canonicalCollections) // for every item set
         {
+            // init table rows
             Action initialAction = {ActionType::INVALID, -1};
             for(auto& terminal : _terminals) _actionTable[In.id].insert(std::make_pair(terminal->name(), initialAction));
             for(auto& nonTerminal : _nonTerminals) _gotoTable[In.id].insert(std::make_pair(nonTerminal->name(), -1));
+
+            for(auto& transition : In.transitions) {
+                if(isTerminal(transition.first)) // if symbol is terminal, update ACTION
+                {
+                    _actionTable[In.id][transition.first->name()].type = ActionType::SHIFT;
+                    _actionTable[In.id][transition.first->name()].id = transition.second;
+                }
+                else // if symbol is nonterminal, update GOTO
+                {
+                    _gotoTable[In.id][transition.first->name()] = transition.second;
+                }
+            }
+
+            for(auto& item : In.items)
+            {
+                if(item.dotPos >= item.production.rhs.size()) // if the item is a reduce item
+                {
+                    if(item.production.id != 1)
+                    {
+                        _actionTable[In.id][item.lookahead->name()].type = ActionType::REDUCE;
+                        _actionTable[In.id][item.lookahead->name()].id = item.production.id;
+                    }
+                    else  _actionTable[In.id][item.lookahead->name()].type = ActionType::ACC;
+                }
+            }
         }
 
         printActionAndGotoTable();
@@ -285,7 +320,7 @@ namespace cc
 
     void LR1Parser::printItemSet(LR1ItemSet& itemSet) const
     {
-        printf("------------------------I%d------------------------\n", itemSet.id);
+        printf("I%d: \n", itemSet.id);
         for(auto& item : itemSet.items)
         {
             printProduction(item.production, true, item.dotPos);
@@ -294,8 +329,7 @@ namespace cc
         }
 
         for(auto& transition : itemSet.transitions)
-            printf("I%d takes %s goto I%d\n", itemSet.id, transition.first.c_str(), transition.second);
-        printf("--------------------------------------------------\n");
+            printf("I%d takes %s goto I%d\n", itemSet.id, transition.first->name().c_str(), transition.second);
     }
 
     void LR1Parser::printProduction(const Production& production, bool shouldAddDot, int dotPos) const

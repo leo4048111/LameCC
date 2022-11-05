@@ -83,15 +83,15 @@ namespace cc
         else retractChar();
     }
 
-    std::vector<Token*> Lexer::run(File* file)
+    std::vector<std::shared_ptr<Token>> Lexer::run(File* file)
     {
         _file = file;
         _tokenCnt = 0;
         _curTokenPos = _file->getPosition();
         nextLine();
 
-        std::vector<Token*> tokens;
-        Token* token = nullptr;
+        std::vector<std::shared_ptr<Token>> tokens;
+        std::shared_ptr<Token> token = nullptr;
 
         do
         {
@@ -105,73 +105,71 @@ namespace cc
         return tokens;
     }
 
-    Token* Lexer::makeGeneralToken(const Token& token) const
+    std::shared_ptr<Token> Lexer::makeGeneralToken(const Token& token) const
     {
-        Token* pToken = (Token*)malloc(sizeof(Token));
-        ZeroMemory(pToken, sizeof(Token));
-        memcpy(pToken, &token, sizeof(Token));
+        std::shared_ptr<Token> pToken= std::make_shared<Token>(token);
         pToken->pos = _curTokenPos;
         pToken->file = _file;
         pToken->count = _tokenCnt;
         return pToken;
     }
 
-    Token* Lexer::makeSpaceToken() const
+    std::shared_ptr<Token> Lexer::makeSpaceToken() const
     {
         Token token;
         token.type = TokenType::TOKEN_WHITESPACE;
-        token.pContent = nullptr;
+        token.content = "";
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::makeEOFToken() const
+    std::shared_ptr<Token> Lexer::makeEOFToken() const
     {
         Token token;
         token.type = TokenType::TOKEN_EOF;
-        token.pContent = nullptr;
+        token.content = "";
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::makeNewlineToken() const
+    std::shared_ptr<Token> Lexer::makeNewlineToken() const
     {
         Token token;
         token.type = TokenType::TOKEN_NEWLINE;
-        token.pContent = nullptr;
+        token.content = "";
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::makeInvalidToken() const
+    std::shared_ptr<Token> Lexer::makeInvalidToken() const
     {
         Token token;
         token.type = TokenType::TOKEN_INVALID;
-        token.pContent = nullptr;
+        token.content = "";
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::makeIdentifierToken(CharBuffer& buffer) const
+    std::shared_ptr<Token> Lexer::makeIdentifierToken(std::string& buffer) const
     {
         Token token;
         token.type = TokenType::TOKEN_IDENTIFIER;
-        token.pContent = buffer.new_c_str();
+        token.content = buffer;
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::makeCharToken(CharBuffer& buffer)
+    std::shared_ptr<Token> Lexer::makeCharToken(std::string& buffer)
     {
         Token token;
         token.type = TokenType::TOKEN_CHAR;
-        token.pContent = buffer.new_c_str();
+        token.content = buffer;
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType)
+    std::shared_ptr<Token> Lexer::forwardSearch(const char possibleCh, TokenType possibleType, TokenType defaultType)
     {
         if(isNextChar(possibleCh)) return makePunctuatorToken(possibleType);
 
         return makePunctuatorToken(defaultType);
     }
 
-    Token* Lexer::forwardSearch(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType)
+    std::shared_ptr<Token> Lexer::forwardSearch(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType)
     {
         if(isNextChar(possibleCh1)) return makePunctuatorToken(possibleType1);
         else if(isNextChar(possibleCh2)) return makePunctuatorToken(possibleType2);
@@ -179,16 +177,16 @@ namespace cc
         return makePunctuatorToken(defaultType);
     }   
 
-    Token* Lexer::readIdentifier(char c)
+    std::shared_ptr<Token> Lexer::readIdentifier(char c)
     {
-        CharBuffer buffer;
-        buffer.append(c);
+        std::string buffer;
+        buffer += c;
         while(true)
         {
             c = nextChar();
             if(isalnum(c) || (c & 0x80) || c == '_' || c == '$') // numbders and ascii letters are accepted
             {
-                buffer.append(c);
+                buffer += c;
                 continue;
             }
             retractChar();
@@ -203,9 +201,9 @@ namespace cc
         }
     }
 
-    Token* Lexer::readString()
+    std::shared_ptr<Token> Lexer::readString()
     {
-        CharBuffer buffer;
+        std::string buffer;
         while(true)
         {
             char c = nextChar();
@@ -213,16 +211,16 @@ namespace cc
             else if(c == '\\') {
                 c = nextChar();
             }
-            buffer.append(c);
+            buffer += c;
         }
 
         return makeStringToken(buffer);
     }
 
-    Token* Lexer::readNumber(char c)
+    std::shared_ptr<Token> Lexer::readNumber(char c)
     {
-        CharBuffer buffer;
-        buffer.append(c);
+        std::string buffer;
+        buffer += c;
         char last = c;
         while(true)
         {
@@ -233,60 +231,60 @@ namespace cc
                 retractChar();
                 break;
             }
-            buffer.append(c);
+            buffer += c;
             last = c;
         }
 
         return makeNumberToken(buffer);
     }
 
-    Token* Lexer::readChar()
+    std::shared_ptr<Token> Lexer::readChar()
     {
-        CharBuffer buffer;
+        std::string buffer;
         while(true)
         {
             char c = nextChar();
             if(c == '\'') break;
             else if(c == '\\') c = nextChar();
-            buffer.append(c);
+            buffer += c;
         }
 
         return makeCharToken(buffer);
     }
 
-    Token* Lexer::makeKeywordToken(TokenType keywordType, CharBuffer& buffer) const
+    std::shared_ptr<Token> Lexer::makeKeywordToken(TokenType keywordType, std::string& buffer) const
     {
         Token token;
         token.type = keywordType;
-        token.pContent = buffer.new_c_str();
+        token.content = buffer;
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::makePunctuatorToken(TokenType punctuatorType) const
+    std::shared_ptr<Token> Lexer::makePunctuatorToken(TokenType punctuatorType) const
     {
         Token token;
         token.type = punctuatorType;
-        token.pContent = nullptr;
+        token.content = "";
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::makeStringToken(CharBuffer& buffer) const
+    std::shared_ptr<Token> Lexer::makeStringToken(std::string& buffer) const
     {
         Token token;
         token.type = TokenType::TOKEN_STRING;
-        token.pContent = buffer.new_c_str();
+        token.content = buffer;
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::makeNumberToken(CharBuffer& buffer) const
+    std::shared_ptr<Token> Lexer::makeNumberToken(std::string& buffer) const
     {
         Token token;
         token.type = TokenType::TOKEN_NUMBER;
-        token.pContent = buffer.new_c_str();
+        token.content = buffer;
         return makeGeneralToken(token);
     }
 
-    Token* Lexer::nextToken()
+    std::shared_ptr<Token> Lexer::nextToken()
     {
         // preprocess
         ignoreComments();
@@ -299,7 +297,7 @@ namespace cc
         case '\n':
         {
             _tokenCnt--; // make sure newline isn't counted
-            Token* token = makeNewlineToken();
+            std::shared_ptr<Token> token = makeNewlineToken();
             nextLine();
             return token;
         }

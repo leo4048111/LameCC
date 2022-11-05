@@ -145,7 +145,7 @@ namespace cc
         _pCurToken = _tokens[_curTokenIdx];
     }
 
-    std::unique_ptr<AST::Decl> Parser::run(const std::vector<Token*>& tokens)
+    std::unique_ptr<AST::Decl> Parser::run(const std::vector<std::shared_ptr<Token>>& tokens)
     {
         _tokens = tokens;
         _curTokenIdx = 0;
@@ -182,7 +182,7 @@ namespace cc
     // ::= ParmVarDecl, params
     std::unique_ptr<AST::Decl> Parser::nextFunctionDecl(const std::string name, const std::string type)
     {
-        Token* pLParen = _pCurToken;
+        std::shared_ptr<Token> pLParen = _pCurToken;
         nextToken(); // eat '('
 
         // parse all funciton params
@@ -201,13 +201,13 @@ namespace cc
                 return nullptr;
             }
 
-            std::string paramType = _pCurToken->pContent;
+            std::string paramType = _pCurToken->content;
             std::string paramName;
             nextToken(); // eat type
             // next token should be identifier
             if(_pCurToken->type == TokenType::TOKEN_IDENTIFIER)
             {
-                paramName = _pCurToken->pContent;
+                paramName = _pCurToken->content;
                 nextToken(); // eat name
             }
             else 
@@ -277,7 +277,7 @@ namespace cc
 
     std::unique_ptr<AST::Decl> Parser::nextTopLevelDecl()
     {
-        std::string type = _pCurToken->pContent; // function return value type or var type
+        std::string type = _pCurToken->content; // function return value type or var type
         nextToken(); // eat type
         
         if(_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
@@ -285,7 +285,7 @@ namespace cc
             FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected identifier");
         }
 
-        std::string name = _pCurToken->pContent; // function or var name
+        std::string name = _pCurToken->content; // function or var name
         nextToken(); // eat name
 
         std::unique_ptr<AST::Decl> topLevelDecl = nullptr;
@@ -310,7 +310,7 @@ namespace cc
 
     std::unique_ptr<AST::Stmt> Parser::nextCompoundStmt()
     {
-        Token* pLBrace = _pCurToken;
+        std::shared_ptr<Token> pLBrace = _pCurToken;
         nextToken(); // eat '{'
 
         std::vector<std::unique_ptr<AST::Stmt>> body;
@@ -332,7 +332,7 @@ namespace cc
 
     std::unique_ptr<AST::Stmt> Parser::nextDeclStmt()
     {
-        std::string type = _pCurToken->pContent; // function return value type or var type
+        std::string type = _pCurToken->content; // function return value type or var type
         nextToken(); // eat type
         
         if(_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
@@ -342,7 +342,7 @@ namespace cc
 
         std::vector<std::unique_ptr<AST::Decl>> decls;
 
-        std::string name = _pCurToken->pContent; // function or var name
+        std::string name = _pCurToken->content; // function or var name
         nextToken(); // eat name
 
         // TODO support comma declaration
@@ -464,7 +464,7 @@ namespace cc
     std::unique_ptr<AST::Stmt> Parser::nextIfStmt()
     {
         nextToken(); // eat 'if'
-        Token* pLParen = _pCurToken;
+        std::shared_ptr<Token> pLParen = _pCurToken;
         switch(_pCurToken->type) // lparen check
         {
         case TokenType::TOKEN_LPAREN:
@@ -506,7 +506,7 @@ namespace cc
     std::unique_ptr<AST::Stmt> Parser::nextWhileStmt()
     {
         nextToken(); // eat 'while'
-        Token* pLParen = _pCurToken;
+        std::shared_ptr<Token> pLParen = _pCurToken;
         switch(_pCurToken->type) // lparen check
         {
         case TokenType::TOKEN_LPAREN:
@@ -540,13 +540,13 @@ namespace cc
     // ::= Expr ',' params
     std::unique_ptr<AST::Expr> Parser::nextVarRefOrFuncCall()
     {
-        std::string name = _pCurToken->pContent;
+        std::string name = _pCurToken->content;
         nextToken(); // eat name
         switch (_pCurToken->type)
         {
         case TokenType::TOKEN_LPAREN:
         {
-            Token* pLParen = _pCurToken;
+            std::shared_ptr<Token> pLParen = _pCurToken;
             nextToken(); // eat '('
             std::vector<std::unique_ptr<AST::Expr>> params;
             do
@@ -575,14 +575,14 @@ namespace cc
     std::unique_ptr<AST::Expr> Parser::nextNumber()
     {
         // TODO float literal
-        std::string number = _pCurToken->pContent;
+        std::string number = _pCurToken->content;
         nextToken(); // eat number
         return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
     }
 
     std::unique_ptr<AST::Expr> Parser::nextParenExpr()
     {
-        Token* pLParen = _pCurToken;
+        std::shared_ptr<Token> pLParen = _pCurToken;
         nextToken(); // eat '('
         std::unique_ptr<AST::Expr> subExpr = nextExpression();
         if(subExpr == nullptr) return nullptr;
