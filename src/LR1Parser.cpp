@@ -4,6 +4,31 @@ namespace cc
 {
     std::unique_ptr<LR1Parser> LR1Parser::_inst;
 
+    static std::string TokenTypeToSymbolName(TokenType type)
+    {
+        switch(type)
+        {
+        #define keyword(name, disc) case TokenType::name: return #name;
+        #define punctuator(name, disc) case TokenType::name: return disc;
+        #include "TokenType.inc"
+        #undef punctuator
+        #undef keyword
+        case TokenType::TOKEN_IDENTIFIER: return "TOKEN_IDENTIFIER";
+        case TokenType::TOKEN_NUMBER: return "TOKEN_NUMBER";
+        case TokenType::TOKEN_CHAR: return "TOKEN_CHAR";
+        case TokenType::TOKEN_STRING: return "TOKEN_STRING";
+        case TokenType::TOKEN_EOF: return "#";
+        default: return "";
+        }
+
+        return "";
+    }
+
+    LR1Parser::LR1Parser()
+    {
+
+    }
+
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
     {
         parseProductionsFromJson(productionFilePath);
@@ -15,8 +40,49 @@ namespace cc
         return root;
     }
 
+    void LR1Parser::nextToken()
+    {
+        if(_curTokenIdx + 1 < _tokens.size()) _curTokenIdx++;
+            _pCurToken = _tokens[_curTokenIdx];
+    }
+
     std::unique_ptr<AST::Decl> LR1Parser::parse(const std::vector<std::shared_ptr<Token>>& tokens)
     {
+        _tokens = tokens;
+        _curTokenIdx = 0;
+        _pCurToken = _tokens[_curTokenIdx];
+
+        std::stack<int> stateStack;
+        std::stack<std::shared_ptr<Symbol>> symbolStack;
+        symbolStack.push(_endSymbol); // push '#'
+        stateStack.push(0); // initial state 0
+
+        do
+        {
+            auto actionTableRow = _actionTable[stateStack.top()];
+            std::string symbolName = TokenTypeToSymbolName(_pCurToken->type);
+            if(actionTableRow.find(symbolName) == actionTableRow.end()) {
+                FATAL_ERROR("LR1Parser can't recognize " << symbolName);
+                return nullptr;
+            }
+            Action action = actionTableRow[symbolName];
+            
+            switch (action.type)
+            {
+            case ActionType::INVALID:
+                FATAL_ERROR("Parsing failed at " << _pCurToken->pos.line << ", " << _pCurToken->pos.column);
+                return nullptr;
+            case ActionType::SHIFT:
+                symbolStack.push(std::make_shared<Terminal>(symbolName, _pCurToken)); // push symbol
+                stateStack.push(action.id); // push state
+                nextToken();
+                break;
+            default:
+                return nullptr;
+            }
+
+        } while (symbolStack.top()->name() != "#");
+        
         return nullptr;
     }
 

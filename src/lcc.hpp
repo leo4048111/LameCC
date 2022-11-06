@@ -771,9 +771,8 @@ namespace cc
         int id;
     }Action;
     
-    
     private:
-        LR1Parser() = default;
+        LR1Parser();
         LR1Parser(const LR1Parser&) = delete;
         LR1Parser& operator=(const LR1Parser&) = delete;
 
@@ -790,6 +789,13 @@ namespace cc
     public:
         std::unique_ptr<AST::Decl> run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath);
 
+    // parsing
+    private:
+        std::unique_ptr<AST::Decl> parse(const std::vector<std::shared_ptr<Token>>& tokens);
+
+        void nextToken();
+
+    // grammar initialization
     private:
         void parseProductionsFromJson(const std::string& productionFilePath);
 
@@ -802,8 +808,6 @@ namespace cc
         void closure(LR1ItemSet& itemSet);
 
         LR1ItemSet go(LR1ItemSet& itemSet, std::shared_ptr<Symbol> symbol);
-
-        std::unique_ptr<AST::Decl> parse(const std::vector<std::shared_ptr<Token>>& tokens);
 
         // some helpers
         bool isTerminal(const std::shared_ptr<Symbol>& symbol) const {
@@ -842,6 +846,10 @@ namespace cc
 
         std::vector<std::map<std::string, Action>> _actionTable; // ACTION
         std::vector<std::map<std::string, int>> _gotoTable; // GOTO 
+
+        std::vector<std::shared_ptr<Token>> _tokens;
+        int _curTokenIdx{ 0 };
+        std::shared_ptr<Token> _pCurToken{ nullptr };
     };
 
     // some util funcs
