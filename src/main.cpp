@@ -146,6 +146,4 @@ int main(int argc, char** argv)
         cc::dumpJson(astRoot->asJson(), g_dump_ast_out_path);
         INFO("AST has been dumped to " << g_dump_ast_out_path);
     }
-    
-    // cleanup
 }

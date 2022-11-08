@@ -459,7 +459,8 @@ namespace cc
             _canonicalCollections[InID] = In;
         }
 
-        for(auto& In : _canonicalCollections) printItemSet(In);
+        // debug print
+        //for(auto& In : _canonicalCollections) printItemSet(In);
     }
 
     void LR1Parser::constructLR1ParseTable()
@@ -500,7 +501,8 @@ namespace cc
             }
         }
 
-        printActionAndGotoTable();
+        // debug print
+        //printActionAndGotoTable();
     }
 
     void LR1Parser::closure(LR1ItemSet& itemSet)
