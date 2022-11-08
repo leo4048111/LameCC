@@ -131,8 +131,13 @@ namespace cc
         // Represents a parameter to a function.
         class ParmVarDecl : public VarDecl
         {
+            friend class cc::LR1Parser;
+
+        protected:
+            std::unique_ptr<ParmVarDecl> _nextParmVarDecl;
+
         public:
-            ParmVarDecl(const std::string& name, const std::string& type) : VarDecl(name, type)
+            ParmVarDecl(const std::string& name, const std::string& type, std::unique_ptr<ParmVarDecl> nextParmVarDecl = nullptr) : VarDecl(name, type), _nextParmVarDecl(std::move(nextParmVarDecl))
             {};
 
             virtual json asJson() const override;
@@ -808,6 +813,9 @@ namespace cc
         static std::shared_ptr<NonTerminal> nextTranslationUnitDeclR3(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 3
         static std::shared_ptr<NonTerminal> nextDeclR4(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 4
         static std::shared_ptr<NonTerminal> nextFunctionDeclR5(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR6(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
+        static std::shared_ptr<NonTerminal> nextParmVarDeclR7(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
+        static std::shared_ptr<NonTerminal> nextParmVarDeclR8(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
 
     // grammar initialization
     private:

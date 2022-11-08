@@ -32,6 +32,10 @@ namespace cc
         _productionFuncMap.insert(std::make_pair(3, &nextTranslationUnitDeclR3));
         _productionFuncMap.insert(std::make_pair(4, &nextDeclR4));
         _productionFuncMap.insert(std::make_pair(5, &nextFunctionDeclR5));
+        _productionFuncMap.insert(std::make_pair(6, &nextFunctionDeclR6));
+        _productionFuncMap.insert(std::make_pair(7, &nextParmVarDeclR7));
+        _productionFuncMap.insert(std::make_pair(8, &nextParmVarDeclR8));
+
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
@@ -89,8 +93,8 @@ namespace cc
                     FATAL_ERROR("Internal LR1 parser error");
                     return nullptr;
                 }
-                symbolStack.push(nonTerminal);
-                stateStack.push(_gotoTable[stateStack.top()][nonTerminal->name()]);
+                symbolStack.push(nonTerminal); // push reduced nonterminal
+                stateStack.push(_gotoTable[stateStack.top()][nonTerminal->name()]); // push new state
                 break;
             }
             case ActionType::ACC:
@@ -148,7 +152,7 @@ namespace cc
 
         if(translationUnitDecl->name() != "TranslationUnitDecl" || decl->name() != "Decl") return nullptr;
 
-        auto lastTranslationUnitDecl = std::move(dynamic_pointer_cast<AST::TranslationUnitDecl>(std::move(translationUnitDecl->_node)));
+        auto lastTranslationUnitDecl = dynamic_pointer_cast<AST::TranslationUnitDecl>(std::move(translationUnitDecl->_node));
         std::vector<std::unique_ptr<AST::Decl>> decls(std::move(lastTranslationUnitDecl->_decls));
         decls.push_back(dynamic_pointer_cast<AST::Decl>(std::move(decl->_node))); // push new decl
         auto curTranslationUnitDeclNode = std::make_unique<AST::TranslationUnitDecl>(decls);
@@ -192,6 +196,84 @@ namespace cc
 
         auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr);
         return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // FunctionDecl -> TOKEN_KWINT TOKEN_IDENTIFIER ( ParmVarDecl ) ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR6(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 6; i++) stateStack.pop(); // pop 6 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto parmVarDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce ParmVarDecl
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        symbolStack.pop();
+
+        if(semi->name() != ";" || rparen->name() != ")" || parmVarDecl->name() != "ParmVarDecl" ||lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT") return nullptr;
+
+        std::string type = kwint->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto curParmVarDeclNode = dynamic_pointer_cast<AST::ParmVarDecl>(std::move(parmVarDecl->_node));
+
+        while(curParmVarDeclNode != nullptr) {
+            params.push_back(std::move(curParmVarDeclNode));
+            curParmVarDeclNode = std::move(params.back()->_nextParmVarDecl);
+        }
+
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr);
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // ParmVarDecl -> TOKEN_KWINT TOKEN_IDENTIFIER
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextParmVarDeclR7(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 2; i++) stateStack.pop(); // pop 2 states
+
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        symbolStack.pop();
+
+        if(identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT") return nullptr;
+
+        std::string type = kwint->_token->content;
+        std::string name = identifier->_token->content;
+
+        auto parmVarDecl = std::make_unique<AST::ParmVarDecl>(name, type);
+        return std::make_shared<NonTerminal>("ParmVarDecl", std::move(parmVarDecl));
+    }
+
+    // ParmVarDecl -> TOKEN_KWINT TOKEN_IDENTIFIER , ParmVarDecl
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextParmVarDeclR8(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 4; i++) stateStack.pop(); // pop 4 states
+
+        auto nextParmVarDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce ParmVarDecl
+        symbolStack.pop();
+        auto comma = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ,
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        symbolStack.pop();
+
+        if(identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT" || comma->name() != "," || nextParmVarDecl->name() != "ParmVarDecl") return nullptr;
+
+        std::string type = kwint->_token->content;
+        std::string name = identifier->_token->content;
+        auto nextParmVarDeclNode = dynamic_pointer_cast<AST::ParmVarDecl>(std::move(nextParmVarDecl->_node));
+
+        auto parmVarDecl = std::make_unique<AST::ParmVarDecl>(name, type, std::move(nextParmVarDeclNode));
+        return std::make_shared<NonTerminal>("ParmVarDecl", std::move(parmVarDecl));
     }
 
     void LR1Parser::parseProductionsFromJson(const std::string& productionFilePath)
