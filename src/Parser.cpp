@@ -229,7 +229,7 @@ namespace cc
 
         nextToken(); // eat ')'
         // parse top level funciton body
-        std::unique_ptr<AST::Stmt> body;
+        std::unique_ptr<AST::Stmt> body = nullptr;
         switch (_pCurToken->type)
         {
             case TokenType::TOKEN_LBRACE: // function definition

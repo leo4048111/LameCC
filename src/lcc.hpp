@@ -34,6 +34,7 @@ namespace cc
         {
         public:
             virtual json asJson() const = 0;
+            virtual ~ASTNode() {};
         };
 
         // Cecls
@@ -66,6 +67,8 @@ namespace cc
         class ReturnStmt;
     }
 
+    class LR1Parser;
+
     // Declarations
     namespace AST
     {
@@ -78,6 +81,8 @@ namespace cc
         // root node for AST 
         class TranslationUnitDecl : public Decl
         {
+            friend class cc::LR1Parser;
+
         protected:
             std::vector<std::unique_ptr<Decl>> _decls;
 
@@ -635,6 +640,7 @@ namespace cc
 
     class Terminal : public Symbol
     {
+        friend class LR1Parser;
     private:
         std::string _name;
         std::shared_ptr<Token> _token;
@@ -646,6 +652,7 @@ namespace cc
 
     class NonTerminal : public Symbol
     {
+        friend class LR1Parser;
     private:
         std::string _name;
         std::unique_ptr<AST::ASTNode> _node;
@@ -653,6 +660,7 @@ namespace cc
         virtual SymbolType type() const override { return SymbolType::NonTerminal; };
         virtual std::string name() const override { return _name; };
         NonTerminal(const std::string& name, std::unique_ptr<AST::ASTNode> node = nullptr) : _name(name), _node(std::move(node)) {};
+        NonTerminal(NonTerminal&& nonTerminal) : _name(nonTerminal.name()), _node(std::move(nonTerminal._node)) {};
     };
 
     typedef struct
@@ -795,6 +803,12 @@ namespace cc
 
         void nextToken();
 
+        static std::shared_ptr<NonTerminal> nextStartSymbolR1(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 1
+        static std::shared_ptr<NonTerminal> nextTranslationUnitDeclR2(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 2
+        static std::shared_ptr<NonTerminal> nextTranslationUnitDeclR3(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 3
+        static std::shared_ptr<NonTerminal> nextDeclR4(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 4
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR5(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
+
     // grammar initialization
     private:
         void parseProductionsFromJson(const std::string& productionFilePath);
@@ -850,10 +864,23 @@ namespace cc
         std::vector<std::shared_ptr<Token>> _tokens;
         int _curTokenIdx{ 0 };
         std::shared_ptr<Token> _pCurToken{ nullptr };
+
+        std::map<int, std::function<std::shared_ptr<NonTerminal>(std::stack<int>&, std::stack<std::shared_ptr<Symbol>>&)>> _productionFuncMap;
     };
 
     // some util funcs
     bool isSpace(const char c);
     json jsonifyTokens(const std::vector<std::shared_ptr<Token>>& tokens);
     bool dumpJson(const json& j, const std::string outPath);
+
+    // cast helpers
+    template<class T, class U> 
+    std::unique_ptr<T> dynamic_pointer_cast( std::unique_ptr<U> && r )
+    {
+        (void) dynamic_cast< T* >( static_cast< U* >( 0 ) );
+
+        T * p = dynamic_cast<T*>( r.get() );
+        if( p ) r.release();
+        return std::unique_ptr<T>( p );
+    }
 }

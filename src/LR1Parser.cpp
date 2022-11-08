@@ -26,7 +26,12 @@ namespace cc
 
     LR1Parser::LR1Parser()
     {
-
+        // for rn item, use function _productionFuncMap[n] to reduce
+        _productionFuncMap.insert(std::make_pair(1, &nextStartSymbolR1));
+        _productionFuncMap.insert(std::make_pair(2, &nextTranslationUnitDeclR2));
+        _productionFuncMap.insert(std::make_pair(3, &nextTranslationUnitDeclR3));
+        _productionFuncMap.insert(std::make_pair(4, &nextDeclR4));
+        _productionFuncMap.insert(std::make_pair(5, &nextFunctionDeclR5));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
@@ -77,6 +82,22 @@ namespace cc
                 stateStack.push(action.id); // push state
                 nextToken();
                 break;
+            case ActionType::REDUCE:
+            {
+                auto nonTerminal = _productionFuncMap[action.id](stateStack, symbolStack);
+                if(nonTerminal == nullptr) {
+                    FATAL_ERROR("Internal LR1 parser error");
+                    return nullptr;
+                }
+                symbolStack.push(nonTerminal);
+                stateStack.push(_gotoTable[stateStack.top()][nonTerminal->name()]);
+                break;
+            }
+            case ActionType::ACC:
+            {
+                auto result = dynamic_pointer_cast<NonTerminal>(symbolStack.top());
+                return std::move(dynamic_pointer_cast<AST::Decl>(std::move(result->_node)));
+            }
             default:
                 return nullptr;
             }
@@ -86,12 +107,100 @@ namespace cc
         return nullptr;
     }
 
+    // S -> TranslationUnitDecl
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextStartSymbolR1(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        stateStack.pop(); // pop state
+
+        auto translationUnitDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce TranslationUnitDecl 
+        symbolStack.pop();
+
+        if(translationUnitDecl->name() != "TranslationUnitDecl") return nullptr;
+
+        return std::make_shared<NonTerminal>("S", std::move(translationUnitDecl->_node));
+    }
+    
+    // TranslationUnitDecl -> Decl
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextTranslationUnitDeclR2(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        stateStack.pop(); // pop state
+
+        auto decl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Decl
+        symbolStack.pop();
+
+        if(decl->name() != "Decl") return nullptr;
+
+        std::vector<std::unique_ptr<AST::Decl>> decls;
+        decls.push_back(dynamic_pointer_cast<AST::Decl>(std::move(decl->_node))); 
+        auto translationUnitDecl = std::make_unique<AST::TranslationUnitDecl>(decls);
+        return std::make_shared<NonTerminal>("TranslationUnitDecl", std::move(translationUnitDecl));
+    }
+
+    // TranslationUnitDecl -> Decl TranslationUnitDecl
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextTranslationUnitDeclR3(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 2; i++) stateStack.pop(); // pop 2 states
+
+        auto translationUnitDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce TranslationUnitDecl
+        symbolStack.pop();
+        auto decl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Decl
+        symbolStack.pop();
+
+        if(translationUnitDecl->name() != "TranslationUnitDecl" || decl->name() != "Decl") return nullptr;
+
+        auto lastTranslationUnitDecl = std::move(dynamic_pointer_cast<AST::TranslationUnitDecl>(std::move(translationUnitDecl->_node)));
+        std::vector<std::unique_ptr<AST::Decl>> decls(std::move(lastTranslationUnitDecl->_decls));
+        decls.push_back(dynamic_pointer_cast<AST::Decl>(std::move(decl->_node))); // push new decl
+        auto curTranslationUnitDeclNode = std::make_unique<AST::TranslationUnitDecl>(decls);
+        return std::make_shared<NonTerminal>("TranslationUnitDecl", std::move(curTranslationUnitDeclNode));
+    }
+
+    // Decl -> FunctionDecl
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextDeclR4(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        stateStack.pop(); // pop state
+
+        auto functionDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce FunctionDecl
+        symbolStack.pop();
+
+        if(functionDecl->name() != "FunctionDecl") return nullptr;
+
+        return std::make_shared<NonTerminal>("Decl", std::move(functionDecl->_node));
+    }
+
+    // FunctionDecl -> TOKEN_KWINT TOKEN_IDENTIFIER ( ) ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR5(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 5; i++) stateStack.pop(); // pop 5 states
+        
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        symbolStack.pop();
+
+        if(semi->name() != ";" || rparen->name() != ")" || lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT") return nullptr;
+
+        std::string type = kwint->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr);
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
     void LR1Parser::parseProductionsFromJson(const std::string& productionFilePath)
     {
         std::ifstream i(productionFilePath);
         json j;
         i >> j;
-        
+        i.close();
+
         for(auto& symbol : j["NonTerminals"]) _nonTerminals.insert(std::make_shared<NonTerminal>(symbol.get<std::string>()));
         for(auto& symbol : j["Terminals"]) _terminals.insert(std::make_shared<Terminal>(symbol.get<std::string>()));
 
@@ -100,12 +209,10 @@ namespace cc
         _terminals.insert(_endSymbol);
         _extensiveStartSymbol = std::make_shared<NonTerminal>("S'");
 
-        int cnt = 1;
         for(auto& production : j["Productions"])
         {
             Production p;
-            p.id = cnt;
-            cnt++;
+            p.id = production["id"].get<int>();
             std::string lhs = production["lhs"].get<std::string>();
             if(lhs == "S'") p.lhs = _extensiveStartSymbol;
             else
