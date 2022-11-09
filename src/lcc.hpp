@@ -819,6 +819,10 @@ namespace cc
         static std::shared_ptr<NonTerminal> nextFunctionDeclR9(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 9
         static std::shared_ptr<NonTerminal> nextCompoundStmtR10(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 10
         static std::shared_ptr<NonTerminal> nextFunctionDeclR11(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 11
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR12(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 11
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR13(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 11
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR14(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 11
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR15(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 11
 
     // grammar initialization
     private:

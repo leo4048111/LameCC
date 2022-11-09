@@ -325,7 +325,9 @@ namespace cc
 
         if(rbrace->name() != "}" || lbrace->name() != "{") return nullptr;
 
-        return std::make_shared<NonTerminal>("CompoundStmt", nullptr); // body is empty
+        std::vector<std::unique_ptr<AST::Stmt>> body;
+        auto CompoundStmt = std::make_unique<AST::CompoundStmt>(body);
+        return std::make_shared<NonTerminal>("CompoundStmt", std::move(CompoundStmt));
     }
 
     // FunctionDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER ( ParmVarDecl ) CompoundStmt
@@ -349,6 +351,129 @@ namespace cc
         if(parmVarDecl->name() != "ParmVarDecl" || rparen->name() != ")" || parmVarDecl->name() != "ParmVarDecl" ||lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwvartype->name() != "TOKEN_VARTYPE") return nullptr;
     
         std::string type = kwvartype->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto curParmVarDeclNode = dynamic_pointer_cast<AST::ParmVarDecl>(std::move(parmVarDecl->_node));
+
+        while(curParmVarDeclNode != nullptr) {
+            params.push_back(std::move(curParmVarDeclNode));
+            curParmVarDeclNode = std::move(params.back()->_nextParmVarDecl);
+        }
+        auto body = dynamic_pointer_cast<AST::CompoundStmt>(std::move(compoundStmt->_node));
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, std::move(body));
+        
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // FunctionDecl -> TOKEN_KWVOID TOKEN_IDENTIFIER ( ) ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR12(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 5; i++) stateStack.pop(); // pop 5 states
+        
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwvoid = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWVOID
+        symbolStack.pop();
+
+        if(semi->name() != ";" || rparen->name() != ")" || lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwvoid->name() != "TOKEN_KWVOID") return nullptr;
+
+        std::string type = kwvoid->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr);
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // FunctionDecl -> TOKEN_KWVOID TOKEN_IDENTIFIER ( ParmVarDecl ) ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR13(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 6; i++) stateStack.pop(); // pop 6 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto parmVarDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce ParmVarDecl
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwvoid = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWVOID
+        symbolStack.pop();
+
+        if(semi->name() != ";" || rparen->name() != ")" || parmVarDecl->name() != "ParmVarDecl" ||lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwvoid->name() != "TOKEN_KWVOID") return nullptr;
+
+        std::string type = kwvoid->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto curParmVarDeclNode = dynamic_pointer_cast<AST::ParmVarDecl>(std::move(parmVarDecl->_node));
+
+        while(curParmVarDeclNode != nullptr) {
+            params.push_back(std::move(curParmVarDeclNode));
+            curParmVarDeclNode = std::move(params.back()->_nextParmVarDecl);
+        }
+
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr);
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // FunctionDecl -> TOKEN_KWVOID TOKEN_IDENTIFIER ( ) CompoundStmt
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR14(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 5; i++) stateStack.pop(); // pop 5 states
+
+        auto compoundStmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce CompoundStmt
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwvoid = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWVOID
+        symbolStack.pop();
+
+        if(compoundStmt->name() != "CompoundStmt" || rparen->name() != ")" || lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwvoid->name() != "TOKEN_KWVOID") return nullptr;
+    
+        std::string type = kwvoid->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+        auto body = dynamic_pointer_cast<AST::CompoundStmt>(std::move(compoundStmt->_node));
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, std::move(body));
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // FunctionDecl -> TOKEN_KWVOID TOKEN_IDENTIFIER ( ParmVarDecl ) CompoundStmt
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR15(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 6; i++) stateStack.pop(); // pop 6 states
+
+        auto compoundStmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce CompoundStmt
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto parmVarDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce ParmVarDecl
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwvoid = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWVOID
+        symbolStack.pop();
+
+        if(parmVarDecl->name() != "ParmVarDecl" || rparen->name() != ")" || parmVarDecl->name() != "ParmVarDecl" ||lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwvoid->name() != "TOKEN_KWVOID") return nullptr;
+    
+        std::string type = kwvoid->_token->content;
         std::string name = identifier->_token->content;
         std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
 
