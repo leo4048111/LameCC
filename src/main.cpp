@@ -118,7 +118,7 @@ static bool parseOpt(int argc, char** argv)
 int main(int argc, char** argv)
 {
     if(!parseOpt(argc, argv)) return 0;
-    cc::File* file = new cc::File(g_in_path);
+    auto file = std::make_shared<cc::File>(g_in_path);
     if(file->fail()) 
     {
         FATAL_ERROR(g_in_path << ": No such file or directory");

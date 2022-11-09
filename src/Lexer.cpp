@@ -83,7 +83,7 @@ namespace cc
         else retractChar();
     }
 
-    std::vector<std::shared_ptr<Token>> Lexer::run(File* file)
+    std::vector<std::shared_ptr<Token>> Lexer::run(std::shared_ptr<File> file)
     {
         _file = file;
         _tokenCnt = 0;

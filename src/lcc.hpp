@@ -489,7 +489,7 @@ namespace cc
     typedef struct _Token
     {
         TokenType type;
-        File* file;
+        std::shared_ptr<File> file;
         Position pos; // token position in file
         unsigned int count;   // token number in a file
         std::string content; // content of this token
@@ -514,7 +514,7 @@ namespace cc
             return _inst.get();
         }
 
-        std::vector<std::shared_ptr<Token>> run(File* file);
+        std::vector<std::shared_ptr<Token>> run(std::shared_ptr<File> file);
     
     private:
         static std::unique_ptr<Lexer> _inst;
@@ -555,7 +555,7 @@ namespace cc
         std::shared_ptr<Token> forwardSearch(const char possibleCh1, TokenType possibleType1, const char possibleCh2, TokenType possibleType2, TokenType defaultType);
 
     private:
-        File* _file;
+        std::shared_ptr<File> _file;
         Position _curTokenPos;
         unsigned int _tokenCnt;
         std::unordered_map<std::string, TokenType> _keywordMap;
