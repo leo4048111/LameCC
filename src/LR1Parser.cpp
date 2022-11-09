@@ -8,11 +8,20 @@ namespace cc
     {
         switch(type)
         {
-        #define keyword(name, disc) case TokenType::name: return #name;
+        #define keyword(name, disc)
         #define punctuator(name, disc) case TokenType::name: return disc;
         #include "TokenType.inc"
         #undef punctuator
         #undef keyword
+        case TokenType::TOKEN_KWINT:
+        case TokenType::TOKEN_KWFLOAT:
+        case TokenType::TOKEN_KWCHAR:
+            return "TOKEN_VARTYPE";
+        case TokenType::TOKEN_KWVOID: return "TOKEN_KWVOID";
+        case TokenType::TOKEN_KWIF: return "TOKEN_KWIF";
+        case TokenType::TOKEN_KWELSE: return "TOKEN_KWELSE";
+        case TokenType::TOKEN_KWWHILE: return "TOKEN_KWWHILE";
+        case TokenType::TOKEN_KWRETURN: return "TOKEN_KWRETURN";
         case TokenType::TOKEN_IDENTIFIER: return "TOKEN_IDENTIFIER";
         case TokenType::TOKEN_NUMBER: return "TOKEN_NUMBER";
         case TokenType::TOKEN_CHAR: return "TOKEN_CHAR";
@@ -35,7 +44,8 @@ namespace cc
         _productionFuncMap.insert(std::make_pair(6, &nextFunctionDeclR6));
         _productionFuncMap.insert(std::make_pair(7, &nextParmVarDeclR7));
         _productionFuncMap.insert(std::make_pair(8, &nextParmVarDeclR8));
-
+        _productionFuncMap.insert(std::make_pair(9, &nextFunctionDeclR9));
+        _productionFuncMap.insert(std::make_pair(10, &nextCompoundStmtR10));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
@@ -274,6 +284,47 @@ namespace cc
 
         auto parmVarDecl = std::make_unique<AST::ParmVarDecl>(name, type, std::move(nextParmVarDeclNode));
         return std::make_shared<NonTerminal>("ParmVarDecl", std::move(parmVarDecl));
+    }
+
+    // FunctionDecl -> TOKEN_KWINT TOKEN_IDENTIFIER ( ) CompoundStmt
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR9(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 5; i++) stateStack.pop(); // pop 5 states
+
+        auto compoundStmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce CompoundStmt
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        symbolStack.pop();
+
+        if(compoundStmt->name() != "CompoundStmt" || rparen->name() != ")" || lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT") return nullptr;
+    
+        std::string type = kwint->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+        auto body = dynamic_pointer_cast<AST::CompoundStmt>(std::move(compoundStmt->_node));
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, std::move(body));
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // CompoundStmt -> { }
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextCompoundStmtR10(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 2; i++) stateStack.pop(); // pop 2 states
+
+        auto rbrace = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce }
+        symbolStack.pop();
+        auto lbrace = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce {
+        symbolStack.pop();
+
+        if(rbrace->name() != "}" || lbrace->name() != "{") return nullptr;
+
+        return std::make_shared<NonTerminal>("CompoundStmt", nullptr); // body is empty
     }
 
     void LR1Parser::parseProductionsFromJson(const std::string& productionFilePath)

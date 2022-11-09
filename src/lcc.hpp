@@ -813,9 +813,11 @@ namespace cc
         static std::shared_ptr<NonTerminal> nextTranslationUnitDeclR3(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 3
         static std::shared_ptr<NonTerminal> nextDeclR4(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 4
         static std::shared_ptr<NonTerminal> nextFunctionDeclR5(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR6(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
-        static std::shared_ptr<NonTerminal> nextParmVarDeclR7(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
-        static std::shared_ptr<NonTerminal> nextParmVarDeclR8(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR6(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 6
+        static std::shared_ptr<NonTerminal> nextParmVarDeclR7(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 7
+        static std::shared_ptr<NonTerminal> nextParmVarDeclR8(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 8
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR9(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 9
+        static std::shared_ptr<NonTerminal> nextCompoundStmtR10(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 10
 
     // grammar initialization
     private:
