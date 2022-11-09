@@ -182,7 +182,7 @@ namespace cc
         return std::make_shared<NonTerminal>("Decl", std::move(functionDecl->_node));
     }
 
-    // FunctionDecl -> TOKEN_KWINT TOKEN_IDENTIFIER ( ) ;
+    // FunctionDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER ( ) ;
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR5(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
     {
         for(int i = 0; i < 5; i++) stateStack.pop(); // pop 5 states
@@ -195,12 +195,12 @@ namespace cc
         symbolStack.pop();
         auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
         symbolStack.pop();
-        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        auto kwvartype = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE
         symbolStack.pop();
 
-        if(semi->name() != ";" || rparen->name() != ")" || lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT") return nullptr;
+        if(semi->name() != ";" || rparen->name() != ")" || lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwvartype->name() != "TOKEN_VARTYPE") return nullptr;
 
-        std::string type = kwint->_token->content;
+        std::string type = kwvartype->_token->content;
         std::string name = identifier->_token->content;
         std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
 
@@ -208,7 +208,7 @@ namespace cc
         return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
     }
 
-    // FunctionDecl -> TOKEN_KWINT TOKEN_IDENTIFIER ( ParmVarDecl ) ;
+    // FunctionDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER ( ParmVarDecl ) ;
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR6(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
     {
         for(int i = 0; i < 6; i++) stateStack.pop(); // pop 6 states
@@ -223,12 +223,12 @@ namespace cc
         symbolStack.pop();
         auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
         symbolStack.pop();
-        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        auto kwvartype = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE
         symbolStack.pop();
 
-        if(semi->name() != ";" || rparen->name() != ")" || parmVarDecl->name() != "ParmVarDecl" ||lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT") return nullptr;
+        if(semi->name() != ";" || rparen->name() != ")" || parmVarDecl->name() != "ParmVarDecl" ||lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwvartype->name() != "TOKEN_VARTYPE") return nullptr;
 
-        std::string type = kwint->_token->content;
+        std::string type = kwvartype->_token->content;
         std::string name = identifier->_token->content;
         std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
 
@@ -243,26 +243,26 @@ namespace cc
         return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
     }
 
-    // ParmVarDecl -> TOKEN_KWINT TOKEN_IDENTIFIER
+    // ParmVarDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextParmVarDeclR7(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
     {
         for(int i = 0; i < 2; i++) stateStack.pop(); // pop 2 states
 
         auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
         symbolStack.pop();
-        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        auto kwvartype = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE
         symbolStack.pop();
 
-        if(identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT") return nullptr;
+        if(identifier->name() != "TOKEN_IDENTIFIER" || kwvartype->name() != "TOKEN_VARTYPE") return nullptr;
 
-        std::string type = kwint->_token->content;
+        std::string type = kwvartype->_token->content;
         std::string name = identifier->_token->content;
 
         auto parmVarDecl = std::make_unique<AST::ParmVarDecl>(name, type);
         return std::make_shared<NonTerminal>("ParmVarDecl", std::move(parmVarDecl));
     }
 
-    // ParmVarDecl -> TOKEN_KWINT TOKEN_IDENTIFIER , ParmVarDecl
+    // ParmVarDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER , ParmVarDecl
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextParmVarDeclR8(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
     {
         for(int i = 0; i < 4; i++) stateStack.pop(); // pop 4 states
@@ -273,12 +273,12 @@ namespace cc
         symbolStack.pop();
         auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
         symbolStack.pop();
-        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        auto kwvartype = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE
         symbolStack.pop();
 
-        if(identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT" || comma->name() != "," || nextParmVarDecl->name() != "ParmVarDecl") return nullptr;
+        if(identifier->name() != "TOKEN_IDENTIFIER" || kwvartype->name() != "TOKEN_VARTYPE" || comma->name() != "," || nextParmVarDecl->name() != "ParmVarDecl") return nullptr;
 
-        std::string type = kwint->_token->content;
+        std::string type = kwvartype->_token->content;
         std::string name = identifier->_token->content;
         auto nextParmVarDeclNode = dynamic_pointer_cast<AST::ParmVarDecl>(std::move(nextParmVarDecl->_node));
 
@@ -286,7 +286,7 @@ namespace cc
         return std::make_shared<NonTerminal>("ParmVarDecl", std::move(parmVarDecl));
     }
 
-    // FunctionDecl -> TOKEN_KWINT TOKEN_IDENTIFIER ( ) CompoundStmt
+    // FunctionDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER ( ) CompoundStmt
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR9(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
     {
         for(int i = 0; i < 5; i++) stateStack.pop(); // pop 5 states
@@ -299,12 +299,12 @@ namespace cc
         symbolStack.pop();
         auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
         symbolStack.pop();
-        auto kwint = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWINT
+        auto kwvartype = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE
         symbolStack.pop();
 
-        if(compoundStmt->name() != "CompoundStmt" || rparen->name() != ")" || lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwint->name() != "TOKEN_KWINT") return nullptr;
+        if(compoundStmt->name() != "CompoundStmt" || rparen->name() != ")" || lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwvartype->name() != "TOKEN_VARTYPE") return nullptr;
     
-        std::string type = kwint->_token->content;
+        std::string type = kwvartype->_token->content;
         std::string name = identifier->_token->content;
         std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
         auto body = dynamic_pointer_cast<AST::CompoundStmt>(std::move(compoundStmt->_node));
