@@ -1,17 +1,35 @@
 // nonvoid return type function decl with params
-int func(int parm1, int parm2);
+int NonVoidFuncDeclWithParams(int parm1, int parm2);
 
 // nonvoid return type function decl without params
-int func2();
+int NonVoidFuncDeclWithoutParams();
 
 // nonvoid return type function definition with params with empty body
-int func3()
+int NonVoidFuncDefWithoutParamsWithEmptyBody()
 {
 
 }
 
 // nonvoid return type function definition with params with empty body
-int func4(int param1, int param2)
+int NonVoidFuncDefWithParamsWithEmptyBody(int param1, int param2)
+{
+
+}
+
+// void return type function decl with params
+void VoidFuncDeclWithParams(int parm1, int parm2);
+
+// nonvoid return type function decl without params
+void VoidFuncDeclWithoutParams();
+
+// void return type function definition with params with empty body
+void VoidFuncDefWithoutParamsWithEmptyBody()
+{
+
+}
+
+// void return type function definition with params with empty body
+void VoidFuncDefWithParamsWithEmptyBody(int param1, int param2)
 {
 
 }

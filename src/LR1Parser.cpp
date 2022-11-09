@@ -47,6 +47,10 @@ namespace cc
         _productionFuncMap.insert(std::make_pair(9, &nextFunctionDeclR9));
         _productionFuncMap.insert(std::make_pair(10, &nextCompoundStmtR10));
         _productionFuncMap.insert(std::make_pair(11, &nextFunctionDeclR11));
+        _productionFuncMap.insert(std::make_pair(12, &nextFunctionDeclR12));
+        _productionFuncMap.insert(std::make_pair(13, &nextFunctionDeclR13));
+        _productionFuncMap.insert(std::make_pair(14, &nextFunctionDeclR14));
+        _productionFuncMap.insert(std::make_pair(15, &nextFunctionDeclR15));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
