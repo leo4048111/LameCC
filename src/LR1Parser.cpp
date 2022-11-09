@@ -46,6 +46,7 @@ namespace cc
         _productionFuncMap.insert(std::make_pair(8, &nextParmVarDeclR8));
         _productionFuncMap.insert(std::make_pair(9, &nextFunctionDeclR9));
         _productionFuncMap.insert(std::make_pair(10, &nextCompoundStmtR10));
+        _productionFuncMap.insert(std::make_pair(11, &nextFunctionDeclR11));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
@@ -325,6 +326,42 @@ namespace cc
         if(rbrace->name() != "}" || lbrace->name() != "{") return nullptr;
 
         return std::make_shared<NonTerminal>("CompoundStmt", nullptr); // body is empty
+    }
+
+    // FunctionDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER ( ParmVarDecl ) CompoundStmt
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR11(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 6; i++) stateStack.pop(); // pop 6 states
+
+        auto compoundStmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce CompoundStmt
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto parmVarDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce ParmVarDecl
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwvartype = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE
+        symbolStack.pop();
+
+        if(parmVarDecl->name() != "ParmVarDecl" || rparen->name() != ")" || parmVarDecl->name() != "ParmVarDecl" ||lparen->name() != "(" || identifier->name() != "TOKEN_IDENTIFIER" || kwvartype->name() != "TOKEN_VARTYPE") return nullptr;
+    
+        std::string type = kwvartype->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto curParmVarDeclNode = dynamic_pointer_cast<AST::ParmVarDecl>(std::move(parmVarDecl->_node));
+
+        while(curParmVarDeclNode != nullptr) {
+            params.push_back(std::move(curParmVarDeclNode));
+            curParmVarDeclNode = std::move(params.back()->_nextParmVarDecl);
+        }
+        auto body = dynamic_pointer_cast<AST::CompoundStmt>(std::move(compoundStmt->_node));
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, std::move(body));
+        
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
     }
 
     void LR1Parser::parseProductionsFromJson(const std::string& productionFilePath)
