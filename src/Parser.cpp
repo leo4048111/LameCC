@@ -565,7 +565,7 @@ namespace cc
             }
 
             nextToken(); // eat ')'
-            return std::make_unique<AST::CallExpr>(std::make_unique<AST::DeclRefExpr>(name), params);
+            return std::make_unique<AST::CallExpr>(std::make_unique<AST::DeclRefExpr>(name, true), params);
         }
         default:
             return std::make_unique<AST::DeclRefExpr>(name);
