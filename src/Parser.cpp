@@ -549,7 +549,7 @@ namespace cc
             std::shared_ptr<Token> pLParen = _pCurToken;
             nextToken(); // eat '('
             std::vector<std::unique_ptr<AST::Expr>> params;
-            do
+            while(_pCurToken->type != TokenType::TOKEN_RPAREN)
             {
                 params.push_back(nextRValue());
                 switch (_pCurToken->type)
@@ -562,7 +562,7 @@ namespace cc
                     FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ) to match ( at " << pLParen->pos.line << ", " << pLParen->pos.column);
                     return nullptr;
                 }
-            }while(_pCurToken->type != TokenType::TOKEN_RPAREN);
+            }
 
             nextToken(); // eat ')'
             return std::make_unique<AST::CallExpr>(std::make_unique<AST::DeclRefExpr>(name), params);
