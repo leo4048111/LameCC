@@ -340,7 +340,14 @@ namespace cc
         // Stmt base class
         class Stmt : public ASTNode
         {
+            friend class cc::LR1Parser;
 
+        protected:
+            std::unique_ptr<Stmt> _nextStmt;
+
+        public:
+            Stmt(std::unique_ptr<Stmt> nextStmt = nullptr) : 
+            _nextStmt(std::move(nextStmt)) {};
         };
 
         // This is the null statement ";": C99 6.8.3p3.
@@ -837,7 +844,11 @@ namespace cc
         static std::shared_ptr<NonTerminal> nextFunctionDeclR15(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 15
         static std::shared_ptr<NonTerminal> nextVarDeclR17(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 17
         static std::shared_ptr<NonTerminal> nextVarDeclR18(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 18
-
+        static std::shared_ptr<NonTerminal> nextCompoundStmtR19(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 19
+        static std::shared_ptr<NonTerminal> nextStmtsR20(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 20
+        static std::shared_ptr<NonTerminal> nextStmtsR21(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 21
+        static std::shared_ptr<NonTerminal> nextStmt(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 22 ~ 28
+        
     // grammar initialization
     private:
         void parseProductionsFromJson(const std::string& productionFilePath);

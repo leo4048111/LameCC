@@ -187,6 +187,11 @@ namespace cc
         _productionFuncMap.insert(std::make_pair(16, &nextDecl));
         _productionFuncMap.insert(std::make_pair(17, &nextVarDeclR17));
         _productionFuncMap.insert(std::make_pair(18, &nextVarDeclR18));
+        _productionFuncMap.insert(std::make_pair(19, &nextCompoundStmtR19));
+        _productionFuncMap.insert(std::make_pair(20, &nextStmtsR20));
+        _productionFuncMap.insert(std::make_pair(21, &nextStmtsR21));
+        for(int id = 22; id <= 28; id++)
+            _productionFuncMap.insert(std::make_pair(id, &nextStmt));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
@@ -685,6 +690,81 @@ namespace cc
 
         auto varDecl = std::make_unique<AST::VarDecl>(name, type, true, std::move(exprNode));
         return std::make_shared<NonTerminal>("VarDecl", std::move(varDecl));
+    }
+
+    // CompoundStmt -> { Stmts }
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextCompoundStmtR19(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 3; i++) stateStack.pop(); // pop 3 states
+
+        auto rbrace = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce }
+        symbolStack.pop();
+        auto stmts = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Stmts
+        symbolStack.pop();
+        auto lbrace = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce {
+        symbolStack.pop();
+
+        if(rbrace->name() != "}" || lbrace->name() != "{" || stmts->name() != "Stmts") return nullptr;
+
+        std::vector<std::unique_ptr<AST::Stmt>> body;
+        auto curStmtNode = dynamic_pointer_cast<AST::Stmt>(std::move(stmts->_node));
+        while(curStmtNode != nullptr) {
+            body.push_back(std::move(curStmtNode));
+            curStmtNode = std::move(body.back()->_nextStmt);
+        }
+
+        auto CompoundStmt = std::make_unique<AST::CompoundStmt>(body);
+        return std::make_shared<NonTerminal>("CompoundStmt", std::move(CompoundStmt));
+    }
+
+    // Stmts -> Stmt
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextStmtsR20(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        stateStack.pop(); // pop state
+
+        auto stmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Stmt
+        symbolStack.pop();
+
+        if(stmt->name() != "Stmt") return nullptr;
+
+        return std::make_shared<NonTerminal>("Stmts", std::move(stmt->_node));
+    }
+
+    // Stmts -> Stmt Stmts
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextStmtsR21(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 2; i++) stateStack.pop(); // pop 2 states
+
+        auto stmts = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Stmts
+        symbolStack.pop();
+        auto stmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Stmt
+        symbolStack.pop();
+
+        if(stmt->name() != "Stmt" || stmts->name() != "Stmts") return nullptr;
+        auto curStmtNode = dynamic_pointer_cast<AST::Stmt>(std::move(stmt->_node));
+        auto nextStmtsNode = dynamic_pointer_cast<AST::Stmt>(std::move(stmts->_node));
+
+        curStmtNode->_nextStmt = std::move(nextStmtsNode);
+        return std::make_shared<NonTerminal>("Stmts", std::move(curStmtNode));
+    }
+
+    // Stmt -> CompoundStmt
+    // Stmt -> WhileStmt
+    // Stmt -> IfStmt
+    // Stmt -> ReturnStmt
+    // Stmt -> NullStmt
+    // Stmt -> DeclStmt
+    // Stmt -> ValueStmt
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextStmt(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        stateStack.pop(); // pop state
+
+        auto stmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce possible Stmt type
+        symbolStack.pop();
+
+        if(stmt->name() != "CompoundStmt" && stmt->name() != "WhileStmt" && stmt->name() != "IfStmt" && stmt->name() != "ReturnStmt" && stmt->name() != "NullStmt" && stmt->name() != "DeclStmt" &&stmt->name() != "ValueStmt") return nullptr;
+
+        return std::make_shared<NonTerminal>("Stmt", std::move(stmt->_node));
     }
 
     // Expression parser imeplemented with OperatorPrecedence Parse
