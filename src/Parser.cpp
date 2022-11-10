@@ -257,7 +257,7 @@ namespace cc
     std::unique_ptr<AST::Decl> Parser::nextVarDecl(const std::string name, const std::string type)
     {
         nextToken(); // eat '='
-        std::unique_ptr<AST::Expr> val = nextBinaryOperator();
+        std::unique_ptr<AST::Expr> val = nextExpression();
         if(val == nullptr) return nullptr;
         switch (_pCurToken->type)
         {

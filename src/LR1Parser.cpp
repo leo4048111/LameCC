@@ -33,13 +33,146 @@ namespace cc
         return "";
     }
 
+    static AST::UnaryOpType TokenTypeToUnaryOpType(TokenType tokenType)
+    {
+        switch(tokenType)
+        {
+        case TokenType::TOKEN_PLUS:
+            return AST::UnaryOpType::UO_Plus;
+        case TokenType::TOKEN_MINUS:
+            return AST::UnaryOpType::UO_Minus;
+        case TokenType::TOKEN_TILDE:
+            return AST::UnaryOpType::UO_Not;
+        case TokenType::TOKEN_EXCLAIM:
+            return AST::UnaryOpType::UO_LNot;
+        default:
+            return AST::UnaryOpType::UO_UNDEFINED;
+        }
+    }
+
+    static AST::BinaryOpType TokenTypeToBinaryOpType(TokenType tokenType)
+    {
+        switch(tokenType)
+        {
+        case TokenType::TOKEN_PLUS:
+            return AST::BinaryOpType::BO_Add;
+        case TokenType::TOKEN_MINUS:
+            return AST::BinaryOpType::BO_Sub;
+        case TokenType::TOKEN_PLUSEQ:
+            return AST::BinaryOpType::BO_AddAssign;
+        case TokenType::TOKEN_MINUSEQ:
+            return AST::BinaryOpType::BO_SubAssign;
+        case TokenType::TOKEN_EXCLAIMEQ:
+            return AST::BinaryOpType::BO_NE;
+        case TokenType::TOKEN_EQEQ:
+            return AST::BinaryOpType::BO_EQ;
+        case TokenType::TOKEN_SLASH:
+            return AST::BinaryOpType::BO_Div;
+        case TokenType::TOKEN_SLASHEQ:
+            return AST::BinaryOpType::BO_DivAssign;
+        case TokenType::TOKEN_PERCENT:
+            return AST::BinaryOpType::BO_Rem;
+        case TokenType::TOKEN_PERCENTEQ:
+            return AST::BinaryOpType::BO_RemAssign;
+        case TokenType::TOKEN_STAR:
+            return AST::BinaryOpType::BO_Mul;
+        case TokenType::TOKEN_STAREQ:
+            return AST::BinaryOpType::BO_MulAssign;
+        case TokenType::TOKEN_LESS:
+            return AST::BinaryOpType::BO_LT;
+        case TokenType::TOKEN_LESSEQ:
+            return AST::BinaryOpType::BO_LE;
+        case TokenType::TOKEN_LESSLESS:
+            return AST::BinaryOpType::BO_Shl;
+        case TokenType::TOKEN_LESSLESSEQ:
+            return AST::BinaryOpType::BO_ShlAssign;
+        case TokenType::TOKEN_GREATER:
+            return AST::BinaryOpType::BO_GT;
+        case TokenType::TOKEN_GREATEREQ:
+            return AST::BinaryOpType::BO_GE;
+        case TokenType::TOKEN_GREATERGREATER:
+            return AST::BinaryOpType::BO_Shr;
+        case TokenType::TOKEN_GREATERGREATEREQ:
+            return AST::BinaryOpType::BO_ShrAssign;
+        case TokenType::TOKEN_EQ:
+            return AST::BinaryOpType::BO_Assign;
+        case TokenType::TOKEN_AMP:
+            return AST::BinaryOpType::BO_And;
+        case TokenType::TOKEN_AMPAMP:
+            return AST::BinaryOpType::BO_LAnd;
+        case TokenType::TOKEN_AMPEQ:
+            return AST::BinaryOpType::BO_AndAssign;
+        case TokenType::TOKEN_PIPE:
+            return AST::BinaryOpType::BO_Or;
+        case TokenType::TOKEN_PIPEPIPE:
+            return AST::BinaryOpType::BO_LOr;
+        case TokenType::TOKEN_PIPEEQ:
+            return AST::BinaryOpType::BO_OrAssign;
+        case TokenType::TOKEN_CARET:
+            return AST::BinaryOpType::BO_Xor;
+        case TokenType::TOKEN_CARETEQ:
+            return AST::BinaryOpType::BO_XorAssign;
+        default:
+            return AST::BinaryOpType::BO_UNDEFINED;
+        }
+    };
+
+    static AST::BinaryOperator::Precedence TokenTypeToBinaryOpPrecedence(TokenType tokenType)
+    {
+        switch(tokenType)
+        {
+        case TokenType::TOKEN_EQ:
+        case TokenType::TOKEN_PLUSEQ:
+        case TokenType::TOKEN_MINUSEQ:
+        case TokenType::TOKEN_STAREQ:
+        case TokenType::TOKEN_SLASHEQ:
+        case TokenType::TOKEN_PERCENTEQ:
+        case TokenType::TOKEN_LESSLESSEQ:
+        case TokenType::TOKEN_GREATERGREATEREQ:
+        case TokenType::TOKEN_AMPEQ:
+        case TokenType::TOKEN_CARETEQ:
+        case TokenType::TOKEN_PIPEEQ:
+            return AST::BinaryOperator::Precedence::ASSIGNMENT;
+        case TokenType::TOKEN_PIPEPIPE:
+            return AST::BinaryOperator::Precedence::LOGICALOR;
+        case TokenType::TOKEN_AMPAMP:
+            return AST::BinaryOperator::Precedence::LOGICALAND;
+        case TokenType::TOKEN_PIPE:
+            return AST::BinaryOperator::Precedence::BITWISEOR;
+        case TokenType::TOKEN_CARET:
+            return AST::BinaryOperator::Precedence::BITWISEXOR;
+        case TokenType::TOKEN_AMP:
+            return AST::BinaryOperator::Precedence::BITWISEAND;
+        case TokenType::TOKEN_EXCLAIMEQ:
+        case TokenType::TOKEN_EQEQ:
+            return AST::BinaryOperator::Precedence::EQUALITY;
+        case TokenType::TOKEN_LESS:
+        case TokenType::TOKEN_LESSEQ:
+        case TokenType::TOKEN_GREATER:
+        case TokenType::TOKEN_GREATEREQ:
+            return AST::BinaryOperator::Precedence::RELATIONAL;
+        case TokenType::TOKEN_LESSLESS:
+        case TokenType::TOKEN_GREATERGREATER:
+            return AST::BinaryOperator::Precedence::BITWISESHIFT;
+        case TokenType::TOKEN_PLUS:
+        case TokenType::TOKEN_MINUS:
+            return AST::BinaryOperator::Precedence::ADDITIVE;
+        case TokenType::TOKEN_SLASH:
+        case TokenType::TOKEN_STAR:
+        case TokenType::TOKEN_PERCENT:
+            return AST::BinaryOperator::Precedence::MULTIPLICATIVE;
+        default:
+            return AST::BinaryOperator::Precedence::UNDEFINED;
+        }
+    };
+
     LR1Parser::LR1Parser()
     {
         // for rn item, use function _productionFuncMap[n] to reduce
         _productionFuncMap.insert(std::make_pair(1, &nextStartSymbolR1));
         _productionFuncMap.insert(std::make_pair(2, &nextTranslationUnitDeclR2));
         _productionFuncMap.insert(std::make_pair(3, &nextTranslationUnitDeclR3));
-        _productionFuncMap.insert(std::make_pair(4, &nextDeclR4));
+        _productionFuncMap.insert(std::make_pair(4, &nextDecl));
         _productionFuncMap.insert(std::make_pair(5, &nextFunctionDeclR5));
         _productionFuncMap.insert(std::make_pair(6, &nextFunctionDeclR6));
         _productionFuncMap.insert(std::make_pair(7, &nextParmVarDeclR7));
@@ -51,6 +184,9 @@ namespace cc
         _productionFuncMap.insert(std::make_pair(13, &nextFunctionDeclR13));
         _productionFuncMap.insert(std::make_pair(14, &nextFunctionDeclR14));
         _productionFuncMap.insert(std::make_pair(15, &nextFunctionDeclR15));
+        _productionFuncMap.insert(std::make_pair(16, &nextDecl));
+        _productionFuncMap.insert(std::make_pair(17, &nextVarDeclR17));
+        _productionFuncMap.insert(std::make_pair(18, &nextVarDeclR18));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
@@ -94,6 +230,16 @@ namespace cc
             switch (action.type)
             {
             case ActionType::INVALID:
+                // check if there should be an expression, if positive then call our OperatorPrecedence Parser
+                if(actionTableRow["Expr"].type != ActionType::INVALID) {
+                    auto expr = nextExpr(); // parse next expression
+                    if(expr != nullptr) { 
+                        symbolStack.push(expr);
+                        stateStack.push(actionTableRow["Expr"].id);
+                        break;
+                    }
+                }
+                // invalid action, abort asap
                 FATAL_ERROR("Parsing failed at " << _pCurToken->pos.line << ", " << _pCurToken->pos.column);
                 return nullptr;
             case ActionType::SHIFT:
@@ -175,16 +321,17 @@ namespace cc
     }
 
     // Decl -> FunctionDecl
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextDeclR4(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    // Decl -> VarDecl
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextDecl(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
     {
         stateStack.pop(); // pop state
 
-        auto functionDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce FunctionDecl
+        auto decl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce FunctionDecl
         symbolStack.pop();
 
-        if(functionDecl->name() != "FunctionDecl") return nullptr;
+        if(decl->name() != "FunctionDecl" && decl->name() != "VarDecl") return nullptr;
 
-        return std::make_shared<NonTerminal>("Decl", std::move(functionDecl->_node));
+        return std::make_shared<NonTerminal>("Decl", std::move(decl->_node));
     }
 
     // FunctionDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER ( ) ;
@@ -491,6 +638,234 @@ namespace cc
         auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, std::move(body));
         
         return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // VarDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextVarDeclR17(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 3; i++) stateStack.pop(); // pop 3 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwvartype = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE
+        symbolStack.pop();
+
+        if(semi->name() != ";" || identifier->name() != "TOKEN_IDENTIFIER" || kwvartype->name() != "TOKEN_VARTYPE") return nullptr;
+
+        std::string type = kwvartype->_token->content;
+        std::string name = identifier->_token->content;
+
+        auto varDecl = std::make_unique<AST::VarDecl>(name, type);
+        return std::make_shared<NonTerminal>("VarDecl", std::move(varDecl));
+    }
+
+    // VarDecl -> TOKEN_VARTYPE TOKEN_IDENTIFIER = Expr ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextVarDeclR18(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 5; i++) stateStack.pop(); // pop 5 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto expr = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Expr
+        symbolStack.pop();
+        auto eq = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce =
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto kwvartype = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE
+        symbolStack.pop();
+
+        if(semi->name() != ";" || expr->name() != "Expr" || eq->name() != "=" || identifier->name() != "TOKEN_IDENTIFIER" || kwvartype->name() != "TOKEN_VARTYPE") return nullptr;
+
+        std::string type = kwvartype->_token->content;
+        std::string name = identifier->_token->content;
+        auto exprNode = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
+
+        auto varDecl = std::make_unique<AST::VarDecl>(name, type, true, std::move(exprNode));
+        return std::make_shared<NonTerminal>("VarDecl", std::move(varDecl));
+    }
+
+    // Expression parser imeplemented with OperatorPrecedence Parse
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextExpr()
+    {
+        auto exprNode = nextExpression();
+        if(exprNode == nullptr) return nullptr;
+
+        return std::make_shared<NonTerminal>("Expr", std::move(exprNode));
+    }
+
+    std::unique_ptr<AST::Expr> LR1Parser::nextExpression()
+    {
+        std::unique_ptr<AST::Expr> lhs = nextUnaryOperator();
+        if(lhs == nullptr) return nullptr;
+
+        return nextRHSExpr(std::move(lhs), AST::BinaryOperator::Precedence::COMMA); 
+    }
+
+    std::unique_ptr<AST::Expr> LR1Parser::nextRHSExpr(std::unique_ptr<AST::Expr> lhs, AST::BinaryOperator::Precedence lastBiOpPrec)
+    {
+        do
+        {
+            AST::BinaryOperator::Precedence curBiOpPrec = TokenTypeToBinaryOpPrecedence(_pCurToken->type);
+            if(curBiOpPrec < lastBiOpPrec) return lhs;
+
+            AST::BinaryOpType opType = TokenTypeToBinaryOpType(_pCurToken->type);
+            nextToken(); // eat current biOp
+            std::unique_ptr<AST::Expr> rhs = nextPrimaryExpr();
+            if(rhs == nullptr) return nullptr;
+
+            AST::BinaryOperator::Precedence nextBiOpPrec = TokenTypeToBinaryOpPrecedence(_pCurToken->type);
+
+            if(curBiOpPrec < nextBiOpPrec || (curBiOpPrec == AST::BinaryOperator::Precedence::ASSIGNMENT && curBiOpPrec == nextBiOpPrec))
+                rhs = nextRHSExpr(std::move(rhs), (AST::BinaryOperator::Precedence)((int)curBiOpPrec + !(curBiOpPrec == AST::BinaryOperator::Precedence::ASSIGNMENT)));
+            lhs = std::make_unique<AST::BinaryOperator>(opType, std::move(lhs), std::move(rhs));
+        }while(true);
+
+        return nullptr;
+    }
+
+    std::unique_ptr<AST::Expr> LR1Parser::nextUnaryOperator()
+    {
+        switch(_pCurToken->type)
+        {
+        case TokenType::TOKEN_EXCLAIM:
+        case TokenType::TOKEN_TILDE:
+        case TokenType::TOKEN_PLUS:
+        case TokenType::TOKEN_MINUS:
+        case TokenType::TOKEN_PLUSPLUS:
+        case TokenType::TOKEN_MINUSMINUS:
+        {
+            AST::UnaryOpType opType;
+            switch(_pCurToken->type)
+            {
+            case TokenType::TOKEN_PLUSPLUS:
+                opType = AST::UnaryOpType::UO_PreInc;
+                break;
+            case TokenType::TOKEN_MINUSMINUS:
+                opType = AST::UnaryOpType::UO_PreDec;
+                break;
+            default:
+                opType = TokenTypeToUnaryOpType(_pCurToken->type);
+                break;
+            }
+
+            if(opType == AST::UnaryOpType::UO_UNDEFINED) // unary op type check
+            {
+                return nullptr;
+            }
+
+            nextToken(); // eat current operator
+            return std::make_unique<AST::UnaryOperator>(opType, nextUnaryOperator());
+        }
+        default:
+        {
+            std::unique_ptr<AST::Expr> body = nextPrimaryExpr();
+            switch (_pCurToken->type)
+            {
+            case TokenType::TOKEN_PLUSPLUS:
+                nextToken(); // eat '++'
+                return std::make_unique<AST::UnaryOperator>(AST::UnaryOpType::UO_PostInc, std::move(body));
+            case TokenType::TOKEN_MINUSMINUS:
+                nextToken(); // eat '--'
+                return std::make_unique<AST::UnaryOperator>(AST::UnaryOpType::UO_PostDec, std::move(body));
+            default:
+                return std::move(body);
+            }
+        }
+        }
+    }
+
+    std::unique_ptr<AST::Expr> LR1Parser::nextRValue()
+    {
+        std::unique_ptr<AST::Expr> expr = nextExpression();
+        if(expr->isLValue())
+            expr = std::make_unique<AST::ImplicitCastExpr>(std::move(expr), "LValueToRValue");
+
+        return expr;
+    }
+
+    // PrimaryExpr
+    // ::= VarRefOrFuncCall
+    // ::= Number
+    // ::= ParenExpr
+    std::unique_ptr<AST::Expr> LR1Parser::nextPrimaryExpr()
+    {
+        switch(_pCurToken->type)
+        {
+        case TokenType::TOKEN_IDENTIFIER:
+            return nextVarRefOrFuncCall();
+        case TokenType::TOKEN_NUMBER:
+            return nextNumber();
+        case TokenType::TOKEN_LPAREN:
+            return nextParenExpr();
+        default:
+            return nullptr;
+        }
+    }
+
+    // VarRefOrFuncCall
+    // ::= CallExpr '(' params ')'
+    // ::= DeclRefExpr
+    // params
+    // ::= Expr
+    // ::= Expr ',' params
+    std::unique_ptr<AST::Expr> LR1Parser::nextVarRefOrFuncCall()
+    {
+        std::string name = _pCurToken->content;
+        nextToken(); // eat name
+        switch (_pCurToken->type)
+        {
+        case TokenType::TOKEN_LPAREN:
+        {
+            std::shared_ptr<Token> pLParen = _pCurToken;
+            nextToken(); // eat '('
+            std::vector<std::unique_ptr<AST::Expr>> params;
+            do
+            {
+                params.push_back(nextRValue());
+                switch (_pCurToken->type)
+                {
+                case TokenType::TOKEN_COMMA:
+                    nextToken(); // eat ','
+                case TokenType::TOKEN_RPAREN:
+                    break;
+                default:
+                    return nullptr;
+                }
+            }while(_pCurToken->type != TokenType::TOKEN_RPAREN);
+
+            nextToken(); // eat ')'
+            return std::make_unique<AST::CallExpr>(std::make_unique<AST::DeclRefExpr>(name), params);
+        }
+        default:
+            return std::make_unique<AST::DeclRefExpr>(name);
+        }
+    }
+
+    std::unique_ptr<AST::Expr> LR1Parser::nextNumber()
+    {
+        // TODO float literal
+        std::string number = _pCurToken->content;
+        nextToken(); // eat number
+        return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
+    }
+
+    std::unique_ptr<AST::Expr> LR1Parser::nextParenExpr()
+    {
+        std::shared_ptr<Token> pLParen = _pCurToken;
+        nextToken(); // eat '('
+        std::unique_ptr<AST::Expr> subExpr = nextExpression();
+        if(subExpr == nullptr) return nullptr;
+        switch(_pCurToken->type)
+        {
+        case TokenType::TOKEN_RPAREN:
+            nextToken(); // eat ')'
+            return std::make_unique<AST::ParenExpr>(std::move(subExpr));
+        default:
+            return nullptr;
+        }
     }
 
     void LR1Parser::parseProductionsFromJson(const std::string& productionFilePath)
