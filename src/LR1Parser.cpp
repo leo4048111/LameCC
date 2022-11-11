@@ -192,6 +192,9 @@ namespace cc
         _productionFuncMap.insert(std::make_pair(21, &nextStmtsR21));
         for(int id = 22; id <= 28; id++)
             _productionFuncMap.insert(std::make_pair(id, &nextStmt));
+        _productionFuncMap.insert(std::make_pair(29, &nextWhileStmtR29));
+        _productionFuncMap.insert(std::make_pair(30, &nextIfStmtR30));
+        _productionFuncMap.insert(std::make_pair(31, &nextIfStmtR31));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath)
@@ -767,6 +770,95 @@ namespace cc
         return std::make_shared<NonTerminal>("Stmt", std::move(stmt->_node));
     }
 
+    // WhileStmt -> TOKEN_KWWHILE ( Expr ) Stmt
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextWhileStmtR29(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 5; i++) stateStack.pop(); // pop 5 states
+
+        auto stmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Stmt
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto expr = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Expr
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto kwwhile = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWWHILE
+        symbolStack.pop();
+
+        if(stmt->name() != "Stmt" || rparen->name() != ")" || expr->name() != "Expr" || lparen->name() != "(" || kwwhile->name() != "TOKEN_KWWHILE") return nullptr;
+
+        auto conditionNode = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
+        if(conditionNode->isLValue()) // a RValue is needed for condition so if LValue, implicitly cast to RValue
+            conditionNode = std::make_unique<AST::ImplicitCastExpr>(std::move(conditionNode), "LValueToRValue");
+        
+        auto body = dynamic_pointer_cast<AST::Stmt>(std::move(stmt->_node));
+        auto whileStmtNode = std::make_unique<AST::WhileStmt>(std::move(conditionNode), std::move(body));
+
+        return std::make_shared<NonTerminal>("WhileStmt", std::move(whileStmtNode));
+    }
+
+    // IfStmt -> TOKEN_KWIF ( Expr ) Stmt
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextIfStmtR30(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 5; i++) stateStack.pop(); // pop 5 states
+
+        auto stmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Stmt
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto expr = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Expr
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto kwif = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWIF
+        symbolStack.pop();
+
+        if(stmt->name() != "Stmt" || rparen->name() != ")" || expr->name() != "Expr" || lparen->name() != "(" || kwif->name() != "TOKEN_KWIF") return nullptr;
+
+        auto conditionNode = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
+        if(conditionNode->isLValue()) // a RValue is needed for condition so if LValue, implicitly cast to RValue
+            conditionNode = std::make_unique<AST::ImplicitCastExpr>(std::move(conditionNode), "LValueToRValue");
+        
+        auto body = dynamic_pointer_cast<AST::Stmt>(std::move(stmt->_node));
+        auto ifStmtNode = std::make_unique<AST::IfStmt>(std::move(conditionNode), std::move(body));
+
+        return std::make_shared<NonTerminal>("IfStmt", std::move(ifStmtNode));
+    }
+
+    // IfStmt -> TOKEN_KWIF ( Expr ) Stmt TOKEN_KWELSE Stmt
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextIfStmtR31(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack)
+    {
+        for(int i = 0; i < 7; i++) stateStack.pop(); // pop 5 states
+
+        auto elseStmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Stmt
+        symbolStack.pop();
+        auto kwelse = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce Stmt
+        symbolStack.pop();
+        auto stmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Stmt
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto expr = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Expr
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto kwif = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWIF
+        symbolStack.pop();
+
+        if(elseStmt->name() != "Stmt" || kwelse->name() != "TOKEN_KWELSE" || stmt->name() != "Stmt" || rparen->name() != ")" || expr->name() != "Expr" || lparen->name() != "(" || kwif->name() != "TOKEN_KWIF") return nullptr;
+
+        auto conditionNode = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
+        if(conditionNode->isLValue()) // a RValue is needed for condition so if LValue, implicitly cast to RValue
+            conditionNode = std::make_unique<AST::ImplicitCastExpr>(std::move(conditionNode), "LValueToRValue");
+        
+        auto body = dynamic_pointer_cast<AST::Stmt>(std::move(stmt->_node));
+        auto elseBody = dynamic_pointer_cast<AST::Stmt>(std::move(elseStmt->_node));
+        auto ifStmtNode = std::make_unique<AST::IfStmt>(std::move(conditionNode), std::move(body), std::move(elseBody));
+
+        return std::make_shared<NonTerminal>("IfStmt", std::move(ifStmtNode));
+    }
+
     // Expression parser imeplemented with OperatorPrecedence Parse
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextExpr()
     {
@@ -952,6 +1044,7 @@ namespace cc
     {
         std::ifstream i(productionFilePath);
         json j;
+        
         i >> j;
         i.close();
 

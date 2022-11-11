@@ -848,7 +848,10 @@ namespace cc
         static std::shared_ptr<NonTerminal> nextStmtsR20(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 20
         static std::shared_ptr<NonTerminal> nextStmtsR21(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 21
         static std::shared_ptr<NonTerminal> nextStmt(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 22 ~ 28
-        
+        static std::shared_ptr<NonTerminal> nextWhileStmtR29(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 21
+        static std::shared_ptr<NonTerminal> nextIfStmtR30(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 21
+        static std::shared_ptr<NonTerminal> nextIfStmtR31(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 21
+    
     // grammar initialization
     private:
         void parseProductionsFromJson(const std::string& productionFilePath);

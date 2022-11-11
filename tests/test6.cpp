@@ -1,3 +1,23 @@
-int func();
+int a = 1;
 
-int a = 3 + 4 * (123 < func()) + 56 / func2() % 8 + (a++);
+int main()
+{
+    if(2 < 3)
+    {
+
+    }
+
+    while(a--)
+    {
+
+    }
+
+    if(1)
+    {
+
+    }
+    else 
+    {
+
+    }
+}
