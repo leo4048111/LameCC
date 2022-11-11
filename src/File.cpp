@@ -35,6 +35,11 @@ namespace cc
             _ss << (char)EOF;
     }
 
+    const std::string File::curLine()
+    {
+        return _ss.str();
+    }
+
     const char File::nextChar()
     {
         if(_curIdx >= _ss.str().size()) return EOF;

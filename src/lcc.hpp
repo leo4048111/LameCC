@@ -462,6 +462,7 @@ namespace cc
         const char nextChar();
         void retractChar();
         const char peekChar();
+        const std::string curLine();
     
         // getters
         const Position getPosition() const { return _pos; };
@@ -854,7 +855,7 @@ namespace cc
     
     // grammar initialization
     private:
-        void parseProductionsFromJson(const std::string& productionFilePath);
+        bool parseProductionsFromFile(const std::string& grammarFilePath);
 
         void findFirstSetForSymbols();
 
