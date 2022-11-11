@@ -440,7 +440,8 @@ namespace cc
         case TokenType::TOKEN_KWFLOAT:
         case TokenType::TOKEN_KWCHAR:
             return nextDeclStmt();
-        case TokenType::TOKEN_NUMBER:
+        case TokenType::TOKEN_INTEGER:
+        case TokenType::TOKEN_FLOAT:
         case TokenType::TOKEN_LPAREN:
         case TokenType::TOKEN_IDENTIFIER:
             return nextValueStmt();
@@ -574,10 +575,17 @@ namespace cc
 
     std::unique_ptr<AST::Expr> Parser::nextNumber()
     {
-        // TODO float literal
         std::string number = _pCurToken->content;
-        nextToken(); // eat number
-        return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
+        if(_pCurToken->type == TokenType::TOKEN_INTEGER)
+        {
+            nextToken(); // eat number
+            return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
+        }
+        else
+        {
+            nextToken(); // eat number
+            return std::make_unique<AST::FloatingLiteral>(std::stof(number));
+        }
     }
 
     std::unique_ptr<AST::Expr> Parser::nextParenExpr()
@@ -607,7 +615,8 @@ namespace cc
         {
         case TokenType::TOKEN_IDENTIFIER:
             return nextVarRefOrFuncCall();
-        case TokenType::TOKEN_NUMBER:
+        case TokenType::TOKEN_INTEGER:
+        case TokenType::TOKEN_FLOAT:
             return nextNumber();
         case TokenType::TOKEN_LPAREN:
             return nextParenExpr();

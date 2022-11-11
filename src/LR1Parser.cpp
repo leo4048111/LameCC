@@ -31,8 +31,10 @@ namespace cc
             return "TOKEN_KWRETURN";
         case TokenType::TOKEN_IDENTIFIER:
             return "TOKEN_IDENTIFIER";
-        case TokenType::TOKEN_NUMBER:
-            return "TOKEN_NUMBER";
+        case TokenType::TOKEN_INTEGER:
+            return "TOKEN_INTEGER";
+        case TokenType::TOKEN_FLOAT:
+            return "TOKEN_FLOAT";
         case TokenType::TOKEN_CHAR:
             return "TOKEN_CHAR";
         case TokenType::TOKEN_STRING:
@@ -350,8 +352,10 @@ namespace cc
             return nullptr;
 
         auto lastTranslationUnitDecl = dynamic_pointer_cast<AST::TranslationUnitDecl>(std::move(translationUnitDecl->_node));
-        std::vector<std::unique_ptr<AST::Decl>> decls(std::move(lastTranslationUnitDecl->_decls));
+        std::vector<std::unique_ptr<AST::Decl>> decls;
         decls.push_back(dynamic_pointer_cast<AST::Decl>(std::move(decl->_node))); // push new decl
+        for(auto& decl : lastTranslationUnitDecl->_decls)
+            decls.push_back(std::move(decl));
         auto curTranslationUnitDeclNode = std::make_unique<AST::TranslationUnitDecl>(decls);
         return std::make_shared<NonTerminal>("TranslationUnitDecl", std::move(curTranslationUnitDeclNode));
     }
@@ -1142,7 +1146,8 @@ namespace cc
         {
         case TokenType::TOKEN_IDENTIFIER:
             return nextVarRefOrFuncCall();
-        case TokenType::TOKEN_NUMBER:
+        case TokenType::TOKEN_INTEGER:
+        case TokenType::TOKEN_FLOAT:
             return nextNumber();
         case TokenType::TOKEN_LPAREN:
             return nextParenExpr();
@@ -1192,10 +1197,17 @@ namespace cc
 
     std::unique_ptr<AST::Expr> LR1Parser::nextNumber()
     {
-        // TODO float literal
         std::string number = _pCurToken->content;
-        nextToken(); // eat number
-        return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
+        if(_pCurToken->type == TokenType::TOKEN_INTEGER)
+        {
+            nextToken(); // eat number
+            return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
+        }
+        else
+        {
+            nextToken(); // eat number
+            return std::make_unique<AST::FloatingLiteral>(std::stof(number));
+        }
     }
 
     std::unique_ptr<AST::Expr> LR1Parser::nextParenExpr()

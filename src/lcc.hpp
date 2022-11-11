@@ -201,6 +201,20 @@ namespace cc
             int value() const { return _value; };
         };
 
+        // Floating literal value
+        class FloatingLiteral : public Expr
+        {
+        protected:
+            float _value;
+
+        public:
+            FloatingLiteral(float value) : _value(value) { _isLValue = false; }; // Floating literal should be LValue instead of RValue
+
+            virtual json asJson() const override;
+
+            float value() const { return _value; };
+        };
+
         // A reference to a declared variable, function, enum, etc.
         class DeclRefExpr : public Expr
         {
@@ -460,7 +474,8 @@ namespace cc
         TOKEN_WHITESPACE,
         TOKEN_NEWLINE,
         TOKEN_IDENTIFIER,
-        TOKEN_NUMBER,
+        TOKEN_INTEGER,
+        TOKEN_FLOAT,
         TOKEN_CHAR,
         TOKEN_STRING,
         TOKEN_EOF,
@@ -529,7 +544,7 @@ namespace cc
         std::shared_ptr<Token> makeKeywordToken(TokenType keywordType, std::string &buffer) const;
         std::shared_ptr<Token> makePunctuatorToken(TokenType punctuatorType) const;
         std::shared_ptr<Token> makeStringToken(std::string &buffer) const;
-        std::shared_ptr<Token> makeNumberToken(std::string &buffer) const;
+        std::shared_ptr<Token> makeNumberToken(TokenType type, std::string &buffer) const;
         std::shared_ptr<Token> makeCharToken(std::string &buffer);
 
         // wrapper for file methods

@@ -1,4 +1,3 @@
-int a = 123;
 float f1 = 1.1;
 float f2 = 1.2f;
 float f3 = 9.2E+3; // scientific notation with positive exponent

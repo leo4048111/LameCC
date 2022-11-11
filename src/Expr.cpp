@@ -73,6 +73,14 @@ namespace cc
             return j;
         }
 
+        json FloatingLiteral::asJson() const
+        {
+            json j;
+            j["type"] = "FloatingLiteral";
+            j["value"] = std::to_string(_value);
+            return j;
+        }
+
         json DeclRefExpr::asJson() const
         {
             json j;

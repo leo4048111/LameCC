@@ -222,10 +222,14 @@ namespace cc
         std::string buffer;
         buffer += c;
         char last = c;
+        float mightBeFloat = false;
         while(true)
         {
             c = nextChar();
             bool isFloat = strchr("eEpP", last) && strchr("+-", c); // accepts scientific notation and p-notation(hexadecimal)
+            
+            if(isFloat) mightBeFloat = true;
+
             if(!isalpha(c) && !isdigit(c) && !isFloat && c != '.')
             {
                 retractChar();
@@ -235,7 +239,10 @@ namespace cc
             last = c;
         }
 
-        return makeNumberToken(buffer);
+        if(!mightBeFloat)
+            return makeNumberToken(TokenType::TOKEN_INTEGER, buffer);
+        else 
+            return makeNumberToken(TokenType::TOKEN_FLOAT, buffer);
     }
 
     std::shared_ptr<Token> Lexer::readChar()
@@ -276,10 +283,10 @@ namespace cc
         return makeGeneralToken(token);
     }
 
-    std::shared_ptr<Token> Lexer::makeNumberToken(std::string& buffer) const
+    std::shared_ptr<Token> Lexer::makeNumberToken(TokenType type, std::string& buffer) const
     {
         Token token;
-        token.type = TokenType::TOKEN_NUMBER;
+        token.type = type;
         token.content = buffer;
         return makeGeneralToken(token);
     }

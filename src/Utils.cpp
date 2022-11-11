@@ -39,9 +39,15 @@ namespace cc
                     j["content"] = token->content;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
-                case TokenType::TOKEN_NUMBER:
+                case TokenType::TOKEN_INTEGER:
                     j["id"] = token->count;
-                    j["type"] = "TOKEN_NUMBER";
+                    j["type"] = "TOKEN_INTEGER";
+                    j["content"] = token->content;
+                    j["position"] = {token->pos.line, token->pos.column};
+                    break;
+                case TokenType::TOKEN_FLOAT:
+                    j["id"] = token->count;
+                    j["type"] = "TOKEN_FLOAT";
                     j["content"] = token->content;
                     j["position"] = {token->pos.line, token->pos.column};
                     break;
