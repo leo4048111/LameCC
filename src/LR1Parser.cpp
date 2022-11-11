@@ -208,6 +208,11 @@ namespace cc
         _productionFuncMap.insert(std::make_pair(29, &nextWhileStmtR29));
         _productionFuncMap.insert(std::make_pair(30, &nextIfStmtR30));
         _productionFuncMap.insert(std::make_pair(31, &nextIfStmtR31));
+        _productionFuncMap.insert(std::make_pair(32, &nextReturnStmtR32));
+        _productionFuncMap.insert(std::make_pair(33, &nextReturnStmtR33));
+        _productionFuncMap.insert(std::make_pair(34, &nextNullStmtR34));
+        _productionFuncMap.insert(std::make_pair(35, &nextDeclStmtR35));
+        _productionFuncMap.insert(std::make_pair(36, &nextValueStmtR36));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath)
@@ -895,7 +900,7 @@ namespace cc
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextIfStmtR31(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
     {
         for (int i = 0; i < 7; i++)
-            stateStack.pop(); // pop 5 states
+            stateStack.pop(); // pop 7 states
 
         auto elseStmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Stmt
         symbolStack.pop();
@@ -924,6 +929,104 @@ namespace cc
         auto ifStmtNode = std::make_unique<AST::IfStmt>(std::move(conditionNode), std::move(body), std::move(elseBody));
 
         return std::make_shared<NonTerminal>("IfStmt", std::move(ifStmtNode));
+    }
+
+    // ReturnStmt -> TOKEN_KWRETURN ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextReturnStmtR32(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
+    {
+        for (int i = 0; i < 2; i++)
+            stateStack.pop(); // pop 7 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto kwreturn = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWRETURN
+        symbolStack.pop();
+
+        if (semi->name() != ";" || kwreturn->name() != "TOKEN_KWRETURN")
+            return nullptr;
+
+        auto returnStmtNode = std::make_unique<AST::ReturnStmt>();
+
+        return std::make_shared<NonTerminal>("ReturnStmt", std::move(returnStmtNode));
+    }
+
+    // ReturnStmt -> TOKEN_KWRETURN Expr ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextReturnStmtR33(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
+    {
+        for (int i = 0; i < 3; i++)
+            stateStack.pop(); // pop 3 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto expr = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Expr
+        symbolStack.pop();
+        auto kwreturn = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWRETURN
+        symbolStack.pop();
+
+        if (semi->name() != ";" || expr->name() != "Expr" || kwreturn->name() != "TOKEN_KWRETURN")
+            return nullptr;
+
+        auto returnVal = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
+
+        if (returnVal->isLValue()) // a RValue is needed for return value so if LValue, implicitly cast to RValue
+            returnVal = std::make_unique<AST::ImplicitCastExpr>(std::move(returnVal), "LValueToRValue");
+        
+        auto returnStmtNode = std::make_unique<AST::ReturnStmt>(std::move(returnVal));
+
+        return std::make_shared<NonTerminal>("ReturnStmt", std::move(returnStmtNode));
+    }
+
+    // NullStmt -> ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextNullStmtR34(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
+    {
+        stateStack.pop(); // pop state
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+
+        if (semi->name() != ";")
+            return nullptr;
+
+        return std::make_shared<NonTerminal>("NullStmt", std::make_unique<AST::NullStmt>());
+    }
+
+    // DeclStmt -> Decl
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextDeclStmtR35(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
+    {
+        stateStack.pop(); // pop state
+
+        auto decl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+
+        if (decl->name() != "Decl")
+            return nullptr;
+
+        // currently comma expression(eg. int a = 1, b = 2) is not supported
+        std::vector<std::unique_ptr<AST::Decl>> decls;
+
+        auto declNode = dynamic_pointer_cast<AST::Decl>(std::move(decl->_node));
+        decls.push_back(std::move(declNode));
+
+        return std::make_shared<NonTerminal>("DeclStmt", std::make_unique<AST::DeclStmt>(decls));
+    }
+
+    // ValueStmt -> Expr ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextValueStmtR36(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
+    {
+        for (int i = 0; i < 2; i++)
+            stateStack.pop(); // pop 2 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto expr = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce Expr
+        symbolStack.pop();
+
+        if (semi->name() != ";" || expr->name() != "Expr")
+            return nullptr;
+
+        auto exprNode = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
+
+        return std::make_shared<NonTerminal>("ValueStmt", std::make_unique<AST::ValueStmt>(std::move(exprNode)));
     }
 
     // Expression parser imeplemented with OperatorPrecedence Parse
@@ -1223,9 +1326,10 @@ namespace cc
                 case 4: // get start sysmbol
                 {
                     std::string symbol;
-                    for(auto& c : line)
+                    for (auto &c : line)
                     {
-                        if(c != ' ' && c != '\n') symbol += c;
+                        if (c != ' ' && c != '\n')
+                            symbol += c;
                     }
                     json production;
                     production["id"] = 0;

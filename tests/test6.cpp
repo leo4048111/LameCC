@@ -2,6 +2,8 @@ int a = 1;
 
 int main()
 {
+    int a = 2;
+    ;
     if(2 < 3)
     {
 
@@ -20,4 +22,5 @@ int main()
     {
 
     }
+    return 0;
 }

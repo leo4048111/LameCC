@@ -24,7 +24,7 @@ using json = nlohmann::ordered_json;
 #define WARNING(msg) \
     std::cout << po::yellow << "Warning: " << po::light_gray << msg << std::endl
 
-// AST nodes 
+// AST nodes
 namespace cc
 {
     namespace AST
@@ -34,7 +34,7 @@ namespace cc
         {
         public:
             virtual json asJson() const = 0;
-            virtual ~ASTNode() {};
+            virtual ~ASTNode(){};
         };
 
         // Cecls
@@ -75,10 +75,9 @@ namespace cc
         // Decl base class
         class Decl : public ASTNode
         {
-
         };
 
-        // root node for AST 
+        // root node for AST
         class TranslationUnitDecl : public Decl
         {
             friend class cc::LR1Parser;
@@ -87,8 +86,7 @@ namespace cc
             std::vector<std::unique_ptr<Decl>> _decls;
 
         public:
-            TranslationUnitDecl(std::vector<std::unique_ptr<Decl>>& decls) :
-            _decls(std::move(decls)) {};
+            TranslationUnitDecl(std::vector<std::unique_ptr<Decl>> &decls) : _decls(std::move(decls)){};
             ~TranslationUnitDecl() = default;
 
             virtual json asJson() const override;
@@ -101,8 +99,7 @@ namespace cc
             std::string _name;
 
         public:
-            NamedDecl(const std::string& name) : 
-            _name(name) {};
+            NamedDecl(const std::string &name) : _name(name){};
             ~NamedDecl() = default;
 
             virtual json asJson() const override;
@@ -110,19 +107,18 @@ namespace cc
             const std::string name() const { return _name; };
         };
 
-        // Represents a variable declaration or definition. 
+        // Represents a variable declaration or definition.
         class VarDecl : public NamedDecl
         {
         protected:
-            std::string _type; 
+            std::string _type;
             bool _isInitialized;
             std::unique_ptr<Expr> _value;
 
         public:
-            VarDecl(const std::string& name, const std::string& type, 
-            bool isInitialized = false, std::unique_ptr<Expr> value = nullptr) :
-            NamedDecl(name), _type(type), _isInitialized(isInitialized), _value(std::move(value)) {};
-            
+            VarDecl(const std::string &name, const std::string &type,
+                    bool isInitialized = false, std::unique_ptr<Expr> value = nullptr) : NamedDecl(name), _type(type), _isInitialized(isInitialized), _value(std::move(value)){};
+
             virtual json asJson() const override;
 
             const std::string type() const { return _type; };
@@ -137,12 +133,11 @@ namespace cc
             std::unique_ptr<ParmVarDecl> _nextParmVarDecl;
 
         public:
-            ParmVarDecl(const std::string& name, const std::string& type, std::unique_ptr<ParmVarDecl> nextParmVarDecl = nullptr) : VarDecl(name, type), _nextParmVarDecl(std::move(nextParmVarDecl))
-            {};
+            ParmVarDecl(const std::string &name, const std::string &type, std::unique_ptr<ParmVarDecl> nextParmVarDecl = nullptr) : VarDecl(name, type), _nextParmVarDecl(std::move(nextParmVarDecl)){};
 
             virtual json asJson() const override;
         };
-        
+
         // Represents a function declaration or definition.
         class FunctionDecl : public NamedDecl
         {
@@ -152,8 +147,7 @@ namespace cc
             std::unique_ptr<Stmt> _body;
 
         public:
-            FunctionDecl(const std::string& name, const std::string& type, std::vector<std::unique_ptr<ParmVarDecl>>& params, std::unique_ptr<Stmt> body) :
-            NamedDecl(name), _type(type), _params(std::move(params)), _body(std::move(body)) {};
+            FunctionDecl(const std::string &name, const std::string &type, std::vector<std::unique_ptr<ParmVarDecl>> &params, std::unique_ptr<Stmt> body) : NamedDecl(name), _type(type), _params(std::move(params)), _body(std::move(body)){};
 
             virtual json asJson() const override;
         };
@@ -165,29 +159,29 @@ namespace cc
         // Binary operator types
         enum class BinaryOpType
         {
-        BO_UNDEFINED = 0,
-        #define BINARY_OPERATION(name, disc) BO_##name,
-        #define UNARY_OPERATION(name, disc)
-        #include "OperationType.inc"
-        #undef UNARY_OPERATION
-        #undef BINARY_OPERATION
+            BO_UNDEFINED = 0,
+#define BINARY_OPERATION(name, disc) BO_##name,
+#define UNARY_OPERATION(name, disc)
+#include "OperationType.inc"
+#undef UNARY_OPERATION
+#undef BINARY_OPERATION
         };
 
         enum class UnaryOpType
         {
-        UO_UNDEFINED = 0,
-        #define BINARY_OPERATION(name, disc)
-        #define UNARY_OPERATION(name, disc) UO_##name,
-        #include "OperationType.inc"
-        #undef UNARY_OPERATION
-        #undef BINARY_OPERATION
+            UO_UNDEFINED = 0,
+#define BINARY_OPERATION(name, disc)
+#define UNARY_OPERATION(name, disc) UO_##name,
+#include "OperationType.inc"
+#undef UNARY_OPERATION
+#undef BINARY_OPERATION
         };
 
         // Expr base class
         class Expr : public ASTNode
         {
         protected:
-            bool _isLValue{ false };
+            bool _isLValue{false};
 
         public:
             bool isLValue() const { return _isLValue; };
@@ -198,10 +192,9 @@ namespace cc
         {
         protected:
             int _value;
-        
-        public: 
-            IntegerLiteral(int value) : 
-            _value(value) { _isLValue = false; }; // Integer literal should be LValue instead of RValue 
+
+        public:
+            IntegerLiteral(int value) : _value(value) { _isLValue = false; }; // Integer literal should be LValue instead of RValue
 
             virtual json asJson() const override;
 
@@ -216,9 +209,8 @@ namespace cc
             bool _isCall;
 
         public:
-            DeclRefExpr(const std::string& name, bool isCall = false) :
-            _name(name), _isCall(isCall) { _isLValue = !isCall; };
-            
+            DeclRefExpr(const std::string &name, bool isCall = false) : _name(name), _isCall(isCall) { _isLValue = !isCall; };
+
             virtual json asJson() const override;
 
             const std::string name() const { return _name; };
@@ -232,18 +224,18 @@ namespace cc
             enum class Precedence
             {
                 UNDEFINED = 0,
-                COMMA = 1, // ,
-                ASSIGNMENT = 2, // =, +=, -=, *=, /=, %=, <<=M >>=, &=, ^=, |=
-                LOGICALOR = 3, // ||
-                LOGICALAND = 4, // &&
-                BITWISEOR = 5, // | 
-                BITWISEXOR = 6, // ^
-                BITWISEAND = 7, // &
-                EQUALITY = 8, // == !=
-                RELATIONAL = 9, // < <= > >=
-                SPACESHIP = 10, // <=>
-                BITWISESHIFT = 11, // << >> 
-                ADDITIVE = 12, // + -
+                COMMA = 1,          // ,
+                ASSIGNMENT = 2,     // =, +=, -=, *=, /=, %=, <<=M >>=, &=, ^=, |=
+                LOGICALOR = 3,      // ||
+                LOGICALAND = 4,     // &&
+                BITWISEOR = 5,      // |
+                BITWISEXOR = 6,     // ^
+                BITWISEAND = 7,     // &
+                EQUALITY = 8,       // == !=
+                RELATIONAL = 9,     // < <= > >=
+                SPACESHIP = 10,     // <=>
+                BITWISESHIFT = 11,  // << >>
+                ADDITIVE = 12,      // + -
                 MULTIPLICATIVE = 13 // * / %
             };
 
@@ -253,7 +245,7 @@ namespace cc
 
         public:
             BinaryOperator(BinaryOpType type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs);
-            
+
             virtual json asJson() const override;
 
             bool isAssignment() const;
@@ -269,9 +261,7 @@ namespace cc
             std::unique_ptr<Expr> _body;
 
         public:
-            UnaryOperator(UnaryOpType type, std::unique_ptr<Expr> body) :
-            _type(type), _body(std::move(body)) 
-            {};
+            UnaryOperator(UnaryOpType type, std::unique_ptr<Expr> body) : _type(type), _body(std::move(body)){};
 
             virtual json asJson() const override;
 
@@ -285,8 +275,7 @@ namespace cc
             std::unique_ptr<Expr> _subExpr;
 
         public:
-            ParenExpr(std::unique_ptr<Expr> expr) :
-            _subExpr(std::move(expr))
+            ParenExpr(std::unique_ptr<Expr> expr) : _subExpr(std::move(expr))
             {
                 _isLValue = _subExpr->isLValue();
             };
@@ -300,16 +289,14 @@ namespace cc
         protected:
             std::unique_ptr<DeclRefExpr> _functionExpr;
             std::vector<std::unique_ptr<Expr>> _params;
-        
+
         public:
-            CallExpr(std::unique_ptr<DeclRefExpr> function, std::vector<std::unique_ptr<Expr>>& params) :
-            _functionExpr(std::move(function)), _params(std::move(params))
-            {};
+            CallExpr(std::unique_ptr<DeclRefExpr> function, std::vector<std::unique_ptr<Expr>> &params) : _functionExpr(std::move(function)), _params(std::move(params)){};
 
             virtual json asJson() const override;
         };
 
-        // Base class for type casts, including both implicit casts (ImplicitCastExpr) and explicit casts 
+        // Base class for type casts, including both implicit casts (ImplicitCastExpr) and explicit casts
         class CastExpr : public Expr
         {
         protected:
@@ -317,8 +304,7 @@ namespace cc
             std::unique_ptr<Expr> _subExpr;
 
         public:
-            CastExpr(std::unique_ptr<Expr> expr, const std::string type):
-                _subExpr(std::move(expr)), _kind(type){};
+            CastExpr(std::unique_ptr<Expr> expr, const std::string type) : _subExpr(std::move(expr)), _kind(type){};
 
             virtual json asJson() const override;
         };
@@ -327,9 +313,8 @@ namespace cc
         class ImplicitCastExpr : public CastExpr
         {
         public:
-            ImplicitCastExpr(std::unique_ptr<Expr> expr, const std::string& type): 
-                CastExpr(std::move(expr), type){};
-                
+            ImplicitCastExpr(std::unique_ptr<Expr> expr, const std::string &type) : CastExpr(std::move(expr), type){};
+
             virtual json asJson() const override;
         };
     } // Expr end
@@ -346,8 +331,7 @@ namespace cc
             std::unique_ptr<Stmt> _nextStmt;
 
         public:
-            Stmt(std::unique_ptr<Stmt> nextStmt = nullptr) : 
-            _nextStmt(std::move(nextStmt)) {};
+            Stmt(std::unique_ptr<Stmt> nextStmt = nullptr) : _nextStmt(std::move(nextStmt)){};
         };
 
         // This is the null statement ";": C99 6.8.3p3.
@@ -362,10 +346,9 @@ namespace cc
         {
         protected:
             std::unique_ptr<Expr> _expr;
-        
+
         public:
-            ValueStmt(std::unique_ptr<Expr> expr) :
-            _expr(std::move(expr)){};
+            ValueStmt(std::unique_ptr<Expr> expr) : _expr(std::move(expr)){};
 
             virtual json asJson() const override;
         };
@@ -379,8 +362,7 @@ namespace cc
             std::unique_ptr<Stmt> _elseBody;
 
         public:
-            IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body, std::unique_ptr<Stmt> elseBody = nullptr) :
-            _condition(std::move(condition)), _body(std::move(body)), _elseBody(std::move(elseBody)){};
+            IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body, std::unique_ptr<Stmt> elseBody = nullptr) : _condition(std::move(condition)), _body(std::move(body)), _elseBody(std::move(elseBody)){};
 
             virtual json asJson() const override;
         };
@@ -393,8 +375,7 @@ namespace cc
             std::unique_ptr<Stmt> _body;
 
         public:
-            WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body) :
-            _condition(std::move(condition)), _body(std::move(body)) {};
+            WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body) : _condition(std::move(condition)), _body(std::move(body)){};
 
             virtual json asJson() const override;
         };
@@ -406,8 +387,7 @@ namespace cc
             std::vector<std::unique_ptr<Decl>> _decls;
 
         public:
-            DeclStmt(std::vector<std::unique_ptr<Decl>>& decls) : 
-            _decls(std::move(decls)) {};
+            DeclStmt(std::vector<std::unique_ptr<Decl>> &decls) : _decls(std::move(decls)){};
 
             virtual json asJson() const override;
         };
@@ -419,21 +399,19 @@ namespace cc
             std::vector<std::unique_ptr<Stmt>> _body;
 
         public:
-            CompoundStmt(std::vector<std::unique_ptr<Stmt>>& body) :
-            _body(std::move(body)) {};
+            CompoundStmt(std::vector<std::unique_ptr<Stmt>> &body) : _body(std::move(body)){};
 
             virtual json asJson() const override;
         };
 
-        // This represents a return, optionally of an expression: return; return 4;. 
+        // This represents a return, optionally of an expression: return; return 4;.
         class ReturnStmt : public Stmt
         {
         protected:
             std::unique_ptr<Expr> _value;
 
         public:
-            ReturnStmt(std::unique_ptr<Expr> value = nullptr) :
-            _value(std::move(value)) {};
+            ReturnStmt(std::unique_ptr<Expr> value = nullptr) : _value(std::move(value)){};
 
             virtual json asJson() const override;
         };
@@ -447,7 +425,7 @@ namespace cc
     {
         int line;
         int column;
-    }Position;
+    } Position;
 
     // File class
     class File
@@ -457,13 +435,14 @@ namespace cc
         ~File();
 
         const bool fail() const;
+
     public:
         void nextLine();
         const char nextChar();
         void retractChar();
         const char peekChar();
         const std::string curLine();
-    
+
         // getters
         const Position getPosition() const { return _pos; };
         const std::string path() const { return _path; };
@@ -475,7 +454,7 @@ namespace cc
         Position _pos;
         int _curIdx{0};
     };
-    
+
     enum class TokenType
     {
         TOKEN_WHITESPACE,
@@ -486,11 +465,11 @@ namespace cc
         TOKEN_STRING,
         TOKEN_EOF,
         TOKEN_INVALID,
-        #define keyword(name, disc) name,
-        #define punctuator(name, disc) name,
-        #include "TokenType.inc"
-        #undef punctuator
-        #undef keyword    
+#define keyword(name, disc) name,
+#define punctuator(name, disc) name,
+#include "TokenType.inc"
+#undef punctuator
+#undef keyword
     };
 
     // Token
@@ -498,8 +477,8 @@ namespace cc
     {
         TokenType type;
         std::shared_ptr<File> file;
-        Position pos; // token position in file
-        unsigned int count;   // token number in a file
+        Position pos;        // token position in file
+        unsigned int count;  // token number in a file
         std::string content; // content of this token
 
     } Token;
@@ -509,21 +488,23 @@ namespace cc
     {
     public:
         ~Lexer() = default;
-        Lexer(const Lexer&) = delete;
-        Lexer& operator= (const Lexer&) = delete;
+        Lexer(const Lexer &) = delete;
+        Lexer &operator=(const Lexer &) = delete;
 
     private:
         Lexer();
 
     public:
-        static Lexer* getInstance() {
-            if(_inst.get() == nullptr) _inst.reset(new Lexer);
+        static Lexer *getInstance()
+        {
+            if (_inst.get() == nullptr)
+                _inst.reset(new Lexer);
 
             return _inst.get();
         }
 
         std::vector<std::shared_ptr<Token>> run(std::shared_ptr<File> file);
-    
+
     private:
         static std::unique_ptr<Lexer> _inst;
 
@@ -539,17 +520,17 @@ namespace cc
         std::shared_ptr<Token> readChar();
 
         // token makers
-        std::shared_ptr<Token> makeGeneralToken(const Token& token) const;
+        std::shared_ptr<Token> makeGeneralToken(const Token &token) const;
         std::shared_ptr<Token> makeSpaceToken() const;
         std::shared_ptr<Token> makeEOFToken() const;
         std::shared_ptr<Token> makeNewlineToken() const;
         std::shared_ptr<Token> makeInvalidToken() const;
-        std::shared_ptr<Token> makeIdentifierToken(std::string& buffer) const;
-        std::shared_ptr<Token> makeKeywordToken(TokenType keywordType, std::string& buffer) const;
+        std::shared_ptr<Token> makeIdentifierToken(std::string &buffer) const;
+        std::shared_ptr<Token> makeKeywordToken(TokenType keywordType, std::string &buffer) const;
         std::shared_ptr<Token> makePunctuatorToken(TokenType punctuatorType) const;
-        std::shared_ptr<Token> makeStringToken(std::string& buffer) const;
-        std::shared_ptr<Token> makeNumberToken(std::string& buffer) const;
-        std::shared_ptr<Token> makeCharToken(std::string& buffer);
+        std::shared_ptr<Token> makeStringToken(std::string &buffer) const;
+        std::shared_ptr<Token> makeNumberToken(std::string &buffer) const;
+        std::shared_ptr<Token> makeCharToken(std::string &buffer);
 
         // wrapper for file methods
         void nextLine();
@@ -574,12 +555,14 @@ namespace cc
     {
     private:
         Parser() = default;
-        Parser(const Parser&) = delete;
-        Parser& operator=(const Parser&) = delete;
+        Parser(const Parser &) = delete;
+        Parser &operator=(const Parser &) = delete;
 
-    public:    
-        static Parser* getInstance() {
-            if(_inst.get() == nullptr) _inst.reset(new Parser);
+    public:
+        static Parser *getInstance()
+        {
+            if (_inst.get() == nullptr)
+                _inst.reset(new Parser);
 
             return _inst.get();
         }
@@ -588,14 +571,14 @@ namespace cc
         static std::unique_ptr<Parser> _inst;
 
     public:
-        std::unique_ptr<AST::Decl> run(const std::vector<std::shared_ptr<Token>>& tokens);
+        std::unique_ptr<AST::Decl> run(const std::vector<std::shared_ptr<Token>> &tokens);
 
     private:
-        void nextToken();  
+        void nextToken();
 
     private:
         // decl parsers
-        std::unique_ptr<AST::Decl> nextTopLevelDecl(); 
+        std::unique_ptr<AST::Decl> nextTopLevelDecl();
         std::unique_ptr<AST::Decl> nextFunctionDecl(const std::string name, const std::string type);
         std::unique_ptr<AST::Decl> nextVarDecl(const std::string name, const std::string type);
         // stmt parsers
@@ -620,186 +603,218 @@ namespace cc
 
     private:
         std::vector<std::shared_ptr<Token>> _tokens;
-        int _curTokenIdx{ 0 };
-        std::shared_ptr<Token> _pCurToken{ nullptr };
+        int _curTokenIdx{0};
+        std::shared_ptr<Token> _pCurToken{nullptr};
     };
 
     // LR1 Parser class
     class LR1Parser
     {
-    enum class SymbolType
-    {
-        Terminal = 0,
-        NonTerminal
-    };
-
-    class Symbol
-    {
-    public: 
-        virtual SymbolType type() const = 0;
-        virtual std::string name() const = 0;
-        bool operator==(const Symbol& symbol) const{
-            return (this->type() == symbol.type()) && (this->name() == symbol.name());
-        }
-
-        bool operator<(const Symbol& symbol) const{
-            if(*this == symbol) return false;
-
-            if(this->type() != symbol.type()) return this->type() < symbol.type();
-
-            return this->name() < symbol.name();
-        }
-    };
-
-    class Terminal : public Symbol
-    {
-        friend class LR1Parser;
-    private:
-        std::string _name;
-        std::shared_ptr<Token> _token;
-    public:
-        virtual SymbolType type() const override { return SymbolType::Terminal; };
-        virtual std::string name() const override { return _name; };
-        Terminal(const std::string& name, std::shared_ptr<Token> token = nullptr) : _name(name), _token(token) {};
-    };
-
-    class NonTerminal : public Symbol
-    {
-        friend class LR1Parser;
-    private:
-        std::string _name;
-        std::unique_ptr<AST::ASTNode> _node;
-    public:
-        virtual SymbolType type() const override { return SymbolType::NonTerminal; };
-        virtual std::string name() const override { return _name; };
-        NonTerminal(const std::string& name, std::unique_ptr<AST::ASTNode> node = nullptr) : _name(name), _node(std::move(node)) {};
-        NonTerminal(NonTerminal&& nonTerminal) : _name(nonTerminal.name()), _node(std::move(nonTerminal._node)) {};
-    };
-
-    typedef struct
-    {
-        template<typename T>
-        bool operator()(const std::shared_ptr<T>& lhs, const std::shared_ptr<T>& rhs) const
+        enum class SymbolType
         {
-            if(*lhs == *rhs) return false; 
-
-            return *lhs < *rhs;
+            Terminal = 0,
+            NonTerminal
         };
-    }SharedPtrComp; // this is implemented so as to do pointer comparisons
-    
-    // production is an expression which looks like this: lhs -> rhs[0] rhs[1] ... rhs[n]
-    typedef struct _Production
-    {
-        int id;
-        std::shared_ptr<NonTerminal> lhs;
-        std::vector<std::shared_ptr<Symbol>> rhs;
-        _Production& operator=(const _Production& p) {
-            if(this != &p) {
-                this->id = p.id;
-                this->lhs = p.lhs;
-                this->rhs = p.rhs;
-            }
-            return *this;
-        }
 
-        bool operator==(const _Production& p) const {
-            if(!(this->id == p.id)) return false;
-            if(!(*lhs == *p.lhs)) return false;
-            if(rhs.size() != p.rhs.size()) return false;
-            for(int i = 0; i < rhs.size(); i++)
-                if(!(*rhs[i] == *p.rhs[i])) return false;
-
-            return true;
-        }
-
-        bool operator<(const _Production& p) const {
-            if(*this == p) return false;
-            if(!(this->id == p.id)) return this->id < p.id;
-            if(!(*lhs == *p.lhs)) return *lhs < *p.lhs;
-            if(rhs.size() != p.rhs.size()) return rhs.size() < p.rhs.size();
-            for(int i = 0; i < rhs.size(); i++)
-                if(!(*rhs[i] == *p.rhs[i])) return *rhs[i] < *p.rhs[i];
-            
-            return false;
-        }
-    }Production;
-
-    // LR(1) item
-    typedef struct _LR1Item
-    {
-        Production production;
-        int dotPos;
-        std::shared_ptr<Symbol> lookahead;
-
-        bool operator==(const _LR1Item& item) const
+        class Symbol
         {
-            return (production == item.production) && (dotPos == item.dotPos) && (*lookahead == *item.lookahead);
-        }
-
-        bool operator <(const _LR1Item& item) const
-        {
-            if(*this == item) return false;
-
-            if(!(production == item.production)) return production < item.production;
-            if(!(dotPos == item.dotPos)) return dotPos < item.dotPos;
-            
-            return *lookahead < *item.lookahead;
-        }
-    }LR1Item;
-
-    // LR(1) item set
-    typedef struct _LR1ItemSet
-    {
-        int id;
-        std::set<LR1Item> items;
-        std::map<std::shared_ptr<Symbol>, int> transitions;
-        bool operator==(const _LR1ItemSet& itemSet) const
-        {
-            if(items.size() != itemSet.items.size()) return false;
-            for(auto i = items.begin(), j = itemSet.items.begin(); i != items.end() && j != itemSet.items.end();i++, j++)
+        public:
+            virtual SymbolType type() const = 0;
+            virtual std::string name() const = 0;
+            bool operator==(const Symbol &symbol) const
             {
-                if(!(*i == *j)) return false;
+                return (this->type() == symbol.type()) && (this->name() == symbol.name());
             }
 
-            return true;
-        }
-
-        bool operator <(const _LR1ItemSet& itemSet) const
-        {
-            if(*this == itemSet) return false;
-            if(this->items.size() != itemSet.items.size()) return this->items.size() < itemSet.items.size();
-            for(auto i = items.begin(), j = itemSet.items.begin(); i != items.end() && j != itemSet.items.end();i++, j++)
+            bool operator<(const Symbol &symbol) const
             {
-                if(!(*i == *j)) return *i < *j;
+                if (*this == symbol)
+                    return false;
+
+                if (this->type() != symbol.type())
+                    return this->type() < symbol.type();
+
+                return this->name() < symbol.name();
+            }
+        };
+
+        class Terminal : public Symbol
+        {
+            friend class LR1Parser;
+
+        private:
+            std::string _name;
+            std::shared_ptr<Token> _token;
+
+        public:
+            virtual SymbolType type() const override { return SymbolType::Terminal; };
+            virtual std::string name() const override { return _name; };
+            Terminal(const std::string &name, std::shared_ptr<Token> token = nullptr) : _name(name), _token(token){};
+        };
+
+        class NonTerminal : public Symbol
+        {
+            friend class LR1Parser;
+
+        private:
+            std::string _name;
+            std::unique_ptr<AST::ASTNode> _node;
+
+        public:
+            virtual SymbolType type() const override { return SymbolType::NonTerminal; };
+            virtual std::string name() const override { return _name; };
+            NonTerminal(const std::string &name, std::unique_ptr<AST::ASTNode> node = nullptr) : _name(name), _node(std::move(node)){};
+            NonTerminal(NonTerminal &&nonTerminal) : _name(nonTerminal.name()), _node(std::move(nonTerminal._node)){};
+        };
+
+        typedef struct
+        {
+            template <typename T>
+            bool operator()(const std::shared_ptr<T> &lhs, const std::shared_ptr<T> &rhs) const
+            {
+                if (*lhs == *rhs)
+                    return false;
+
+                return *lhs < *rhs;
+            };
+        } SharedPtrComp; // this is implemented so as to do pointer comparisons
+
+        // production is an expression which looks like this: lhs -> rhs[0] rhs[1] ... rhs[n]
+        typedef struct _Production
+        {
+            int id;
+            std::shared_ptr<NonTerminal> lhs;
+            std::vector<std::shared_ptr<Symbol>> rhs;
+            _Production &operator=(const _Production &p)
+            {
+                if (this != &p)
+                {
+                    this->id = p.id;
+                    this->lhs = p.lhs;
+                    this->rhs = p.rhs;
+                }
+                return *this;
             }
 
-            return false;
-        }
-    }LR1ItemSet;
+            bool operator==(const _Production &p) const
+            {
+                if (!(this->id == p.id))
+                    return false;
+                if (!(*lhs == *p.lhs))
+                    return false;
+                if (rhs.size() != p.rhs.size())
+                    return false;
+                for (int i = 0; i < rhs.size(); i++)
+                    if (!(*rhs[i] == *p.rhs[i]))
+                        return false;
 
-    // ACTION table action definitions
-    enum class ActionType
-    {
-        INVALID = 0,
-        ACC,
-        SHIFT, // s
-        REDUCE // r
-    };
+                return true;
+            }
 
-    typedef struct 
-    {
-        ActionType type;
-        int id;
-    }Action;
-    
+            bool operator<(const _Production &p) const
+            {
+                if (*this == p)
+                    return false;
+                if (!(this->id == p.id))
+                    return this->id < p.id;
+                if (!(*lhs == *p.lhs))
+                    return *lhs < *p.lhs;
+                if (rhs.size() != p.rhs.size())
+                    return rhs.size() < p.rhs.size();
+                for (int i = 0; i < rhs.size(); i++)
+                    if (!(*rhs[i] == *p.rhs[i]))
+                        return *rhs[i] < *p.rhs[i];
+
+                return false;
+            }
+        } Production;
+
+        // LR(1) item
+        typedef struct _LR1Item
+        {
+            Production production;
+            int dotPos;
+            std::shared_ptr<Symbol> lookahead;
+
+            bool operator==(const _LR1Item &item) const
+            {
+                return (production == item.production) && (dotPos == item.dotPos) && (*lookahead == *item.lookahead);
+            }
+
+            bool operator<(const _LR1Item &item) const
+            {
+                if (*this == item)
+                    return false;
+
+                if (!(production == item.production))
+                    return production < item.production;
+                if (!(dotPos == item.dotPos))
+                    return dotPos < item.dotPos;
+
+                return *lookahead < *item.lookahead;
+            }
+        } LR1Item;
+
+        // LR(1) item set
+        typedef struct _LR1ItemSet
+        {
+            int id;
+            std::set<LR1Item> items;
+            std::map<std::shared_ptr<Symbol>, int> transitions;
+            bool operator==(const _LR1ItemSet &itemSet) const
+            {
+                if (items.size() != itemSet.items.size())
+                    return false;
+                for (auto i = items.begin(), j = itemSet.items.begin(); i != items.end() && j != itemSet.items.end(); i++, j++)
+                {
+                    if (!(*i == *j))
+                        return false;
+                }
+
+                return true;
+            }
+
+            bool operator<(const _LR1ItemSet &itemSet) const
+            {
+                if (*this == itemSet)
+                    return false;
+                if (this->items.size() != itemSet.items.size())
+                    return this->items.size() < itemSet.items.size();
+                for (auto i = items.begin(), j = itemSet.items.begin(); i != items.end() && j != itemSet.items.end(); i++, j++)
+                {
+                    if (!(*i == *j))
+                        return *i < *j;
+                }
+
+                return false;
+            }
+        } LR1ItemSet;
+
+        // ACTION table action definitions
+        enum class ActionType
+        {
+            INVALID = 0,
+            ACC,
+            SHIFT, // s
+            REDUCE // r
+        };
+
+        typedef struct
+        {
+            ActionType type;
+            int id;
+        } Action;
+
     private:
         LR1Parser();
-        LR1Parser(const LR1Parser&) = delete;
-        LR1Parser& operator=(const LR1Parser&) = delete;
+        LR1Parser(const LR1Parser &) = delete;
+        LR1Parser &operator=(const LR1Parser &) = delete;
 
-    public:    
-        static LR1Parser* getInstance() {
-            if(_inst.get() == nullptr) _inst.reset(new LR1Parser);
+    public:
+        static LR1Parser *getInstance()
+        {
+            if (_inst.get() == nullptr)
+                _inst.reset(new LR1Parser);
 
             return _inst.get();
         }
@@ -808,11 +823,11 @@ namespace cc
         static std::unique_ptr<LR1Parser> _inst;
 
     public:
-        std::unique_ptr<AST::Decl> run(const std::vector<std::shared_ptr<Token>>& tokens, const std::string& productionFilePath);
+        std::unique_ptr<AST::Decl> run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath);
 
-    // parsing
+        // parsing
     private:
-        std::unique_ptr<AST::Decl> parse(const std::vector<std::shared_ptr<Token>>& tokens);
+        std::unique_ptr<AST::Decl> parse(const std::vector<std::shared_ptr<Token>> &tokens);
 
         void nextToken();
 
@@ -828,34 +843,39 @@ namespace cc
         std::unique_ptr<AST::Expr> nextRValue();
 
         // production func
-        static std::shared_ptr<NonTerminal> nextStartSymbolR1(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 1
-        static std::shared_ptr<NonTerminal> nextTranslationUnitDeclR2(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 2
-        static std::shared_ptr<NonTerminal> nextTranslationUnitDeclR3(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 3
-        static std::shared_ptr<NonTerminal> nextDecl(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 4, 16
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR5(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 5
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR6(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 6
-        static std::shared_ptr<NonTerminal> nextParmVarDeclR7(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 7
-        static std::shared_ptr<NonTerminal> nextParmVarDeclR8(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 8
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR9(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 9
-        static std::shared_ptr<NonTerminal> nextCompoundStmtR10(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 10
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR11(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 11
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR12(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 12
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR13(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 13
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR14(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 14
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR15(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 15
-        static std::shared_ptr<NonTerminal> nextVarDeclR17(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 17
-        static std::shared_ptr<NonTerminal> nextVarDeclR18(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 18
-        static std::shared_ptr<NonTerminal> nextCompoundStmtR19(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 19
-        static std::shared_ptr<NonTerminal> nextStmtsR20(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 20
-        static std::shared_ptr<NonTerminal> nextStmtsR21(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 21
-        static std::shared_ptr<NonTerminal> nextStmt(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 22 ~ 28
-        static std::shared_ptr<NonTerminal> nextWhileStmtR29(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 21
-        static std::shared_ptr<NonTerminal> nextIfStmtR30(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 21
-        static std::shared_ptr<NonTerminal> nextIfStmtR31(std::stack<int>& stateStack, std::stack<std::shared_ptr<Symbol>>& symbolStack); // production 21
-    
-    // grammar initialization
+        static std::shared_ptr<NonTerminal> nextStartSymbolR1(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);         // production 1
+        static std::shared_ptr<NonTerminal> nextTranslationUnitDeclR2(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack); // production 2
+        static std::shared_ptr<NonTerminal> nextTranslationUnitDeclR3(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack); // production 3
+        static std::shared_ptr<NonTerminal> nextDecl(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);                  // production 4, 16
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR5(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);        // production 5
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR6(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);        // production 6
+        static std::shared_ptr<NonTerminal> nextParmVarDeclR7(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);         // production 7
+        static std::shared_ptr<NonTerminal> nextParmVarDeclR8(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);         // production 8
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR9(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);        // production 9
+        static std::shared_ptr<NonTerminal> nextCompoundStmtR10(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);       // production 10
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR11(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);       // production 11
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR12(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);       // production 12
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR13(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);       // production 13
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR14(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);       // production 14
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR15(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);       // production 15
+        static std::shared_ptr<NonTerminal> nextVarDeclR17(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);            // production 17
+        static std::shared_ptr<NonTerminal> nextVarDeclR18(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);            // production 18
+        static std::shared_ptr<NonTerminal> nextCompoundStmtR19(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);       // production 19
+        static std::shared_ptr<NonTerminal> nextStmtsR20(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);              // production 20
+        static std::shared_ptr<NonTerminal> nextStmtsR21(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);              // production 21
+        static std::shared_ptr<NonTerminal> nextStmt(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);                  // production 22 ~ 28
+        static std::shared_ptr<NonTerminal> nextWhileStmtR29(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 29
+        static std::shared_ptr<NonTerminal> nextIfStmtR30(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);             // production 30
+        static std::shared_ptr<NonTerminal> nextIfStmtR31(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);             // production 31
+        static std::shared_ptr<NonTerminal> nextReturnStmtR32(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);         // production 32
+        static std::shared_ptr<NonTerminal> nextReturnStmtR33(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);         // production 33
+        static std::shared_ptr<NonTerminal> nextNullStmtR34(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 34
+        static std::shared_ptr<NonTerminal> nextDeclStmtR35(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 35
+        static std::shared_ptr<NonTerminal> nextValueStmtR36(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 36
+
+        // grammar initialization
     private:
-        bool parseProductionsFromFile(const std::string& grammarFilePath);
+        bool parseProductionsFromFile(const std::string &grammarFilePath);
 
         void findFirstSetForSymbols();
 
@@ -863,38 +883,41 @@ namespace cc
 
         void constructLR1ParseTable();
 
-        void closure(LR1ItemSet& itemSet);
+        void closure(LR1ItemSet &itemSet);
 
-        LR1ItemSet go(LR1ItemSet& itemSet, std::shared_ptr<Symbol> symbol);
+        LR1ItemSet go(LR1ItemSet &itemSet, std::shared_ptr<Symbol> symbol);
 
         // some helpers
-        bool isTerminal(const std::shared_ptr<Symbol>& symbol) const {
+        bool isTerminal(const std::shared_ptr<Symbol> &symbol) const
+        {
             return symbol->type() == SymbolType::Terminal;
         }
 
-        bool isNonTerminal(const std::shared_ptr<Symbol>& symbol) const {
+        bool isNonTerminal(const std::shared_ptr<Symbol> &symbol) const
+        {
             return symbol->type() == SymbolType::NonTerminal;
         }
 
-        bool isEpsilon(const std::shared_ptr<Symbol>& symbol) {
+        bool isEpsilon(const std::shared_ptr<Symbol> &symbol)
+        {
             return symbol->name() == "$";
         }
 
-        template<typename T, typename _Pr=std::less<T>>
-        bool doInsert(std::set<T, _Pr>& s, T elem) // if insertion is successful return true
+        template <typename T, typename _Pr = std::less<T>>
+        bool doInsert(std::set<T, _Pr> &s, T elem) // if insertion is successful return true
         {
             auto lastSize = s.size();
             s.insert(elem);
             return lastSize != s.size();
         }
 
-        void printItemSet(LR1ItemSet& itemSet) const;
-        void printProduction(const Production& production, bool shouldAddDot = false, int dotPos = 0) const;
+        void printItemSet(LR1ItemSet &itemSet) const;
+        void printProduction(const Production &production, bool shouldAddDot = false, int dotPos = 0) const;
         void printActionAndGotoTable() const;
 
     private:
-        std::shared_ptr<Terminal> _endSymbol; // #
-        std::shared_ptr<Terminal> _epsilonSymbol; // $
+        std::shared_ptr<Terminal> _endSymbol;               // #
+        std::shared_ptr<Terminal> _epsilonSymbol;           // $
         std::shared_ptr<NonTerminal> _extensiveStartSymbol; // S'
         std::set<std::shared_ptr<Terminal>, SharedPtrComp> _terminals;
         std::set<std::shared_ptr<NonTerminal>, SharedPtrComp> _nonTerminals;
@@ -903,28 +926,29 @@ namespace cc
         std::vector<LR1ItemSet> _canonicalCollections;
 
         std::vector<std::map<std::string, Action>> _actionTable; // ACTION
-        std::vector<std::map<std::string, int>> _gotoTable; // GOTO 
+        std::vector<std::map<std::string, int>> _gotoTable;      // GOTO
 
         std::vector<std::shared_ptr<Token>> _tokens;
-        int _curTokenIdx{ 0 };
-        std::shared_ptr<Token> _pCurToken{ nullptr };
+        int _curTokenIdx{0};
+        std::shared_ptr<Token> _pCurToken{nullptr};
 
-        std::map<int, std::function<std::shared_ptr<NonTerminal>(std::stack<int>&, std::stack<std::shared_ptr<Symbol>>&)>> _productionFuncMap;
+        std::map<int, std::function<std::shared_ptr<NonTerminal>(std::stack<int> &, std::stack<std::shared_ptr<Symbol>> &)>> _productionFuncMap;
     };
 
     // some util funcs
     bool isSpace(const char c);
-    json jsonifyTokens(const std::vector<std::shared_ptr<Token>>& tokens);
-    bool dumpJson(const json& j, const std::string outPath);
+    json jsonifyTokens(const std::vector<std::shared_ptr<Token>> &tokens);
+    bool dumpJson(const json &j, const std::string outPath);
 
     // cast helpers
-    template<class T, class U> 
-    std::unique_ptr<T> dynamic_pointer_cast( std::unique_ptr<U> && r )
+    template <class T, class U>
+    std::unique_ptr<T> dynamic_pointer_cast(std::unique_ptr<U> &&r)
     {
-        (void) dynamic_cast< T* >( static_cast< U* >( 0 ) );
+        (void)dynamic_cast<T *>(static_cast<U *>(0));
 
-        T * p = dynamic_cast<T*>( r.get() );
-        if( p ) r.release();
-        return std::unique_ptr<T>( p );
+        T *p = dynamic_cast<T *>(r.get());
+        if (p)
+            r.release();
+        return std::unique_ptr<T>(p);
     }
 }

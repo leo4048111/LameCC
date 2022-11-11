@@ -64,7 +64,7 @@ namespace cc
             json j;
             j["type"] = "ReturnStmt";
             if(_value == nullptr)
-                j["value"] = "Void";
+                j["value"] = "VOID";
             else j["value"] = json::array( { _value->asJson() });
             return j;
         }
