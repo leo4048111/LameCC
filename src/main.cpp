@@ -12,6 +12,7 @@ std::string g_lr1_grammar_path;
 bool g_shouldDumpTokens = false;
 bool g_shouldDumpAST = false;
 bool g_shouldUseLR1Parser = false;
+bool g_shouldLogPrintLR1Process = false;
 
 static bool parseOpt(int argc, char** argv)
 {
@@ -52,6 +53,9 @@ static bool parseOpt(int argc, char** argv)
         .description("Specify grammar with a json file and use LR(1) parser")
         .type(po::string)
         .single();
+
+    auto& LOG = parser["log"]
+        .description("Print LR(1) parsing process");
 
     if(!parser(argc, argv)) return false;
 
@@ -112,6 +116,16 @@ static bool parseOpt(int argc, char** argv)
         }
     }
 
+    if(LOG.was_set())
+    {
+        if(!g_shouldUseLR1Parser)
+        {
+            WARNING("--log option must be used with --LR1 option, ignored --log");
+        }
+        else
+            g_shouldLogPrintLR1Process = true;
+    }
+
     return true;
 }
 
@@ -129,7 +143,7 @@ int main(int argc, char** argv)
     
     std::unique_ptr<cc::AST::Decl> astRoot = nullptr;
     if(g_shouldUseLR1Parser)
-        astRoot = cc::LR1Parser::getInstance()->run(tokens, g_lr1_grammar_path);
+        astRoot = cc::LR1Parser::getInstance()->run(tokens, g_lr1_grammar_path, g_shouldLogPrintLR1Process);
     else
         astRoot = cc::Parser::getInstance()->run(tokens);
 

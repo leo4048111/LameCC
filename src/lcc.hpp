@@ -838,16 +838,16 @@ namespace cc
         static std::unique_ptr<LR1Parser> _inst;
 
     public:
-        std::unique_ptr<AST::Decl> run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath);
+        std::unique_ptr<AST::Decl> run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath, bool shouldPrintProcess);
 
         // parsing
     private:
-        std::unique_ptr<AST::Decl> parse(const std::vector<std::shared_ptr<Token>> &tokens);
+        std::unique_ptr<AST::Decl> parse(const std::vector<std::shared_ptr<Token>> &tokens, bool shouldPrintProcess);
 
         void nextToken();
 
         // expression parsers
-        std::shared_ptr<LR1Parser::NonTerminal> nextExpr(); // expr parser implemented with OperatorPrecedence Parse
+        std::shared_ptr<NonTerminal> nextExpr(); // expr parser implemented with OperatorPrecedence Parse
         std::unique_ptr<AST::Expr> nextExpression();
         std::unique_ptr<AST::Expr> nextRHSExpr(std::unique_ptr<AST::Expr> lhs, AST::BinaryOperator::Precedence lastBiOpPrec);
         std::unique_ptr<AST::Expr> nextUnaryOperator();

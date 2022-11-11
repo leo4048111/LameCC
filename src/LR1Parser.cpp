@@ -217,7 +217,7 @@ namespace cc
         _productionFuncMap.insert(std::make_pair(36, &nextValueStmtR36));
     }
 
-    std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath)
+    std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath, bool shouldPrintProcess)
     {
         if (!parseProductionsFromFile(productionFilePath))
             return nullptr;
@@ -225,7 +225,17 @@ namespace cc
         constructCanonicalCollections();
         constructLR1ParseTable();
 
-        auto root = parse(tokens);
+        if (shouldPrintProcess)
+        {
+            INFO("LR(1) Canonical Collections: ");
+            for (auto &itemset : _canonicalCollections)
+                printItemSet(itemset);
+            INFO("ACTION GOTO Table: ");
+            printActionAndGotoTable();
+            INFO("Parse process: ");
+        }
+
+        auto root = parse(tokens, shouldPrintProcess);
         return root;
     }
 
@@ -236,7 +246,7 @@ namespace cc
         _pCurToken = _tokens[_curTokenIdx];
     }
 
-    std::unique_ptr<AST::Decl> LR1Parser::parse(const std::vector<std::shared_ptr<Token>> &tokens)
+    std::unique_ptr<AST::Decl> LR1Parser::parse(const std::vector<std::shared_ptr<Token>> &tokens, bool shouldPrintProcess)
     {
         _tokens = tokens;
         _curTokenIdx = 0;
@@ -264,6 +274,8 @@ namespace cc
                 // check if there should be an expression, if positive then call our OperatorPrecedence Parser
                 if (actionTableRow["Expr"].type != ActionType::INVALID)
                 {
+                    if(shouldPrintProcess)
+                        INFO("Called OperatorPrecedence parser and parsed expression");
                     auto expr = nextExpr(); // parse next expression
                     if (expr != nullptr)
                     {
@@ -276,12 +288,16 @@ namespace cc
                 FATAL_ERROR("Parsing failed at " << _pCurToken->pos.line << ", " << _pCurToken->pos.column);
                 return nullptr;
             case ActionType::SHIFT:
+                if (shouldPrintProcess)
+                    INFO("Shifted " << symbolName << " (s" << action.id << ")");
                 symbolStack.push(std::make_shared<Terminal>(symbolName, _pCurToken)); // push symbol
                 stateStack.push(action.id);                                           // push state
                 nextToken();
                 break;
             case ActionType::REDUCE:
             {
+                if (shouldPrintProcess)
+                    INFO("Reduced using production " << action.id << " (r" << action.id << ")");
                 auto nonTerminal = _productionFuncMap[action.id](stateStack, symbolStack);
                 if (nonTerminal == nullptr)
                 {
@@ -354,7 +370,7 @@ namespace cc
         auto lastTranslationUnitDecl = dynamic_pointer_cast<AST::TranslationUnitDecl>(std::move(translationUnitDecl->_node));
         std::vector<std::unique_ptr<AST::Decl>> decls;
         decls.push_back(dynamic_pointer_cast<AST::Decl>(std::move(decl->_node))); // push new decl
-        for(auto& decl : lastTranslationUnitDecl->_decls)
+        for (auto &decl : lastTranslationUnitDecl->_decls)
             decls.push_back(std::move(decl));
         auto curTranslationUnitDeclNode = std::make_unique<AST::TranslationUnitDecl>(decls);
         return std::make_shared<NonTerminal>("TranslationUnitDecl", std::move(curTranslationUnitDeclNode));
@@ -974,7 +990,7 @@ namespace cc
 
         if (returnVal->isLValue()) // a RValue is needed for return value so if LValue, implicitly cast to RValue
             returnVal = std::make_unique<AST::ImplicitCastExpr>(std::move(returnVal), "LValueToRValue");
-        
+
         auto returnStmtNode = std::make_unique<AST::ReturnStmt>(std::move(returnVal));
 
         return std::make_shared<NonTerminal>("ReturnStmt", std::move(returnStmtNode));
@@ -1198,7 +1214,7 @@ namespace cc
     std::unique_ptr<AST::Expr> LR1Parser::nextNumber()
     {
         std::string number = _pCurToken->content;
-        if(_pCurToken->type == TokenType::TOKEN_INTEGER)
+        if (_pCurToken->type == TokenType::TOKEN_INTEGER)
         {
             nextToken(); // eat number
             return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
