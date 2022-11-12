@@ -16,6 +16,12 @@ bool g_shouldLogPrintLR1Process = false;
 
 static bool parseOpt(int argc, char **argv)
 {
+    if(argc == 1)
+    {
+        FATAL_ERROR("Required program options, use -? to see all available options");
+        return false;
+    }
+
     po::parser parser;
 
     auto &help = parser["help"]
@@ -37,23 +43,23 @@ static bool parseOpt(int argc, char **argv)
 
     auto &T = parser["dump-tokens"]
                   .abbreviation('T')
-                  .description("Dump tokens in json format")
+                  .description("dump tokens in json format")
                   .type(po::string)
                   .single();
 
     auto &A = parser["dump-ast"]
                   .abbreviation('A')
-                  .description("Dump AST Nodes in json format")
+                  .description("dump AST Nodes in json format")
                   .type(po::string)
                   .single();
 
     auto &LR1 = parser["LR1"]
-                    .description("Specify grammar with a json file and use LR(1) parser")
+                    .description("specify grammar with a json file and use LR(1) parser")
                     .type(po::string)
                     .single();
 
     auto &LOG = parser["log"]
-                    .description("Print LR(1) parsing process");
+                    .description("print LR(1) parsing process");
 
     if (!parser(argc, argv))
         return false;
