@@ -90,10 +90,10 @@ Usage:
 Available options:
   -?, --help         show all available options
   -o, --out          set output file path
-  -T, --dump-tokens  Dump tokens in json format
-  -A, --dump-ast     Dump AST Nodes in json format
-      --LR1          Specify grammar with a json file and use LR(1) parser
-      --log          Print LR(1) parsing process
+  -T, --dump-tokens  dump tokens in json format
+  -A, --dump-ast     dump AST Nodes in json format
+      --LR1          specify grammar with a json file and use LR(1) parser
+      --log          print LR(1) parsing process
 ```
 Run command:
 ```
