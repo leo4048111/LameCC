@@ -235,6 +235,9 @@ namespace cc
                 retractChar();
                 break;
             }
+
+            if(c == '.') mightBeFloat = true;
+
             buffer += c;
             last = c;
         }
