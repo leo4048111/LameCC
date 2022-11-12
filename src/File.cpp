@@ -1,9 +1,8 @@
 #include "lcc.hpp"
 
-namespace cc
+namespace lcc
 {
-    File::File(std::string path):
-    _pos({0, 1}), _path(path)
+    File::File(std::string path) : _pos({0, 1}), _path(path)
     {
         _ifs = std::ifstream(path);
     }
@@ -29,9 +28,9 @@ namespace cc
         _pos.line++;
         _pos.column = 1;
         _curIdx = 0;
-        if(std::getline(_ifs, line)) 
+        if (std::getline(_ifs, line))
             _ss << line << '\n';
-        else 
+        else
             _ss << (char)EOF;
     }
 
@@ -42,7 +41,8 @@ namespace cc
 
     const char File::nextChar()
     {
-        if(_curIdx >= _ss.str().size()) return EOF;
+        if (_curIdx >= _ss.str().size())
+            return EOF;
 
         char c = _ss.str()[_curIdx++];
         _pos.column++;
@@ -67,8 +67,9 @@ namespace cc
 
     const char File::peekChar()
     {
-        if(_curIdx >= _ss.str().size()) return EOF;
-        
+        if (_curIdx >= _ss.str().size())
+            return EOF;
+
         return _ss.str()[_curIdx];
     }
 }

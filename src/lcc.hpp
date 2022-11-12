@@ -25,7 +25,7 @@ using json = nlohmann::ordered_json;
     std::cout << po::yellow << "Warning: " << po::light_gray << msg << std::endl
 
 // AST nodes
-namespace cc
+namespace lcc
 {
     namespace AST
     {
@@ -80,7 +80,7 @@ namespace cc
         // root node for AST
         class TranslationUnitDecl : public Decl
         {
-            friend class cc::LR1Parser;
+            friend class lcc::LR1Parser;
 
         protected:
             std::vector<std::unique_ptr<Decl>> _decls;
@@ -127,7 +127,7 @@ namespace cc
         // Represents a parameter to a function.
         class ParmVarDecl : public VarDecl
         {
-            friend class cc::LR1Parser;
+            friend class lcc::LR1Parser;
 
         protected:
             std::unique_ptr<ParmVarDecl> _nextParmVarDecl;
@@ -339,7 +339,7 @@ namespace cc
         // Stmt base class
         class Stmt : public ASTNode
         {
-            friend class cc::LR1Parser;
+            friend class lcc::LR1Parser;
 
         protected:
             std::unique_ptr<Stmt> _nextStmt;
@@ -432,7 +432,7 @@ namespace cc
     }
 } // AST end
 
-namespace cc
+namespace lcc
 {
     // A simple vec2 struct for marking position
     typedef struct _Position
@@ -886,7 +886,7 @@ namespace cc
         static std::shared_ptr<NonTerminal> nextReturnStmtR33(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);         // production 33
         static std::shared_ptr<NonTerminal> nextNullStmtR34(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 34
         static std::shared_ptr<NonTerminal> nextDeclStmtR35(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 35
-        static std::shared_ptr<NonTerminal> nextValueStmtR36(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 36
+        static std::shared_ptr<NonTerminal> nextValueStmtR36(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 36
 
         // grammar initialization
     private:

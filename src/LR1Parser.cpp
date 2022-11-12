@@ -1,6 +1,6 @@
 #include "lcc.hpp"
 
-namespace cc
+namespace lcc
 {
     std::unique_ptr<LR1Parser> LR1Parser::_inst;
 
@@ -274,7 +274,7 @@ namespace cc
                 // check if there should be an expression, if positive then call our OperatorPrecedence Parser
                 if (actionTableRow["Expr"].type != ActionType::INVALID)
                 {
-                    if(shouldPrintProcess)
+                    if (shouldPrintProcess)
                         INFO("Called OperatorPrecedence parser and parsed expression");
                     auto expr = nextExpr(); // parse next expression
                     if (expr != nullptr)

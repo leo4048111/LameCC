@@ -1,6 +1,6 @@
 #include "lcc.hpp"
 
-namespace cc
+namespace lcc
 {
     namespace AST
     {
@@ -9,7 +9,7 @@ namespace cc
             json j;
             j["type"] = "TranslationUnitDecl";
             j["children"] = json::array();
-            for(const auto & decl : _decls)
+            for (const auto &decl : _decls)
                 j["children"].emplace_back(decl->asJson());
             return j;
         }
@@ -27,9 +27,9 @@ namespace cc
             json j;
             j["type"] = "VarDecl";
             j["name"] = _name;
-            if(_isInitialized)
-                j["init"] = json::array({ _value->asJson() });
-            else 
+            if (_isInitialized)
+                j["init"] = json::array({_value->asJson()});
+            else
                 j["init"] = false;
             return j;
         }
@@ -50,9 +50,9 @@ namespace cc
             functionType += _type; // ret value type
             functionType += '(';
             bool isBegin = true;
-            for(const auto & param : _params)
+            for (const auto &param : _params)
             {
-                if(!isBegin)
+                if (!isBegin)
                     functionType += ", ";
                 functionType += param->type();
                 isBegin = false;
@@ -61,11 +61,12 @@ namespace cc
             j["functionType"] = functionType;
             j["name"] = name();
             j["params"] = json::array();
-            for(const auto & param : _params)
+            for (const auto &param : _params)
                 j["params"].emplace_back(param->asJson());
-            if(_body != nullptr)
-                j["body"] = json::array({ _body->asJson() });
-            else j["body"] = "empty";
+            if (_body != nullptr)
+                j["body"] = json::array({_body->asJson()});
+            else
+                j["body"] = "empty";
             return j;
         }
     }

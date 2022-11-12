@@ -1,12 +1,12 @@
 #include "lcc.hpp"
 
-#define TOKEN_INFO(pTok) pTok->file->path() << ' ' <<  pTok->pos.line << ", " << pTok->pos.column << ": "
+#define TOKEN_INFO(pTok) pTok->file->path() << ' ' << pTok->pos.line << ", " << pTok->pos.column << ": "
 
-namespace cc
+namespace lcc
 {
     static AST::UnaryOpType TokenTypeToUnaryOpType(TokenType tokenType)
     {
-        switch(tokenType)
+        switch (tokenType)
         {
         case TokenType::TOKEN_PLUS:
             return AST::UnaryOpType::UO_Plus;
@@ -23,7 +23,7 @@ namespace cc
 
     static AST::BinaryOpType TokenTypeToBinaryOpType(TokenType tokenType)
     {
-        switch(tokenType)
+        switch (tokenType)
         {
         case TokenType::TOKEN_PLUS:
             return AST::BinaryOpType::BO_Add;
@@ -90,7 +90,7 @@ namespace cc
 
     static AST::BinaryOperator::Precedence TokenTypeToBinaryOpPrecedence(TokenType tokenType)
     {
-        switch(tokenType)
+        switch (tokenType)
         {
         case TokenType::TOKEN_EQ:
         case TokenType::TOKEN_PLUSEQ:
@@ -141,11 +141,12 @@ namespace cc
 
     void Parser::nextToken()
     {
-        if(_curTokenIdx + 1 < _tokens.size()) _curTokenIdx++;
+        if (_curTokenIdx + 1 < _tokens.size())
+            _curTokenIdx++;
         _pCurToken = _tokens[_curTokenIdx];
     }
 
-    std::unique_ptr<AST::Decl> Parser::run(const std::vector<std::shared_ptr<Token>>& tokens)
+    std::unique_ptr<AST::Decl> Parser::run(const std::vector<std::shared_ptr<Token>> &tokens)
     {
         _tokens = tokens;
         _curTokenIdx = 0;
@@ -153,9 +154,9 @@ namespace cc
 
         std::vector<std::unique_ptr<AST::Decl>> topLevelDecls;
 
-        while(_curTokenIdx < _tokens.size())
+        while (_curTokenIdx < _tokens.size())
         {
-            switch(_pCurToken->type)
+            switch (_pCurToken->type)
             {
             case TokenType::TOKEN_EOF:
                 return std::make_unique<AST::TranslationUnitDecl>(topLevelDecls);
@@ -187,15 +188,15 @@ namespace cc
 
         // parse all funciton params
         std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
-        while(_pCurToken->type != TokenType::TOKEN_RPAREN)
+        while (_pCurToken->type != TokenType::TOKEN_RPAREN)
         {
-            switch(_pCurToken->type) // function return type check
+            switch (_pCurToken->type) // function return type check
             {
             case TokenType::TOKEN_KWINT:
             case TokenType::TOKEN_KWVOID:
             case TokenType::TOKEN_KWFLOAT:
             case TokenType::TOKEN_KWCHAR:
-            break;
+                break;
             default:
                 FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Unsupported return type.");
                 return nullptr;
@@ -205,20 +206,21 @@ namespace cc
             std::string paramName;
             nextToken(); // eat type
             // next token should be identifier
-            if(_pCurToken->type == TokenType::TOKEN_IDENTIFIER)
+            if (_pCurToken->type == TokenType::TOKEN_IDENTIFIER)
             {
                 paramName = _pCurToken->content;
                 nextToken(); // eat name
             }
-            else 
+            else
             {
                 FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected parameter name");
                 return nullptr;
             }
 
             // next token is either comma(another param) or rbaren(end decl)
-            if(_pCurToken->type == TokenType::TOKEN_COMMA) nextToken(); // eat ','
-            else if(_pCurToken->type != TokenType::TOKEN_RPAREN)
+            if (_pCurToken->type == TokenType::TOKEN_COMMA)
+                nextToken(); // eat ','
+            else if (_pCurToken->type != TokenType::TOKEN_RPAREN)
             {
                 FATAL_ERROR(TOKEN_INFO(_pCurToken) << "No matching rparen found for lparen at " << pLParen->pos.line << ", " << pLParen->pos.column);
                 return nullptr;
@@ -232,21 +234,22 @@ namespace cc
         std::unique_ptr<AST::Stmt> body = nullptr;
         switch (_pCurToken->type)
         {
-            case TokenType::TOKEN_LBRACE: // function definition
-                body = nextCompoundStmt();
-                if(body == nullptr) return nullptr;
-                if(_pCurToken->type == TokenType::TOKEN_SEMI) 
-                {
-                    WARNING(TOKEN_INFO(_pCurToken) << "Ignored ; after function definition");
-                    nextToken(); // eat ';'
-                }
-                break;
-            case TokenType::TOKEN_SEMI: // function declaration
-                nextToken(); // eat ';'
-                break;
-            default:
-                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ;");
+        case TokenType::TOKEN_LBRACE: // function definition
+            body = nextCompoundStmt();
+            if (body == nullptr)
                 return nullptr;
+            if (_pCurToken->type == TokenType::TOKEN_SEMI)
+            {
+                WARNING(TOKEN_INFO(_pCurToken) << "Ignored ; after function definition");
+                nextToken(); // eat ';'
+            }
+            break;
+        case TokenType::TOKEN_SEMI: // function declaration
+            nextToken();            // eat ';'
+            break;
+        default:
+            FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ;");
+            return nullptr;
         }
 
         return std::make_unique<AST::FunctionDecl>(name, type, params, std::move(body));
@@ -258,13 +261,14 @@ namespace cc
     {
         nextToken(); // eat '='
         std::unique_ptr<AST::Expr> val = nextExpression();
-        if(val == nullptr) return nullptr;
+        if (val == nullptr)
+            return nullptr;
         switch (_pCurToken->type)
         {
         case TokenType::TOKEN_SEMI:
         {
             nextToken(); // eat ';'
-            if(val->isLValue())
+            if (val->isLValue())
                 val = std::make_unique<AST::ImplicitCastExpr>(std::move(val), "LValueToRValue");
             break;
         }
@@ -278,15 +282,15 @@ namespace cc
     std::unique_ptr<AST::Decl> Parser::nextTopLevelDecl()
     {
         std::string type = _pCurToken->content; // function return value type or var type
-        nextToken(); // eat type
-        
-        if(_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
+        nextToken();                            // eat type
+
+        if (_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
         {
             FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected identifier");
         }
 
         std::string name = _pCurToken->content; // function or var name
-        nextToken(); // eat name
+        nextToken();                            // eat name
 
         std::unique_ptr<AST::Decl> topLevelDecl = nullptr;
 
@@ -298,7 +302,7 @@ namespace cc
         case TokenType::TOKEN_EQ:
             return nextVarDecl(name, type);
         case TokenType::TOKEN_SEMI: // uninitialized varDecl
-            nextToken(); // eat ';'
+            nextToken();            // eat ';'
             return std::make_unique<AST::VarDecl>(name, type);
         default:
             FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Unexpected top level declaration");
@@ -314,14 +318,15 @@ namespace cc
         nextToken(); // eat '{'
 
         std::vector<std::unique_ptr<AST::Stmt>> body;
-        while(_pCurToken->type != TokenType::TOKEN_RBRACE)
+        while (_pCurToken->type != TokenType::TOKEN_RBRACE)
         {
             std::unique_ptr<AST::Stmt> stmt = nextStmt();
-            if(stmt == nullptr) break;
+            if (stmt == nullptr)
+                break;
             body.push_back(std::move(stmt));
         }
 
-        if(_pCurToken->type != TokenType::TOKEN_RBRACE)
+        if (_pCurToken->type != TokenType::TOKEN_RBRACE)
         {
             FATAL_ERROR(TOKEN_INFO(_pCurToken) << "No matching rbrace found for lbrace at " << pLBrace->pos.line << ", " << pLBrace->pos.column);
             return nullptr;
@@ -333,9 +338,9 @@ namespace cc
     std::unique_ptr<AST::Stmt> Parser::nextDeclStmt()
     {
         std::string type = _pCurToken->content; // function return value type or var type
-        nextToken(); // eat type
-        
-        if(_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
+        nextToken();                            // eat type
+
+        if (_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
         {
             FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected identifier");
         }
@@ -343,7 +348,7 @@ namespace cc
         std::vector<std::unique_ptr<AST::Decl>> decls;
 
         std::string name = _pCurToken->content; // function or var name
-        nextToken(); // eat name
+        nextToken();                            // eat name
 
         // TODO support comma declaration
         switch (_pCurToken->type)
@@ -352,7 +357,7 @@ namespace cc
         {
             std::unique_ptr<AST::Decl> funcDecl = nextFunctionDecl(name, type);
             decls.push_back(std::move(funcDecl));
-            if(_pCurToken->type == TokenType::TOKEN_COMMA) 
+            if (_pCurToken->type == TokenType::TOKEN_COMMA)
                 nextToken(); // eat ','
             break;
         }
@@ -360,14 +365,15 @@ namespace cc
         {
             std::unique_ptr<AST::Decl> varDecl = nextVarDecl(name, type);
             decls.push_back(std::move(varDecl));
-            if(_pCurToken->type == TokenType::TOKEN_COMMA) 
+            if (_pCurToken->type == TokenType::TOKEN_COMMA)
                 nextToken(); // eat ','
             break;
         }
         case TokenType::TOKEN_SEMI: // uninitialized varDecl
         case TokenType::TOKEN_COMMA:
         {
-            if(_pCurToken->type == TokenType::TOKEN_COMMA) nextToken(); // eat ','
+            if (_pCurToken->type == TokenType::TOKEN_COMMA)
+                nextToken(); // eat ','
             std::unique_ptr<AST::Decl> varDecl = std::make_unique<AST::VarDecl>(name, type);
             decls.push_back(std::move(varDecl));
             break;
@@ -377,7 +383,7 @@ namespace cc
             return nullptr;
         }
 
-        //nextToken(); // eat ';'
+        // nextToken(); // eat ';'
         return std::make_unique<AST::DeclStmt>(decls);
     }
 
@@ -393,8 +399,9 @@ namespace cc
         default:
         {
             std::unique_ptr<AST::Expr> val = nextRValue();
-            if(val == nullptr) return nullptr;
-            if(_pCurToken->type != TokenType::TOKEN_SEMI)
+            if (val == nullptr)
+                return nullptr;
+            if (_pCurToken->type != TokenType::TOKEN_SEMI)
             {
                 FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ;");
                 return nullptr;
@@ -423,7 +430,7 @@ namespace cc
 
     std::unique_ptr<AST::Stmt> Parser::nextStmt()
     {
-        switch(_pCurToken->type)
+        switch (_pCurToken->type)
         {
         case TokenType::TOKEN_LBRACE:
             return nextCompoundStmt();
@@ -450,7 +457,7 @@ namespace cc
             return nullptr;
         }
     }
-    
+
     // NullStmt
     // ::= ';'
     std::unique_ptr<AST::Stmt> Parser::nextNullStmt()
@@ -466,7 +473,7 @@ namespace cc
     {
         nextToken(); // eat 'if'
         std::shared_ptr<Token> pLParen = _pCurToken;
-        switch(_pCurToken->type) // lparen check
+        switch (_pCurToken->type) // lparen check
         {
         case TokenType::TOKEN_LPAREN:
             nextToken(); // eat '('
@@ -477,9 +484,10 @@ namespace cc
         }
 
         std::unique_ptr<AST::Expr> condition = nextRValue();
-        if(condition == nullptr) return nullptr;
+        if (condition == nullptr)
+            return nullptr;
 
-        switch(_pCurToken->type) // rparen check
+        switch (_pCurToken->type) // rparen check
         {
         case TokenType::TOKEN_RPAREN:
             nextToken(); // eat ')'
@@ -490,10 +498,11 @@ namespace cc
         }
 
         std::unique_ptr<AST::Stmt> body = nextStmt();
-        if(body == nullptr) return nullptr;
+        if (body == nullptr)
+            return nullptr;
 
         std::unique_ptr<AST::Stmt> elseBody = nullptr;
-        if(_pCurToken->type == TokenType::TOKEN_KWELSE) // parse else body
+        if (_pCurToken->type == TokenType::TOKEN_KWELSE) // parse else body
         {
             nextToken(); // eat 'else'
             elseBody = nextStmt();
@@ -508,7 +517,7 @@ namespace cc
     {
         nextToken(); // eat 'while'
         std::shared_ptr<Token> pLParen = _pCurToken;
-        switch(_pCurToken->type) // lparen check
+        switch (_pCurToken->type) // lparen check
         {
         case TokenType::TOKEN_LPAREN:
             nextToken(); // eat '('
@@ -518,7 +527,7 @@ namespace cc
             return nullptr;
         }
         std::unique_ptr<AST::Expr> condition = nextRValue();
-        switch(_pCurToken->type) // rparen check
+        switch (_pCurToken->type) // rparen check
         {
         case TokenType::TOKEN_RPAREN:
             nextToken(); // eat ')'
@@ -528,7 +537,8 @@ namespace cc
             return nullptr;
         }
         std::unique_ptr<AST::Stmt> body = nextStmt();
-        if(body == nullptr) return nullptr;
+        if (body == nullptr)
+            return nullptr;
 
         return std::make_unique<AST::WhileStmt>(std::move(condition), std::move(body));
     }
@@ -550,7 +560,7 @@ namespace cc
             std::shared_ptr<Token> pLParen = _pCurToken;
             nextToken(); // eat '('
             std::vector<std::unique_ptr<AST::Expr>> params;
-            while(_pCurToken->type != TokenType::TOKEN_RPAREN)
+            while (_pCurToken->type != TokenType::TOKEN_RPAREN)
             {
                 params.push_back(nextRValue());
                 switch (_pCurToken->type)
@@ -576,7 +586,7 @@ namespace cc
     std::unique_ptr<AST::Expr> Parser::nextNumber()
     {
         std::string number = _pCurToken->content;
-        if(_pCurToken->type == TokenType::TOKEN_INTEGER)
+        if (_pCurToken->type == TokenType::TOKEN_INTEGER)
         {
             nextToken(); // eat number
             return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
@@ -593,8 +603,9 @@ namespace cc
         std::shared_ptr<Token> pLParen = _pCurToken;
         nextToken(); // eat '('
         std::unique_ptr<AST::Expr> subExpr = nextExpression();
-        if(subExpr == nullptr) return nullptr;
-        switch(_pCurToken->type)
+        if (subExpr == nullptr)
+            return nullptr;
+        switch (_pCurToken->type)
         {
         case TokenType::TOKEN_RPAREN:
             nextToken(); // eat ')'
@@ -611,7 +622,7 @@ namespace cc
     // ::= ParenExpr
     std::unique_ptr<AST::Expr> Parser::nextPrimaryExpr()
     {
-        switch(_pCurToken->type)
+        switch (_pCurToken->type)
         {
         case TokenType::TOKEN_IDENTIFIER:
             return nextVarRefOrFuncCall();
@@ -628,7 +639,7 @@ namespace cc
 
     std::unique_ptr<AST::Expr> Parser::nextUnaryOperator()
     {
-        switch(_pCurToken->type)
+        switch (_pCurToken->type)
         {
         case TokenType::TOKEN_EXCLAIM:
         case TokenType::TOKEN_TILDE:
@@ -638,7 +649,7 @@ namespace cc
         case TokenType::TOKEN_MINUSMINUS:
         {
             AST::UnaryOpType opType;
-            switch(_pCurToken->type)
+            switch (_pCurToken->type)
             {
             case TokenType::TOKEN_PLUSPLUS:
                 opType = AST::UnaryOpType::UO_PreInc;
@@ -651,7 +662,7 @@ namespace cc
                 break;
             }
 
-            if(opType == AST::UnaryOpType::UO_UNDEFINED) // unary op type check
+            if (opType == AST::UnaryOpType::UO_UNDEFINED) // unary op type check
             {
                 FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Undefined unary operator");
                 return nullptr;
@@ -683,19 +694,21 @@ namespace cc
         do
         {
             AST::BinaryOperator::Precedence curBiOpPrec = TokenTypeToBinaryOpPrecedence(_pCurToken->type);
-            if(curBiOpPrec < lastBiOpPrec) return lhs;
+            if (curBiOpPrec < lastBiOpPrec)
+                return lhs;
 
             AST::BinaryOpType opType = TokenTypeToBinaryOpType(_pCurToken->type);
             nextToken(); // eat current biOp
             std::unique_ptr<AST::Expr> rhs = nextPrimaryExpr();
-            if(rhs == nullptr) return nullptr;
+            if (rhs == nullptr)
+                return nullptr;
 
             AST::BinaryOperator::Precedence nextBiOpPrec = TokenTypeToBinaryOpPrecedence(_pCurToken->type);
 
-            if(curBiOpPrec < nextBiOpPrec || (curBiOpPrec == AST::BinaryOperator::Precedence::ASSIGNMENT && curBiOpPrec == nextBiOpPrec))
+            if (curBiOpPrec < nextBiOpPrec || (curBiOpPrec == AST::BinaryOperator::Precedence::ASSIGNMENT && curBiOpPrec == nextBiOpPrec))
                 rhs = nextRHSExpr(std::move(rhs), (AST::BinaryOperator::Precedence)((int)curBiOpPrec + !(curBiOpPrec == AST::BinaryOperator::Precedence::ASSIGNMENT)));
             lhs = std::make_unique<AST::BinaryOperator>(opType, std::move(lhs), std::move(rhs));
-        }while(true);
+        } while (true);
 
         return nullptr;
     }
@@ -703,9 +716,10 @@ namespace cc
     std::unique_ptr<AST::Expr> Parser::nextBinaryOperator()
     {
         std::unique_ptr<AST::Expr> lhs = nextUnaryOperator();
-        if(lhs == nullptr) return nullptr;
+        if (lhs == nullptr)
+            return nullptr;
 
-        return nextRHSExpr(std::move(lhs), AST::BinaryOperator::Precedence::COMMA); 
+        return nextRHSExpr(std::move(lhs), AST::BinaryOperator::Precedence::COMMA);
     }
 
     std::unique_ptr<AST::Expr> Parser::nextExpression()
@@ -716,7 +730,7 @@ namespace cc
     std::unique_ptr<AST::Expr> Parser::nextRValue()
     {
         std::unique_ptr<AST::Expr> expr = nextExpression();
-        if(expr->isLValue())
+        if (expr->isLValue())
             expr = std::make_unique<AST::ImplicitCastExpr>(std::move(expr), "LValueToRValue");
 
         return expr;

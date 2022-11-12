@@ -1,18 +1,20 @@
 #include "lcc.hpp"
 
-namespace cc
+namespace lcc
 {
     namespace AST
     {
         static std::string BinaryOpTypeToStringDisc(BinaryOpType type)
         {
-            switch(type)
+            switch (type)
             {
-            #define BINARY_OPERATION(name, disc) case BinaryOpType::BO_##name: return disc;
-            #define UNARY_OPERATION(name, disc)
-            #include "OperationType.inc"
-            #undef UNARY_OPERATION
-            #undef BINARY_OPERATION
+#define BINARY_OPERATION(name, disc) \
+    case BinaryOpType::BO_##name:    \
+        return disc;
+#define UNARY_OPERATION(name, disc)
+#include "OperationType.inc"
+#undef UNARY_OPERATION
+#undef BINARY_OPERATION
             default:
                 return "";
             }
@@ -20,26 +22,27 @@ namespace cc
 
         static std::string UnaryOpTypeToStringDisc(UnaryOpType type)
         {
-            switch(type)
+            switch (type)
             {
-            #define BINARY_OPERATION(name, disc)
-            #define UNARY_OPERATION(name, disc) case UnaryOpType::UO_##name: return #name;
-            #include "OperationType.inc"
-            #undef UNARY_OPERATION
-            #undef BINARY_OPERATION
+#define BINARY_OPERATION(name, disc)
+#define UNARY_OPERATION(name, disc) \
+    case UnaryOpType::UO_##name:    \
+        return #name;
+#include "OperationType.inc"
+#undef UNARY_OPERATION
+#undef BINARY_OPERATION
             default:
                 return "";
             }
         }
 
-        BinaryOperator::BinaryOperator(BinaryOpType type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs):
-        _type(type)
+        BinaryOperator::BinaryOperator(BinaryOpType type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs) : _type(type)
         {
-            if(!isAssignment() && lhs->isLValue())
+            if (!isAssignment() && lhs->isLValue())
                 lhs = std::make_unique<ImplicitCastExpr>(std::move(lhs), "LValueToRValue");
-            if(rhs->isLValue())
+            if (rhs->isLValue())
                 rhs = std::make_unique<ImplicitCastExpr>(std::move(rhs), "LValueToRValue");
-            
+
             _lhs = std::move(lhs);
             _rhs = std::move(rhs);
         }
@@ -62,7 +65,7 @@ namespace cc
                 return true;
             default:
                 return false;
-            }  
+            }
         }
 
         json IntegerLiteral::asJson() const
@@ -95,8 +98,8 @@ namespace cc
             json j;
             j["type"] = "BinaryOperator";
             j["opcode"] = BinaryOpTypeToStringDisc(_type);
-            j["lhs"] = json::array({ _lhs->asJson() });
-            j["rhs"] = json::array({ _rhs->asJson() });
+            j["lhs"] = json::array({_lhs->asJson()});
+            j["rhs"] = json::array({_rhs->asJson()});
             return j;
         }
 
@@ -105,7 +108,7 @@ namespace cc
             json j;
             j["type"] = "UnaryOperator";
             j["opcode"] = UnaryOpTypeToStringDisc(_type);
-            j["body"] = json::array({ _body->asJson() });
+            j["body"] = json::array({_body->asJson()});
             return j;
         }
 
@@ -113,7 +116,7 @@ namespace cc
         {
             json j;
             j["type"] = "ParenExpr";
-            j["expr"] = json::array({ _subExpr->asJson() });
+            j["expr"] = json::array({_subExpr->asJson()});
             return j;
         }
 
@@ -121,9 +124,9 @@ namespace cc
         {
             json j;
             j["type"] = "CallExpr";
-            j["expr"] = json::array({ _functionExpr->asJson() });
+            j["expr"] = json::array({_functionExpr->asJson()});
             j["params"] = json::array();
-            for(const auto & param : _params)
+            for (const auto &param : _params)
                 j["params"].emplace_back(param->asJson());
             return j;
         }
@@ -133,7 +136,7 @@ namespace cc
             json j;
             j["type"] = "CastExpr";
             j["castKind"] = _kind;
-            j["expr"] = json::array({ _subExpr->asJson() });
+            j["expr"] = json::array({_subExpr->asJson()});
             return j;
         }
 
@@ -142,7 +145,7 @@ namespace cc
             json j;
             j["type"] = "ImplicitCastExpr";
             j["castKind"] = _kind;
-            j["expr"] = json::array({ _subExpr->asJson() });
+            j["expr"] = json::array({_subExpr->asJson()});
             return j;
         }
     }

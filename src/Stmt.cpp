@@ -1,6 +1,6 @@
 #include "lcc.hpp"
 
-namespace cc
+namespace lcc
 {
     namespace AST
     {
@@ -15,7 +15,7 @@ namespace cc
         {
             json j;
             j["type"] = "ValueStmt";
-            j["expr"] = json::array({ _expr->asJson() });
+            j["expr"] = json::array({_expr->asJson()});
             return j;
         }
 
@@ -23,10 +23,12 @@ namespace cc
         {
             json j;
             j["type"] = "IfStmt";
-            j["condition"] = json::array({ _condition->asJson() });
-            j["body"] = json::array({ _body->asJson() });
-            if(_elseBody == nullptr) j["elseBody"] = "Empty";
-            else j["elseBody"] = json::array({ _elseBody->asJson() });
+            j["condition"] = json::array({_condition->asJson()});
+            j["body"] = json::array({_body->asJson()});
+            if (_elseBody == nullptr)
+                j["elseBody"] = "Empty";
+            else
+                j["elseBody"] = json::array({_elseBody->asJson()});
             return j;
         }
 
@@ -34,8 +36,8 @@ namespace cc
         {
             json j;
             j["type"] = "WhileStmt";
-            j["condition"] = json::array({ _condition->asJson() });
-            j["body"] = json::array({ _body->asJson() });
+            j["condition"] = json::array({_condition->asJson()});
+            j["body"] = json::array({_body->asJson()});
             return j;
         }
 
@@ -44,7 +46,7 @@ namespace cc
             json j;
             j["type"] = "DeclStmt";
             j["children"] = json::array();
-            for(const auto& decl : _decls)
+            for (const auto &decl : _decls)
                 j["children"].emplace_back(decl->asJson());
             return j;
         }
@@ -54,7 +56,7 @@ namespace cc
             json j;
             j["type"] = "CompoundStmt";
             j["children"] = json::array();
-            for(const auto& stmt : _body)
+            for (const auto &stmt : _body)
                 j["children"].emplace_back(stmt->asJson());
             return j;
         }
@@ -63,9 +65,10 @@ namespace cc
         {
             json j;
             j["type"] = "ReturnStmt";
-            if(_value == nullptr)
+            if (_value == nullptr)
                 j["value"] = "VOID";
-            else j["value"] = json::array( { _value->asJson() });
+            else
+                j["value"] = json::array({_value->asJson()});
             return j;
         }
     }
