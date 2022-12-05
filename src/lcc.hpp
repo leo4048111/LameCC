@@ -441,7 +441,7 @@ namespace lcc
         int column;
     } Position;
 
-    // File class
+    // File class(File.cpp)
     class File
     {
     public:
@@ -498,7 +498,7 @@ namespace lcc
 
     } Token;
 
-    // Lexer class
+    // Lexer class(Lexer.cpp)
     class Lexer
     {
     public:
@@ -565,7 +565,7 @@ namespace lcc
         std::unordered_map<std::string, TokenType> _keywordMap;
     };
 
-    // Parser class
+    // Parser class(Parser.cpp)
     class Parser
     {
     private:
@@ -622,7 +622,7 @@ namespace lcc
         std::shared_ptr<Token> _pCurToken{nullptr};
     };
 
-    // LR1 Parser class
+    // LR1 Parser class(LR1Parser.cpp)
     class LR1Parser
     {
         enum class SymbolType
@@ -950,7 +950,13 @@ namespace lcc
         std::map<int, std::function<std::shared_ptr<NonTerminal>(std::stack<int> &, std::stack<std::shared_ptr<Symbol>> &)>> _productionFuncMap;
     };
 
-    // some util funcs
+    // Intermediate representation generator class(IRGenerator.cpp)
+    class IRGenerator
+    {
+        
+    };
+
+    // some util funcs(Utils.cpp)
     bool isSpace(const char c);
     json jsonifyTokens(const std::vector<std::shared_ptr<Token>> &tokens);
     bool dumpJson(const json &j, const std::string outPath);
