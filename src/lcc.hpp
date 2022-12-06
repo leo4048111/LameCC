@@ -248,6 +248,8 @@ namespace lcc
         // Binary operator type expression
         class BinaryOperator : public Expr
         {
+            friend class lcc::IRGenerator;
+
         public:
             // https://en.cppreference.com/w/cpp/language/operator_precedence
             enum class Precedence
@@ -276,6 +278,8 @@ namespace lcc
             BinaryOperator(BinaryOpType type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs);
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
 
             bool isAssignment() const;
 
@@ -1032,7 +1036,12 @@ namespace lcc
 
         enum class QuaternionOperator
         {
-            ASSIGN = 0
+            Invalid = 0,
+#define BINARY_OPERATION(name, disc) name,
+#define UNARY_OPERATION(name, disc) name,
+#include "OperationType.inc"
+#undef UNARY_OPERATION
+#undef BINARY_OPERATION
         };
 
         typedef struct
@@ -1065,6 +1074,7 @@ namespace lcc
         bool gen(AST::TranslationUnitDecl *translationUnitDecl);
         bool gen(AST::VarDecl *varDecl);
         bool gen(AST::IntegerLiteral *integerLiteral);
+        bool gen(AST::BinaryOperator *binaryOperator);
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);
@@ -1073,6 +1083,8 @@ namespace lcc
         std::vector<IRGenerator::SymbolTableItem>::iterator lookup(std::string name);
         void emit(QuaternionOperator op, std::shared_ptr<Arg> arg1, std::shared_ptr<Arg> arg2, std::shared_ptr<Arg> result);
         std::vector<IRGenerator::SymbolTableItem>::iterator newtemp(std::string type, int width);
+
+        static QuaternionOperator BinaryOpToQuaternionOp(AST::BinaryOpType op);
 
     public:
         void printCode() const;

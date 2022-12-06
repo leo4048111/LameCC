@@ -108,6 +108,11 @@ namespace lcc
             return j;
         }
 
+        bool BinaryOperator::gen() 
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
         json UnaryOperator::asJson() const
         {
             json j;

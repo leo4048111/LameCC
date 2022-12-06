@@ -1,6 +1,6 @@
 #include "lcc.hpp"
 
-#define EMIT(op, arg1, arg2, result) emit(IRGenerator::QuaternionOperator::op, arg1, arg2, result)
+#define EMIT(op, arg1, arg2, result) emit(op, arg1, arg2, result)
 #define INVALID_SYMBOLTBL_ENTRY(entry) (entry == _currentTable->items.end())
 #define INT32_WIDTH sizeof(uint32_t)
 #define INT "int"
@@ -13,6 +13,23 @@
 namespace lcc
 {
     std::unique_ptr<IRGenerator> IRGenerator::_inst;
+
+    IRGenerator::QuaternionOperator IRGenerator::BinaryOpToQuaternionOp(AST::BinaryOpType op)
+    {
+        switch (op)
+        {
+#define BINARY_OPERATION(name, disc)   \
+    case AST::BinaryOpType::BO_##name: \
+        return QuaternionOperator::name;
+#define UNARY_OPERATION(name, disc)
+#include "OperationType.inc"
+#undef UNARY_OPERATION
+#undef BINARY_OPERATION
+        default:
+            return IRGenerator::QuaternionOperator::Invalid;
+            break;
+        }
+    }
 
     IRGenerator::IRGenerator()
     {
@@ -43,7 +60,7 @@ namespace lcc
                 return false;
             auto arg1Entry = lookup(varDecl->_value->place);
             auto resultEntry = lookup(varDecl->name());
-            EMIT(ASSIGN, MAKE_ENTRY_ARG(arg1Entry), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(resultEntry));
+            EMIT(QuaternionOperator::Assign, MAKE_ENTRY_ARG(arg1Entry), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(resultEntry));
         }
 
         return true;
@@ -51,12 +68,30 @@ namespace lcc
 
     bool IRGenerator::gen(AST::IntegerLiteral *integerLiteral)
     {
-        auto newTmpEntry = newtemp("int", INT32_WIDTH);
+        auto newTmpEntry = newtemp(INT, INT32_WIDTH);
         if (INVALID_SYMBOLTBL_ENTRY(newTmpEntry))
             return false;
         integerLiteral->place = newTmpEntry->name;
 
-        EMIT(ASSIGN, MAKE_VALUE_ARG(integerLiteral->value()), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTmpEntry));
+        EMIT(QuaternionOperator::Assign, MAKE_VALUE_ARG(integerLiteral->value()), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTmpEntry));
+        return true;
+    }
+
+    bool IRGenerator::gen(AST::BinaryOperator *binaryOperator)
+    {
+        if(!binaryOperator->_lhs->gen()) return false;
+        if(!binaryOperator->_rhs->gen()) return false;
+        
+        auto newTmpEntry = newtemp(INT, INT32_WIDTH);
+        if (INVALID_SYMBOLTBL_ENTRY(newTmpEntry))
+            return false;
+        binaryOperator->place = newTmpEntry->name;
+
+        auto arg1Entry = lookup(binaryOperator->_lhs->place);
+        auto arg2Entry = lookup(binaryOperator->_rhs->place);
+        auto resultEntry = lookup(newTmpEntry->name);
+
+        EMIT(BinaryOpToQuaternionOp(binaryOperator->type()), MAKE_ENTRY_ARG(arg1Entry), MAKE_ENTRY_ARG(arg2Entry), MAKE_ENTRY_ARG(resultEntry));
         return true;
     }
 
@@ -125,8 +160,16 @@ namespace lcc
         {
             switch (code.op)
             {
-            case QuaternionOperator::ASSIGN:
-                op = ":=";
+#define BINARY_OPERATION(name, disc) \
+    case QuaternionOperator::name:   \
+        op = disc;                   \
+        break;
+#define UNARY_OPERATION(name, disc)
+#include "OperationType.inc"
+#undef UNARY_OPERATION
+#undef BINARY_OPERATION
+            default:
+                op = "_";
                 break;
             }
 
