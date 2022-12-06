@@ -149,7 +149,17 @@ namespace lcc
             return j;
         }
 
+        bool DeclRefExpr::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
         bool IntegerLiteral::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
+        bool CastExpr::gen()
         {
             return lcc::IRGenerator::getInstance()->gen(this);
         }

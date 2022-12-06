@@ -77,6 +77,42 @@ namespace lcc
         return true;
     }
 
+    bool IRGenerator::gen(AST::DeclRefExpr *declRefExpr)
+    {
+        if (!declRefExpr->_isCall) // referencing a param
+        {
+            auto currentTbl = _currentTable;
+            std::shared_ptr<SymbolTableItem> tblEntry = nullptr;
+            for (_currentTable; _currentTable != nullptr; changeTable(_currentTable->previous))
+            {
+                tblEntry = lookup(declRefExpr->name());
+                if (!(INVALID_SYMBOLTBL_ENTRY(tblEntry)))
+                    break;
+            }
+            changeTable(currentTbl);
+            if (INVALID_SYMBOLTBL_ENTRY(tblEntry)) // symbol not declared
+            {
+                FATAL_ERROR("Symbol " << declRefExpr->name() << " not declared.");
+                return false;
+            }
+
+            declRefExpr->place = tblEntry->name;
+            return true;
+        }
+
+        // TODO function call
+        return true;
+    }
+
+    bool IRGenerator::gen(AST::CastExpr *castExpr)
+    {
+        // CURRENTLY TYPE CAST DOES NOTHING AT ALL!
+        if(!castExpr->_subExpr->gen()) return false;
+
+        castExpr->place = castExpr->_subExpr->place;
+        return true;
+    }
+
     bool IRGenerator::gen(AST::BinaryOperator *binaryOperator)
     {
         if (!binaryOperator->_lhs->gen())
@@ -110,12 +146,24 @@ namespace lcc
     {
         auto previousTable = _currentTable;
         changeTable(mkTable(previousTable));
-        for(auto& stmt: compoundStmt->_body)
+        for (auto &stmt : compoundStmt->_body)
         {
-            if(!stmt->gen()) return false;
+            if (!stmt->gen())
+                return false;
         }
-        
+
         changeTable(previousTable);
+        return true;
+    }
+
+    bool IRGenerator::gen(AST::DeclStmt *declStmt)
+    {
+        for (auto &decl : declStmt->_decls)
+        {
+            if (!decl->gen())
+                return false;
+        }
+
         return true;
     }
 

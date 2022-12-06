@@ -36,7 +36,7 @@ namespace lcc
             std::string place{""}; // for IR generation
         public:
             virtual json asJson() const = 0;
-            virtual bool gen() { return false; }; // CHANGE THIS TO PURE VIRTUAL LATER!!!
+            virtual bool gen() { return true; }; // CHANGE THIS TO PURE VIRTUAL LATER!!!
             virtual ~ASTNode(){};
         };
 
@@ -233,6 +233,8 @@ namespace lcc
         // A reference to a declared variable, function, enum, etc.
         class DeclRefExpr : public Expr
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::string _name;
             bool _isCall;
@@ -241,6 +243,8 @@ namespace lcc
             DeclRefExpr(const std::string &name, bool isCall = false) : _name(name), _isCall(isCall) { _isLValue = !isCall; };
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
 
             const std::string name() const { return _name; };
         };
@@ -336,6 +340,8 @@ namespace lcc
         // Base class for type casts, including both implicit casts (ImplicitCastExpr) and explicit casts
         class CastExpr : public Expr
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::string _kind;
             std::unique_ptr<Expr> _subExpr;
@@ -344,6 +350,8 @@ namespace lcc
             CastExpr(std::unique_ptr<Expr> expr, const std::string type) : _subExpr(std::move(expr)), _kind(type){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
 
         // Allows us to explicitly represent implicit type conversions
@@ -420,6 +428,8 @@ namespace lcc
         // Adaptor class for mixing declarations with statements and expressions.
         class DeclStmt : public Stmt
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::vector<std::unique_ptr<Decl>> _decls;
 
@@ -427,6 +437,8 @@ namespace lcc
             DeclStmt(std::vector<std::unique_ptr<Decl>> &decls) : _decls(std::move(decls)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
 
         // This represents a group of statements like { stmt stmt }.
@@ -1083,9 +1095,12 @@ namespace lcc
         bool gen(AST::TranslationUnitDecl *translationUnitDecl);
         bool gen(AST::VarDecl *varDecl);
         bool gen(AST::IntegerLiteral *integerLiteral);
+        bool gen(AST::DeclRefExpr* declRefExpr);
+        bool gen(AST::CastExpr *castExpr);
         bool gen(AST::BinaryOperator *binaryOperator);
         bool gen(AST::ParenExpr *parenExpr);
         bool gen(AST::CompoundStmt *compoundStmt);
+        bool gen(AST::DeclStmt *declStmt);
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);
