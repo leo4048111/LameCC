@@ -66,6 +66,24 @@ namespace lcc
         return true;
     }
 
+    bool IRGenerator::gen(AST::FunctionDecl *functionDecl)
+    {
+        auto previousTable = _currentTable;
+        changeTable(mkTable(previousTable));
+
+        for (auto &param : functionDecl->_params)
+        {
+            if (!param->gen())
+                return false;
+        }
+
+        if (!functionDecl->_body->gen())
+            return false;
+
+        changeTable(previousTable);
+        return true;
+    }
+
     bool IRGenerator::gen(AST::IntegerLiteral *integerLiteral)
     {
         auto newTmpEntry = newtemp(INT, INT32_WIDTH);
@@ -81,15 +99,7 @@ namespace lcc
     {
         if (!declRefExpr->_isCall) // referencing a param
         {
-            auto currentTbl = _currentTable;
-            std::shared_ptr<SymbolTableItem> tblEntry = nullptr;
-            for (_currentTable; _currentTable != nullptr; changeTable(_currentTable->previous))
-            {
-                tblEntry = lookup(declRefExpr->name());
-                if (!(INVALID_SYMBOLTBL_ENTRY(tblEntry)))
-                    break;
-            }
-            changeTable(currentTbl);
+            auto tblEntry = lookup(declRefExpr->name());
             if (INVALID_SYMBOLTBL_ENTRY(tblEntry)) // symbol not declared
             {
                 FATAL_ERROR("Symbol " << declRefExpr->name() << " not declared.");
@@ -107,7 +117,8 @@ namespace lcc
     bool IRGenerator::gen(AST::CastExpr *castExpr)
     {
         // CURRENTLY TYPE CAST DOES NOTHING AT ALL!
-        if(!castExpr->_subExpr->gen()) return false;
+        if (!castExpr->_subExpr->gen())
+            return false;
 
         castExpr->place = castExpr->_subExpr->place;
         return true;
@@ -169,7 +180,9 @@ namespace lcc
 
     std::shared_ptr<IRGenerator::SymbolTable> IRGenerator::mkTable(std::shared_ptr<SymbolTable> previous)
     {
-        return std::make_shared<SymbolTable>(previous);
+        auto tbl = std::make_shared<SymbolTable>(previous);
+        _tables.push_back(tbl);
+        return tbl;
     }
 
     void IRGenerator::changeTable(std::shared_ptr<SymbolTable> table)
@@ -177,7 +190,7 @@ namespace lcc
         _currentTable = table;
     }
 
-    std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::lookup(std::string name)
+    std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::lookupCurrentTbl(std::string name)
     {
         for (auto &item : _currentTable->items)
         {
@@ -188,9 +201,24 @@ namespace lcc
         return nullptr;
     }
 
+    std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::lookup(std::string name)
+    {
+        auto currentTbl = _currentTable;
+        std::shared_ptr<SymbolTableItem> tblEntry = nullptr;
+        for (_currentTable; _currentTable != nullptr; changeTable(_currentTable->previous))
+        {
+            tblEntry = lookupCurrentTbl(name);
+            if (!(INVALID_SYMBOLTBL_ENTRY(tblEntry)))
+                break;
+        }
+        changeTable(currentTbl);
+
+        return tblEntry;
+    }
+
     bool IRGenerator::enter(std::string name, std::string type, int width)
     {
-        auto entry = lookup(name);
+        auto entry = lookupCurrentTbl(name);
         if (!INVALID_SYMBOLTBL_ENTRY(entry)) // duplication check
             return false;
 

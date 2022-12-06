@@ -152,6 +152,8 @@ namespace lcc
         // Represents a function declaration or definition.
         class FunctionDecl : public NamedDecl
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::string _type;
             std::vector<std::unique_ptr<ParmVarDecl>> _params;
@@ -161,6 +163,8 @@ namespace lcc
             FunctionDecl(const std::string &name, const std::string &type, std::vector<std::unique_ptr<ParmVarDecl>> &params, std::unique_ptr<Stmt> body) : NamedDecl(name), _type(type), _params(std::move(params)), _body(std::move(body)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
     } // Decl end
 
@@ -1093,9 +1097,10 @@ namespace lcc
     public:
         // gen methods
         bool gen(AST::TranslationUnitDecl *translationUnitDecl);
+        bool gen(AST::FunctionDecl *functionDecl);
         bool gen(AST::VarDecl *varDecl);
         bool gen(AST::IntegerLiteral *integerLiteral);
-        bool gen(AST::DeclRefExpr* declRefExpr);
+        bool gen(AST::DeclRefExpr *declRefExpr);
         bool gen(AST::CastExpr *castExpr);
         bool gen(AST::BinaryOperator *binaryOperator);
         bool gen(AST::ParenExpr *parenExpr);
@@ -1107,6 +1112,7 @@ namespace lcc
         void changeTable(std::shared_ptr<SymbolTable> table);
         bool enter(std::string name, std::string type, int width);
         std::shared_ptr<SymbolTableItem> lookup(std::string name);
+        std::shared_ptr<SymbolTableItem> lookupCurrentTbl(std::string name);
         void emit(QuaternionOperator op, std::shared_ptr<Arg> arg1, std::shared_ptr<Arg> arg2, std::shared_ptr<Arg> result);
         std::shared_ptr<SymbolTableItem> newtemp(std::string type, int width);
 
@@ -1116,6 +1122,7 @@ namespace lcc
         void printCode() const;
 
     private:
+        std::vector<std::shared_ptr<SymbolTable>> _tables;
         std::shared_ptr<SymbolTable> _currentTable;
         std::vector<Quaternion> _codes;
     };
