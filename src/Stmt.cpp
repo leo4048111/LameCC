@@ -71,5 +71,10 @@ namespace lcc
                 j["value"] = json::array({_value->asJson()});
             return j;
         }
+
+        bool CompoundStmt::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
     }
 }

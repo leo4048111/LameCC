@@ -432,6 +432,8 @@ namespace lcc
         // This represents a group of statements like { stmt stmt }.
         class CompoundStmt : public Stmt
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::vector<std::unique_ptr<Stmt>> _body;
 
@@ -439,6 +441,8 @@ namespace lcc
             CompoundStmt(std::vector<std::unique_ptr<Stmt>> &body) : _body(std::move(body)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
 
         // This represents a return, optionally of an expression: return; return 4;.
@@ -1081,6 +1085,7 @@ namespace lcc
         bool gen(AST::IntegerLiteral *integerLiteral);
         bool gen(AST::BinaryOperator *binaryOperator);
         bool gen(AST::ParenExpr *parenExpr);
+        bool gen(AST::CompoundStmt *compoundStmt);
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);

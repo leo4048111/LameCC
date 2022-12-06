@@ -99,9 +99,23 @@ namespace lcc
 
     bool IRGenerator::gen(AST::ParenExpr *parenExpr)
     {
-        if(!parenExpr->_subExpr->gen()) return false;
+        if (!parenExpr->_subExpr->gen())
+            return false;
 
         parenExpr->place = parenExpr->_subExpr->place;
+        return true;
+    }
+
+    bool IRGenerator::gen(AST::CompoundStmt *compoundStmt)
+    {
+        auto previousTable = _currentTable;
+        changeTable(mkTable(previousTable));
+        for(auto& stmt: compoundStmt->_body)
+        {
+            if(!stmt->gen()) return false;
+        }
+        
+        changeTable(previousTable);
         return true;
     }
 
