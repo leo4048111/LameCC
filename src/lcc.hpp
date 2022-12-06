@@ -223,6 +223,8 @@ namespace lcc
         // Floating literal value
         class FloatingLiteral : public Expr
         {
+            friend class lcc::IRGenerator;
+
         protected:
             float _value;
 
@@ -230,6 +232,8 @@ namespace lcc
             FloatingLiteral(float value) : _value(value) { _isLValue = false; }; // Floating literal should be LValue instead of RValue
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
 
             float value() const { return _value; };
         };
@@ -1047,6 +1051,13 @@ namespace lcc
         class Value : public Arg
         {
         public:
+            enum class ValueType
+            {
+                INTEGER = 0,
+                FLOAT
+            };
+
+        public:
             virtual ArgType type() override { return ArgType::VALUE; };
 
             union
@@ -1055,8 +1066,9 @@ namespace lcc
                 int integerVal;
             };
 
-            Value(float floatVal) : floatVal(floatVal){};
-            Value(int integerVal) : integerVal(integerVal){};
+            ValueType valueType;
+            Value(float floatVal) : floatVal(floatVal), valueType(ValueType::FLOAT){};
+            Value(int integerVal) : integerVal(integerVal), valueType(ValueType::INTEGER){};
         };
 
         enum class QuaternionOperator
@@ -1106,6 +1118,7 @@ namespace lcc
         bool gen(AST::FunctionDecl *functionDecl);
         bool gen(AST::VarDecl *varDecl);
         bool gen(AST::IntegerLiteral *integerLiteral);
+        bool gen(AST::FloatingLiteral *floatingLiteral);
         bool gen(AST::DeclRefExpr *declRefExpr);
         bool gen(AST::CastExpr *castExpr);
         bool gen(AST::BinaryOperator *binaryOperator);

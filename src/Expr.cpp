@@ -159,6 +159,11 @@ namespace lcc
             return lcc::IRGenerator::getInstance()->gen(this);
         }
 
+        bool FloatingLiteral::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
         bool CastExpr::gen()
         {
             return lcc::IRGenerator::getInstance()->gen(this);

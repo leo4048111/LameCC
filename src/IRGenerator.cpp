@@ -3,7 +3,9 @@
 #define EMIT(op, arg1, arg2, result) emit(op, arg1, arg2, result)
 #define INVALID_SYMBOLTBL_ENTRY(entry) (entry == nullptr)
 #define INT32_WIDTH sizeof(uint32_t)
+#define FLOAT_WIDTH sizeof(float)
 #define INT "int"
+#define FLOAT "float"
 #define MAKE_NIL_ARG() std::make_shared<Arg>()
 #define MAKE_VALUE_ARG(val) std::make_shared<Value>(val)
 #define MAKE_ENTRY_ARG(entry) std::make_shared<SymbTblEntry>(entry)
@@ -68,7 +70,8 @@ namespace lcc
 
     bool IRGenerator::gen(AST::FunctionDecl *functionDecl)
     {
-        if(!registerFunc(functionDecl->name(), _codes.size())) {
+        if (!registerFunc(functionDecl->name(), _codes.size()))
+        {
             FATAL_ERROR("Function " << functionDecl->name() << " redeclaration.");
             return false;
         }
@@ -97,6 +100,17 @@ namespace lcc
         integerLiteral->place = newTmpEntry->name;
 
         EMIT(QuaternionOperator::Assign, MAKE_VALUE_ARG(integerLiteral->value()), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTmpEntry));
+        return true;
+    }
+
+    bool IRGenerator::gen(AST::FloatingLiteral *floatingLiteral)
+    {
+        auto newTmpEntry = newtemp(FLOAT, FLOAT_WIDTH);
+        if (INVALID_SYMBOLTBL_ENTRY(newTmpEntry))
+            return false;
+        floatingLiteral->place = newTmpEntry->name;
+
+        EMIT(QuaternionOperator::Assign, MAKE_VALUE_ARG(floatingLiteral->value()), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTmpEntry));
         return true;
     }
 
@@ -136,13 +150,28 @@ namespace lcc
         if (!binaryOperator->_rhs->gen())
             return false;
 
-        auto newTmpEntry = newtemp(INT, INT32_WIDTH);
-        if (INVALID_SYMBOLTBL_ENTRY(newTmpEntry))
-            return false;
-        binaryOperator->place = newTmpEntry->name;
-
         auto arg1Entry = lookup(binaryOperator->_lhs->place);
         auto arg2Entry = lookup(binaryOperator->_rhs->place);
+
+        std::string resultType;
+        int resultWidth;
+        if (arg1Entry->type == FLOAT || arg2Entry->type == FLOAT)
+        {
+            resultType = FLOAT;
+            resultWidth = FLOAT_WIDTH;
+        }
+        else
+        {
+            resultType = INT;
+            resultWidth = INT32_WIDTH;
+        }
+
+        auto newTmpEntry = newtemp(resultType, resultWidth);
+        if (INVALID_SYMBOLTBL_ENTRY(newTmpEntry))
+            return false;
+
+        binaryOperator->place = newTmpEntry->name;
+
         auto resultEntry = lookup(newTmpEntry->name);
 
         EMIT(BinaryOpToQuaternionOp(binaryOperator->type()), MAKE_ENTRY_ARG(arg1Entry), MAKE_ENTRY_ARG(arg2Entry), MAKE_ENTRY_ARG(resultEntry));
@@ -256,9 +285,10 @@ namespace lcc
 
     bool IRGenerator::registerFunc(std::string name, int entry)
     {
-        for(auto& item : _functionTable)
+        for (auto &item : _functionTable)
         {
-            if(item.name == name) return false;
+            if (item.name == name)
+                return false;
         }
 
         _functionTable.push_back({name, entry});
@@ -274,9 +304,9 @@ namespace lcc
         std::string result;
         for (auto &code : _codes)
         {
-            for(auto& item : _functionTable)
+            for (auto &item : _functionTable)
             {
-                if(id == item.entry)
+                if (id == item.entry)
                     printf("%s:\n", item.name.c_str());
             }
 
@@ -309,7 +339,10 @@ namespace lcc
             case ArgType::VALUE:
             {
                 auto pArg1 = std::dynamic_pointer_cast<Value>(code.arg1);
-                arg1 = std::to_string(pArg1->integerVal);
+                if(pArg1->valueType == Value::ValueType::INTEGER)
+                    arg1 = std::to_string(pArg1->integerVal);
+                else
+                    arg1 = std::to_string(pArg1->floatVal);
                 break;
             }
             case ArgType::CODEADDR:
@@ -334,7 +367,10 @@ namespace lcc
             case ArgType::VALUE:
             {
                 auto pArg2 = std::dynamic_pointer_cast<Value>(code.arg2);
-                arg2 = std::to_string(pArg2->integerVal);
+                if(pArg2->valueType == Value::ValueType::INTEGER)
+                    arg2 = std::to_string(pArg2->integerVal);
+                else
+                    arg2 = std::to_string(pArg2->floatVal);
                 break;
             }
             case ArgType::CODEADDR:
@@ -359,7 +395,10 @@ namespace lcc
             case ArgType::VALUE:
             {
                 auto pResult = std::dynamic_pointer_cast<Value>(code.result);
-                result = std::to_string(pResult->integerVal);
+                if(pResult->valueType == Value::ValueType::INTEGER)
+                    result = std::to_string(pResult->integerVal);
+                else
+                    result = std::to_string(pResult->floatVal);
                 break;
             }
             case ArgType::CODEADDR:
