@@ -304,6 +304,8 @@ namespace lcc
         // This represents a parethesized expression
         class ParenExpr : public Expr
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::unique_ptr<Expr> _subExpr;
 
@@ -314,6 +316,8 @@ namespace lcc
             };
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
 
         // Represents a function call (C99 6.5.2.2, C++ [expr.call]).
@@ -977,7 +981,7 @@ namespace lcc
             std::string name;
             std::string type;
             int offset;
-            _SymbolTableItem(std::string name, std::string type, int offset) : name(name), type(type), offset(offset) {};
+            _SymbolTableItem(std::string name, std::string type, int offset) : name(name), type(type), offset(offset){};
         } SymbolTableItem;
 
         typedef struct _SymbolTable
@@ -1076,6 +1080,7 @@ namespace lcc
         bool gen(AST::VarDecl *varDecl);
         bool gen(AST::IntegerLiteral *integerLiteral);
         bool gen(AST::BinaryOperator *binaryOperator);
+        bool gen(AST::ParenExpr *parenExpr);
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);

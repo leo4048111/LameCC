@@ -76,11 +76,6 @@ namespace lcc
             return j;
         }
 
-        bool IntegerLiteral::gen()
-        {
-            return lcc::IRGenerator::getInstance()->gen(this);
-        }
-
         json FloatingLiteral::asJson() const
         {
             json j;
@@ -106,11 +101,6 @@ namespace lcc
             j["lhs"] = json::array({_lhs->asJson()});
             j["rhs"] = json::array({_rhs->asJson()});
             return j;
-        }
-
-        bool BinaryOperator::gen() 
-        {
-            return lcc::IRGenerator::getInstance()->gen(this);
         }
 
         json UnaryOperator::asJson() const
@@ -157,6 +147,21 @@ namespace lcc
             j["castKind"] = _kind;
             j["expr"] = json::array({_subExpr->asJson()});
             return j;
+        }
+
+        bool IntegerLiteral::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
+        bool BinaryOperator::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
+        bool ParenExpr::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
         }
     }
 }

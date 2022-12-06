@@ -79,8 +79,10 @@ namespace lcc
 
     bool IRGenerator::gen(AST::BinaryOperator *binaryOperator)
     {
-        if(!binaryOperator->_lhs->gen()) return false;
-        if(!binaryOperator->_rhs->gen()) return false;
+        if (!binaryOperator->_lhs->gen())
+            return false;
+        if (!binaryOperator->_rhs->gen())
+            return false;
 
         auto newTmpEntry = newtemp(INT, INT32_WIDTH);
         if (INVALID_SYMBOLTBL_ENTRY(newTmpEntry))
@@ -92,6 +94,14 @@ namespace lcc
         auto resultEntry = lookup(newTmpEntry->name);
 
         EMIT(BinaryOpToQuaternionOp(binaryOperator->type()), MAKE_ENTRY_ARG(arg1Entry), MAKE_ENTRY_ARG(arg2Entry), MAKE_ENTRY_ARG(resultEntry));
+        return true;
+    }
+
+    bool IRGenerator::gen(AST::ParenExpr *parenExpr)
+    {
+        if(!parenExpr->_subExpr->gen()) return false;
+
+        parenExpr->place = parenExpr->_subExpr->place;
         return true;
     }
 
@@ -107,9 +117,10 @@ namespace lcc
 
     std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::lookup(std::string name)
     {
-        for(auto& item : _currentTable->items)
+        for (auto &item : _currentTable->items)
         {
-            if(item->name == name) return item;
+            if (item->name == name)
+                return item;
         }
 
         return nullptr;
