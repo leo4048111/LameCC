@@ -972,18 +972,19 @@ namespace lcc
     // Intermediate representation generator class(IRGenerator.cpp)
     class IRGenerator
     {
-        typedef struct
+        typedef struct _SymbolTableItem
         {
             std::string name;
             std::string type;
             int offset;
+            _SymbolTableItem(std::string name, std::string type, int offset) : name(name), type(type), offset(offset) {};
         } SymbolTableItem;
 
         typedef struct _SymbolTable
         {
             _SymbolTable(std::shared_ptr<_SymbolTable> previous) : previous(previous){};
             std::shared_ptr<_SymbolTable> previous;
-            std::vector<SymbolTableItem> items;
+            std::vector<std::shared_ptr<SymbolTableItem>> items;
             int totalWidth{0};
         } SymbolTable;
 
@@ -1014,9 +1015,9 @@ namespace lcc
         public:
             virtual ArgType type() override { return ArgType::ENTRY; };
 
-            std::vector<SymbolTableItem>::iterator pEntry;
+            std::shared_ptr<SymbolTableItem> pEntry;
 
-            SymbTblEntry(std::vector<SymbolTableItem>::iterator pEntry) : pEntry(pEntry){};
+            SymbTblEntry(std::shared_ptr<SymbolTableItem> pEntry) : pEntry(pEntry){};
         };
 
         class Value : public Arg
@@ -1080,9 +1081,9 @@ namespace lcc
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);
         void changeTable(std::shared_ptr<SymbolTable> table);
         bool enter(std::string name, std::string type, int width);
-        std::vector<IRGenerator::SymbolTableItem>::iterator lookup(std::string name);
+        std::shared_ptr<SymbolTableItem> lookup(std::string name);
         void emit(QuaternionOperator op, std::shared_ptr<Arg> arg1, std::shared_ptr<Arg> arg2, std::shared_ptr<Arg> result);
-        std::vector<IRGenerator::SymbolTableItem>::iterator newtemp(std::string type, int width);
+        std::shared_ptr<SymbolTableItem> newtemp(std::string type, int width);
 
         static QuaternionOperator BinaryOpToQuaternionOp(AST::BinaryOpType op);
 

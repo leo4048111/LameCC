@@ -1,7 +1,7 @@
 #include "lcc.hpp"
 
 #define EMIT(op, arg1, arg2, result) emit(op, arg1, arg2, result)
-#define INVALID_SYMBOLTBL_ENTRY(entry) (entry == _currentTable->items.end())
+#define INVALID_SYMBOLTBL_ENTRY(entry) (entry == nullptr)
 #define INT32_WIDTH sizeof(uint32_t)
 #define INT "int"
 #define MAKE_NIL_ARG() std::make_shared<Arg>()
@@ -81,7 +81,7 @@ namespace lcc
     {
         if(!binaryOperator->_lhs->gen()) return false;
         if(!binaryOperator->_rhs->gen()) return false;
-        
+
         auto newTmpEntry = newtemp(INT, INT32_WIDTH);
         if (INVALID_SYMBOLTBL_ENTRY(newTmpEntry))
             return false;
@@ -105,15 +105,14 @@ namespace lcc
         _currentTable = table;
     }
 
-    std::vector<IRGenerator::SymbolTableItem>::iterator IRGenerator::lookup(std::string name)
+    std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::lookup(std::string name)
     {
-        for (auto it = _currentTable->items.begin(); it != _currentTable->items.end(); it++)
+        for(auto& item : _currentTable->items)
         {
-            if ((*it).name == name)
-                return it;
+            if(item->name == name) return item;
         }
 
-        return _currentTable->items.end();
+        return nullptr;
     }
 
     bool IRGenerator::enter(std::string name, std::string type, int width)
@@ -122,7 +121,7 @@ namespace lcc
         if (!INVALID_SYMBOLTBL_ENTRY(entry)) // duplication check
             return false;
 
-        _currentTable->items.push_back({name, type, _currentTable->totalWidth});
+        _currentTable->items.push_back(std::make_shared<SymbolTableItem>(name, type, _currentTable->totalWidth));
         _currentTable->totalWidth += width;
 
         return true;
@@ -134,7 +133,7 @@ namespace lcc
         _codes.push_back(code);
     }
 
-    std::vector<IRGenerator::SymbolTableItem>::iterator IRGenerator::newtemp(std::string type, int width)
+    std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::newtemp(std::string type, int width)
     {
         static int id = 0;
         std::string name = "@T" + std::to_string(id);
@@ -143,7 +142,7 @@ namespace lcc
         if (!enter(name, type, width))
         {
             FATAL_ERROR("Internal error.");
-            return _currentTable->items.end();
+            return nullptr;
         }
 
         return lookup(name);
