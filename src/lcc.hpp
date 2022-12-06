@@ -33,7 +33,10 @@ namespace lcc
         class ASTNode
         {
         public:
+            std::string place{""}; // for IR generation
+        public:
             virtual json asJson() const = 0;
+            virtual bool gen() { return false; }; // CHANGE THIS TO PURE VIRTUAL LATER!!!
             virtual ~ASTNode(){};
         };
 
@@ -68,6 +71,7 @@ namespace lcc
     }
 
     class LR1Parser;
+    class IRGenerator;
 
     // Declarations
     namespace AST
@@ -81,6 +85,7 @@ namespace lcc
         class TranslationUnitDecl : public Decl
         {
             friend class lcc::LR1Parser;
+            friend class lcc::IRGenerator;
 
         protected:
             std::vector<std::unique_ptr<Decl>> _decls;
@@ -90,6 +95,8 @@ namespace lcc
             ~TranslationUnitDecl() = default;
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
 
         // This represents a decl that may have a name
@@ -110,6 +117,8 @@ namespace lcc
         // Represents a variable declaration or definition.
         class VarDecl : public NamedDecl
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::string _type;
             bool _isInitialized;
@@ -120,6 +129,8 @@ namespace lcc
                     bool isInitialized = false, std::unique_ptr<Expr> value = nullptr) : NamedDecl(name), _type(type), _isInitialized(isInitialized), _value(std::move(value)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
 
             const std::string type() const { return _type; };
         };
@@ -190,6 +201,8 @@ namespace lcc
         // Integer literal value
         class IntegerLiteral : public Expr
         {
+            friend class lcc::IRGenerator;
+
         protected:
             int _value;
 
@@ -197,6 +210,8 @@ namespace lcc
             IntegerLiteral(int value) : _value(value) { _isLValue = false; }; // Integer literal should be LValue instead of RValue
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
 
             int value() const { return _value; };
         };
@@ -953,7 +968,118 @@ namespace lcc
     // Intermediate representation generator class(IRGenerator.cpp)
     class IRGenerator
     {
-        
+        typedef struct
+        {
+            std::string name;
+            std::string type;
+            int offset;
+        } SymbolTableItem;
+
+        typedef struct _SymbolTable
+        {
+            _SymbolTable(std::shared_ptr<_SymbolTable> previous) : previous(previous){};
+            std::shared_ptr<_SymbolTable> previous;
+            std::vector<SymbolTableItem> items;
+            int totalWidth{0};
+        } SymbolTable;
+
+        enum class ArgType
+        {
+            NIL = 0,
+            CODEADDR,
+            ENTRY,
+            VALUE
+        };
+
+        class Arg
+        {
+        public:
+            virtual ArgType type() { return ArgType::NIL; };
+        };
+
+        class CodeAddr : public Arg
+        {
+        public:
+            virtual ArgType type() override { return ArgType::CODEADDR; };
+
+            int codeAddr;
+        };
+
+        class SymbTblEntry : public Arg
+        {
+        public:
+            virtual ArgType type() override { return ArgType::ENTRY; };
+
+            std::vector<SymbolTableItem>::iterator pEntry;
+
+            SymbTblEntry(std::vector<SymbolTableItem>::iterator pEntry) : pEntry(pEntry){};
+        };
+
+        class Value : public Arg
+        {
+        public:
+            virtual ArgType type() override { return ArgType::VALUE; };
+
+            union
+            {
+                float floatVal;
+                int integerVal;
+            };
+
+            Value(float floatVal) : floatVal(floatVal){};
+            Value(int integerVal) : integerVal(integerVal){};
+        };
+
+        enum class QuaternionOperator
+        {
+            ASSIGN = 0
+        };
+
+        typedef struct
+        {
+            QuaternionOperator op;
+            std::shared_ptr<Arg> arg1;
+            std::shared_ptr<Arg> arg2;
+            std::shared_ptr<Arg> result;
+        } Quaternion;
+
+    private:
+        IRGenerator();
+        IRGenerator(const IRGenerator &) = delete;
+        IRGenerator &operator=(const IRGenerator &) = delete;
+
+    public:
+        static IRGenerator *getInstance()
+        {
+            if (_inst.get() == nullptr)
+                _inst.reset(new IRGenerator);
+
+            return _inst.get();
+        }
+
+    private:
+        static std::unique_ptr<IRGenerator> _inst;
+
+    public:
+        // gen methods
+        bool gen(AST::TranslationUnitDecl *translationUnitDecl);
+        bool gen(AST::VarDecl *varDecl);
+        bool gen(AST::IntegerLiteral *integerLiteral);
+
+    private:
+        std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);
+        void changeTable(std::shared_ptr<SymbolTable> table);
+        bool enter(std::string name, std::string type, int width);
+        std::vector<IRGenerator::SymbolTableItem>::iterator lookup(std::string name);
+        void emit(QuaternionOperator op, std::shared_ptr<Arg> arg1, std::shared_ptr<Arg> arg2, std::shared_ptr<Arg> result);
+        std::vector<IRGenerator::SymbolTableItem>::iterator newtemp(std::string type, int width);
+
+    public:
+        void printCode() const;
+
+    private:
+        std::shared_ptr<SymbolTable> _currentTable;
+        std::vector<Quaternion> _codes;
     };
 
     // some util funcs(Utils.cpp)

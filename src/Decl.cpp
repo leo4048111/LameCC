@@ -14,6 +14,11 @@ namespace lcc
             return j;
         }
 
+        bool TranslationUnitDecl::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
         json NamedDecl::asJson() const
         {
             json j;
@@ -32,6 +37,11 @@ namespace lcc
             else
                 j["init"] = false;
             return j;
+        }
+
+        bool VarDecl::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
         }
 
         json ParmVarDecl::asJson() const

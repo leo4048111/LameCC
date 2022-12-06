@@ -76,6 +76,11 @@ namespace lcc
             return j;
         }
 
+        bool IntegerLiteral::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
         json FloatingLiteral::asJson() const
         {
             json j;

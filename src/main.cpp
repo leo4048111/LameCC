@@ -158,6 +158,11 @@ int main(int argc, char **argv)
     if (astRoot == nullptr)
         WARNING("Parsed empty AST");
 
+    if(astRoot) {
+        if(!astRoot->gen()) FATAL_ERROR("Failed to generate IR.");
+        else lcc::IRGenerator::getInstance()->printCode();
+    }
+
     if (g_shouldDumpTokens)
     {
         lcc::dumpJson(lcc::jsonifyTokens(tokens), g_dump_token_out_path);
