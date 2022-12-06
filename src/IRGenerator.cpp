@@ -205,7 +205,7 @@ namespace lcc
             }
             }
 
-            printf("%4d: (%-20s, %-20s, %-20s, %-20s)\n", id, op.c_str(), arg1.c_str(), arg2.c_str(), result.c_str());
+            printf("%4d: (%-10s, %-10s, %-10s, %-10s)\n", id, op.c_str(), arg1.c_str(), arg2.c_str(), result.c_str());
             id++;
         }
     }
