@@ -1077,6 +1077,12 @@ namespace lcc
             std::shared_ptr<Arg> result;
         } Quaternion;
 
+        typedef struct
+        {
+            std::string name;
+            int entry;
+        } FunctionTableItem;
+
     private:
         IRGenerator();
         IRGenerator(const IRGenerator &) = delete;
@@ -1111,6 +1117,7 @@ namespace lcc
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);
         void changeTable(std::shared_ptr<SymbolTable> table);
         bool enter(std::string name, std::string type, int width);
+        bool registerFunc(std::string name, int entry);
         std::shared_ptr<SymbolTableItem> lookup(std::string name);
         std::shared_ptr<SymbolTableItem> lookupCurrentTbl(std::string name);
         void emit(QuaternionOperator op, std::shared_ptr<Arg> arg1, std::shared_ptr<Arg> arg2, std::shared_ptr<Arg> result);
@@ -1123,7 +1130,8 @@ namespace lcc
 
     private:
         std::vector<std::shared_ptr<SymbolTable>> _tables;
-        std::shared_ptr<SymbolTable> _currentTable;
+        std::shared_ptr<SymbolTable> _currentSymbolTable;
+        std::vector<FunctionTableItem> _functionTable;
         std::vector<Quaternion> _codes;
     };
 

@@ -68,7 +68,12 @@ namespace lcc
 
     bool IRGenerator::gen(AST::FunctionDecl *functionDecl)
     {
-        auto previousTable = _currentTable;
+        if(!registerFunc(functionDecl->name(), _codes.size())) {
+            FATAL_ERROR("Function " << functionDecl->name() << " redeclaration.");
+            return false;
+        }
+
+        auto previousTable = _currentSymbolTable;
         changeTable(mkTable(previousTable));
 
         for (auto &param : functionDecl->_params)
@@ -155,7 +160,7 @@ namespace lcc
 
     bool IRGenerator::gen(AST::CompoundStmt *compoundStmt)
     {
-        auto previousTable = _currentTable;
+        auto previousTable = _currentSymbolTable;
         changeTable(mkTable(previousTable));
         for (auto &stmt : compoundStmt->_body)
         {
@@ -187,12 +192,12 @@ namespace lcc
 
     void IRGenerator::changeTable(std::shared_ptr<SymbolTable> table)
     {
-        _currentTable = table;
+        _currentSymbolTable = table;
     }
 
     std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::lookupCurrentTbl(std::string name)
     {
-        for (auto &item : _currentTable->items)
+        for (auto &item : _currentSymbolTable->items)
         {
             if (item->name == name)
                 return item;
@@ -203,9 +208,9 @@ namespace lcc
 
     std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::lookup(std::string name)
     {
-        auto currentTbl = _currentTable;
+        auto currentTbl = _currentSymbolTable;
         std::shared_ptr<SymbolTableItem> tblEntry = nullptr;
-        for (_currentTable; _currentTable != nullptr; changeTable(_currentTable->previous))
+        for (_currentSymbolTable; _currentSymbolTable != nullptr; changeTable(_currentSymbolTable->previous))
         {
             tblEntry = lookupCurrentTbl(name);
             if (!(INVALID_SYMBOLTBL_ENTRY(tblEntry)))
@@ -222,8 +227,8 @@ namespace lcc
         if (!INVALID_SYMBOLTBL_ENTRY(entry)) // duplication check
             return false;
 
-        _currentTable->items.push_back(std::make_shared<SymbolTableItem>(name, type, _currentTable->totalWidth));
-        _currentTable->totalWidth += width;
+        _currentSymbolTable->items.push_back(std::make_shared<SymbolTableItem>(name, type, _currentSymbolTable->totalWidth));
+        _currentSymbolTable->totalWidth += width;
 
         return true;
     }
@@ -249,6 +254,17 @@ namespace lcc
         return lookup(name);
     }
 
+    bool IRGenerator::registerFunc(std::string name, int entry)
+    {
+        for(auto& item : _functionTable)
+        {
+            if(item.name == name) return false;
+        }
+
+        _functionTable.push_back({name, entry});
+        return true;
+    }
+
     void IRGenerator::printCode() const
     {
         int id = 0;
@@ -258,6 +274,12 @@ namespace lcc
         std::string result;
         for (auto &code : _codes)
         {
+            for(auto& item : _functionTable)
+            {
+                if(id == item.entry)
+                    printf("%s:\n", item.name.c_str());
+            }
+
             switch (code.op)
             {
 #define BINARY_OPERATION(name, disc) \

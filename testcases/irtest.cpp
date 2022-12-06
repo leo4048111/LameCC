@@ -1,3 +1,9 @@
+int g_a = 3;
+void func1(int a)
+{
+    int b = a;
+}
+
 void func(int tmp)
 {
     int a = tmp;
