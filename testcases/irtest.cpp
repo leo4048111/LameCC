@@ -25,5 +25,5 @@ void func3(int tmp)
     }
     else int c = 3;
 
-    return tmp + tmp;
+    return tmp;
 }
