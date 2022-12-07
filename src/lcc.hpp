@@ -339,6 +339,8 @@ namespace lcc
         // Represents a function call (C99 6.5.2.2, C++ [expr.call]).
         class CallExpr : public Expr
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::unique_ptr<DeclRefExpr> _functionExpr;
             std::vector<std::unique_ptr<Expr>> _params;
@@ -347,6 +349,8 @@ namespace lcc
             CallExpr(std::unique_ptr<DeclRefExpr> function, std::vector<std::unique_ptr<Expr>> &params) : _functionExpr(std::move(function)), _params(std::move(params)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
 
         // Base class for type casts, including both implicit casts (ImplicitCastExpr) and explicit casts
@@ -1156,6 +1160,7 @@ namespace lcc
         bool gen(AST::ValueStmt *valueStmt);
         bool gen(AST::ReturnStmt *returnStmt);
         bool gen(AST::WhileStmt *whileStmt);
+        bool gen(AST::CallExpr* callExpr);
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);

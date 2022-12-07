@@ -291,12 +291,11 @@ namespace lcc
 
         std::shared_ptr<SymbolTableItem> newTempResult = nullptr;
 
-        if(bodyResultEntry->type == INT)
+        if (bodyResultEntry->type == INT)
             newTempResult = newtemp(bodyResultEntry->type, INT32_WIDTH);
-        else 
+        else
             newTempResult = newtemp(bodyResultEntry->type, FLOAT_WIDTH);
 
-        
         EMIT(UnaryOpToQuaternionOp(unaryOperator->type()), MAKE_ENTRY_ARG(bodyResultEntry), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTempResult));
 
         unaryOperator->place = newTempResult->name;
@@ -325,6 +324,14 @@ namespace lcc
         whileExitAddr = _codes.size();
 
         jumpToWhileExitCode.result = MAKE_ADDR_ARG(whileExitAddr); // replace 0 with while exit addr
+
+        return true;
+    }
+
+    bool IRGenerator::gen(AST::CallExpr* callExpr)
+    {
+        // TODO IR Generation for call expr will be implemented later
+        EMIT(QuaternionOperator::Call, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_NIL_ARG());
 
         return true;
     }

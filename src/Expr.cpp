@@ -183,5 +183,10 @@ namespace lcc
         {
             return lcc::IRGenerator::getInstance()->gen(this);
         }
+
+        bool CallExpr::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
     }
 }
