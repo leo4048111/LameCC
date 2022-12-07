@@ -17,7 +17,7 @@ void func3(int tmp)
 {
     if(1 + 2)
     {
-        int a = 1;
+        tmp = 1 + 2;
     }
     else if(5)
     {

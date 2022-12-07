@@ -397,6 +397,8 @@ namespace lcc
         // Represents a statement that could possibly have a value and type.
         class ValueStmt : public Stmt
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::unique_ptr<Expr> _expr;
 
@@ -404,6 +406,8 @@ namespace lcc
             ValueStmt(std::unique_ptr<Expr> expr) : _expr(std::move(expr)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
 
         // This represents an if/then/else.
@@ -1041,7 +1045,7 @@ namespace lcc
 
             int codeAddr;
 
-            CodeAddr(int codeAddr) : codeAddr(codeAddr) {};
+            CodeAddr(int codeAddr) : codeAddr(codeAddr){};
         };
 
         class SymbTblEntry : public Arg
@@ -1086,7 +1090,8 @@ namespace lcc
 #undef UNARY_OPERATION
 #undef BINARY_OPERATION
             Jnz, // conditional jump
-            J, // jump
+            J,   // jump
+            Call, // TODO function call
         };
 
         typedef struct
@@ -1133,7 +1138,8 @@ namespace lcc
         bool gen(AST::ParenExpr *parenExpr);
         bool gen(AST::CompoundStmt *compoundStmt);
         bool gen(AST::DeclStmt *declStmt);
-        bool gen(AST::IfStmt* ifStmt);
+        bool gen(AST::IfStmt *ifStmt);
+        bool gen(AST::ValueStmt *valueStmt);
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);

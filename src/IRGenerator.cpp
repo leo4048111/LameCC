@@ -239,6 +239,13 @@ namespace lcc
         return true;
     }
 
+    bool IRGenerator::gen(AST::ValueStmt *valueStmt)
+    {
+        if(!valueStmt->_expr->gen()) return false;
+
+        return true;
+    }
+
     std::shared_ptr<IRGenerator::SymbolTable> IRGenerator::mkTable(std::shared_ptr<SymbolTable> previous)
     {
         auto tbl = std::make_shared<SymbolTable>(previous);
@@ -352,6 +359,9 @@ namespace lcc
                 break;
             case QuaternionOperator::J:
                 op = "J";
+                break;
+            case QuaternionOperator::Call:
+                op = "Call";
                 break;
             default:
                 op = "_";
