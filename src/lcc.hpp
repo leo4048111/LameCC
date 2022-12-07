@@ -476,6 +476,8 @@ namespace lcc
         // This represents a return, optionally of an expression: return; return 4;.
         class ReturnStmt : public Stmt
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::unique_ptr<Expr> _value;
 
@@ -483,6 +485,8 @@ namespace lcc
             ReturnStmt(std::unique_ptr<Expr> value = nullptr) : _value(std::move(value)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
     }
 } // AST end
@@ -1089,9 +1093,10 @@ namespace lcc
 #include "OperationType.inc"
 #undef UNARY_OPERATION
 #undef BINARY_OPERATION
-            Jnz, // conditional jump
-            J,   // jump
+            Jnz,  // conditional jump
+            J,    // jump
             Call, // TODO function call
+            Ret,  // function returns
         };
 
         typedef struct
@@ -1140,6 +1145,7 @@ namespace lcc
         bool gen(AST::DeclStmt *declStmt);
         bool gen(AST::IfStmt *ifStmt);
         bool gen(AST::ValueStmt *valueStmt);
+        bool gen(AST::ReturnStmt *returnStmt);
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);

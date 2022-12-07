@@ -6,6 +6,7 @@
 #define FLOAT_WIDTH sizeof(float)
 #define INT "int"
 #define FLOAT "float"
+//#define VOID "void"
 #define MAKE_NIL_ARG() std::make_shared<Arg>()
 #define MAKE_VALUE_ARG(val) std::make_shared<Value>(val)
 #define MAKE_ENTRY_ARG(entry) std::make_shared<SymbTblEntry>(entry)
@@ -241,7 +242,23 @@ namespace lcc
 
     bool IRGenerator::gen(AST::ValueStmt *valueStmt)
     {
-        if(!valueStmt->_expr->gen()) return false;
+        if (!valueStmt->_expr->gen())
+            return false;
+
+        return true;
+    }
+
+    bool IRGenerator::gen(AST::ReturnStmt *returnStmt)
+    {
+        if(returnStmt->_value == nullptr)
+            EMIT(QuaternionOperator::Ret, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_NIL_ARG());
+        else 
+        {
+            if(!returnStmt->_value->gen()) return false;
+
+            auto returnValueEntry = lookup(returnStmt->_value->place);
+            EMIT(QuaternionOperator::Ret, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(returnValueEntry));
+        }
 
         return true;
     }
@@ -363,6 +380,9 @@ namespace lcc
             case QuaternionOperator::Call:
                 op = "Call";
                 break;
+            case QuaternionOperator::Ret:
+                op = "Return";
+                break;
             default:
                 op = "_";
                 break;
@@ -427,7 +447,7 @@ namespace lcc
             switch (code.result->type())
             {
             case ArgType::NIL:
-                arg1 = "_";
+                result = "_";
                 break;
             case ArgType::ENTRY:
             {

@@ -24,4 +24,6 @@ void func3(int tmp)
         int b = 2;
     }
     else int c = 3;
+
+    return tmp + tmp;
 }
