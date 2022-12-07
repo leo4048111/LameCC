@@ -409,6 +409,8 @@ namespace lcc
         // This represents an if/then/else.
         class IfStmt : public Stmt
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::unique_ptr<Expr> _condition;
             std::unique_ptr<Stmt> _body;
@@ -418,6 +420,8 @@ namespace lcc
             IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body, std::unique_ptr<Stmt> elseBody = nullptr) : _condition(std::move(condition)), _body(std::move(body)), _elseBody(std::move(elseBody)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
 
         // This represents a 'while' stmt.
@@ -1036,6 +1040,8 @@ namespace lcc
             virtual ArgType type() override { return ArgType::CODEADDR; };
 
             int codeAddr;
+
+            CodeAddr(int codeAddr) : codeAddr(codeAddr) {};
         };
 
         class SymbTblEntry : public Arg
@@ -1079,6 +1085,8 @@ namespace lcc
 #include "OperationType.inc"
 #undef UNARY_OPERATION
 #undef BINARY_OPERATION
+            Jnz, // conditional jump
+            J, // jump
         };
 
         typedef struct
@@ -1125,6 +1133,7 @@ namespace lcc
         bool gen(AST::ParenExpr *parenExpr);
         bool gen(AST::CompoundStmt *compoundStmt);
         bool gen(AST::DeclStmt *declStmt);
+        bool gen(AST::IfStmt* ifStmt);
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);

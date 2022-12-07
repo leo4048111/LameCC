@@ -81,5 +81,10 @@ namespace lcc
         {
             return lcc::IRGenerator::getInstance()->gen(this);
         }
+
+        bool IfStmt::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
     }
 }

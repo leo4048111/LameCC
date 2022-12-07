@@ -9,6 +9,7 @@
 #define MAKE_NIL_ARG() std::make_shared<Arg>()
 #define MAKE_VALUE_ARG(val) std::make_shared<Value>(val)
 #define MAKE_ENTRY_ARG(entry) std::make_shared<SymbTblEntry>(entry)
+#define MAKE_ADDR_ARG(codeAddr) std::make_shared<CodeAddr>(codeAddr)
 
 #define DEBUG_
 
@@ -212,6 +213,32 @@ namespace lcc
         return true;
     }
 
+    bool IRGenerator::gen(AST::IfStmt *ifStmt)
+    {
+        // currently all conditional jumps are implemented with jnz
+        if (!ifStmt->_condition->gen())
+            return false; // gen ir for condition first
+        int bodyCodeEntryAddr = _codes.size() + 2;
+        int elseBodyEntryAddr = 0; // this will be filled in after if body is generated
+        auto conditionExprResultEntry = lookup(ifStmt->_condition->place);
+        EMIT(QuaternionOperator::Jnz, MAKE_ENTRY_ARG(conditionExprResultEntry), MAKE_NIL_ARG(), MAKE_ADDR_ARG(bodyCodeEntryAddr)); // if condition is true, jump to if body
+        EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(elseBodyEntryAddr));
+
+        auto &jumpToElseBodyCode = _codes.back();
+
+        if (!ifStmt->_body->gen())
+            return false;
+        elseBodyEntryAddr = _codes.size();
+
+        jumpToElseBodyCode.result = MAKE_ADDR_ARG(elseBodyEntryAddr); // replace 0 with correct else body addr
+
+        if (ifStmt->_elseBody != nullptr) // gen else body if exists
+            if (!ifStmt->_elseBody->gen())
+                return false;
+
+        return true;
+    }
+
     std::shared_ptr<IRGenerator::SymbolTable> IRGenerator::mkTable(std::shared_ptr<SymbolTable> previous)
     {
         auto tbl = std::make_shared<SymbolTable>(previous);
@@ -320,6 +347,12 @@ namespace lcc
 #include "OperationType.inc"
 #undef UNARY_OPERATION
 #undef BINARY_OPERATION
+            case QuaternionOperator::Jnz:
+                op = "Jnz";
+                break;
+            case QuaternionOperator::J:
+                op = "J";
+                break;
             default:
                 op = "_";
                 break;
@@ -339,7 +372,7 @@ namespace lcc
             case ArgType::VALUE:
             {
                 auto pArg1 = std::dynamic_pointer_cast<Value>(code.arg1);
-                if(pArg1->valueType == Value::ValueType::INTEGER)
+                if (pArg1->valueType == Value::ValueType::INTEGER)
                     arg1 = std::to_string(pArg1->integerVal);
                 else
                     arg1 = std::to_string(pArg1->floatVal);
@@ -367,7 +400,7 @@ namespace lcc
             case ArgType::VALUE:
             {
                 auto pArg2 = std::dynamic_pointer_cast<Value>(code.arg2);
-                if(pArg2->valueType == Value::ValueType::INTEGER)
+                if (pArg2->valueType == Value::ValueType::INTEGER)
                     arg2 = std::to_string(pArg2->integerVal);
                 else
                     arg2 = std::to_string(pArg2->floatVal);
@@ -395,7 +428,7 @@ namespace lcc
             case ArgType::VALUE:
             {
                 auto pResult = std::dynamic_pointer_cast<Value>(code.result);
-                if(pResult->valueType == Value::ValueType::INTEGER)
+                if (pResult->valueType == Value::ValueType::INTEGER)
                     result = std::to_string(pResult->integerVal);
                 else
                     result = std::to_string(pResult->floatVal);
