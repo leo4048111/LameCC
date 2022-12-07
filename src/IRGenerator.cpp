@@ -250,11 +250,13 @@ namespace lcc
 
     bool IRGenerator::gen(AST::ReturnStmt *returnStmt)
     {
-        if(returnStmt->_value == nullptr)
+        // TODO return type check!
+        if (returnStmt->_value == nullptr)
             EMIT(QuaternionOperator::Ret, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_NIL_ARG());
-        else 
+        else
         {
-            if(!returnStmt->_value->gen()) return false;
+            if (!returnStmt->_value->gen())
+                return false;
 
             auto returnValueEntry = lookup(returnStmt->_value->place);
             EMIT(QuaternionOperator::Ret, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(returnValueEntry));
