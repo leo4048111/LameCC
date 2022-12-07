@@ -104,8 +104,9 @@ namespace lcc
                 return false;
         }
 
-        if (!functionDecl->_body->gen())
-            return false;
+        if (functionDecl->_body != nullptr)
+            if (!functionDecl->_body->gen())
+                return false;
 
         changeTable(previousTable);
         return true;
@@ -242,13 +243,13 @@ namespace lcc
         EMIT(QuaternionOperator::Jnz, MAKE_ENTRY_ARG(conditionExprResultEntry), MAKE_NIL_ARG(), MAKE_ADDR_ARG(bodyCodeEntryAddr)); // if condition is true, jump to if body
         EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(elseBodyEntryAddr));
 
-        auto &jumpToElseBodyCode = _codes.back();
+        auto jumpToElseBodyCodeAddr = _codes.size() - 1;
 
         if (!ifStmt->_body->gen())
             return false;
         elseBodyEntryAddr = _codes.size();
 
-        jumpToElseBodyCode.result = MAKE_ADDR_ARG(elseBodyEntryAddr); // replace 0 with correct else body addr
+        _codes[jumpToElseBodyCodeAddr].result = MAKE_ADDR_ARG(elseBodyEntryAddr); // replace 0 with correct else body addr
 
         if (ifStmt->_elseBody != nullptr) // gen else body if exists
             if (!ifStmt->_elseBody->gen())
@@ -315,7 +316,7 @@ namespace lcc
         EMIT(QuaternionOperator::Jnz, MAKE_ENTRY_ARG(conditionExprResultEntry), MAKE_NIL_ARG(), MAKE_ADDR_ARG(whileBodyEntryAddr));
         EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(whileExitAddr));
 
-        auto &jumpToWhileExitCode = _codes.back();
+        auto jumpToWhileExitCodeAddr = _codes.size() - 1;
 
         if (!whileStmt->_body->gen())
             return false;
@@ -323,15 +324,19 @@ namespace lcc
         EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(whileConditionEntryAddr)); // go back to while condition entry to calculate loop condition again
         whileExitAddr = _codes.size();
 
-        jumpToWhileExitCode.result = MAKE_ADDR_ARG(whileExitAddr); // replace 0 with while exit addr
+        _codes[jumpToWhileExitCodeAddr].result = MAKE_ADDR_ARG(whileExitAddr); // replace 0 with while exit addr
 
         return true;
     }
 
-    bool IRGenerator::gen(AST::CallExpr* callExpr)
+    bool IRGenerator::gen(AST::CallExpr *callExpr)
     {
-        // TODO IR Generation for call expr will be implemented later
-        EMIT(QuaternionOperator::Call, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_NIL_ARG());
+        // TODO IR Generation for call expr will be implemented later;
+        auto newTempResult = newtemp(INT, INT32_WIDTH);
+
+        EMIT(QuaternionOperator::Call, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTempResult));
+
+        callExpr->place = newTempResult->name;
 
         return true;
     }
