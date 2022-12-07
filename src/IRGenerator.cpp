@@ -273,7 +273,6 @@ namespace lcc
 
     bool IRGenerator::gen(AST::WhileStmt *whileStmt)
     {
-        // TODO
         int whileConditionEntryAddr = _codes.size();
         if (!whileStmt->_condition->gen())
             return false;
