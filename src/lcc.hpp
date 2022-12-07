@@ -1168,6 +1168,7 @@ namespace lcc
         std::shared_ptr<SymbolTableItem> newtemp(std::string type, int width);
 
         static QuaternionOperator BinaryOpToQuaternionOp(AST::BinaryOpType op);
+        static QuaternionOperator UnaryOpToQuaternionOp(AST::UnaryOpType op);
 
     public:
         void printCode() const;

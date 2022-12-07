@@ -35,6 +35,23 @@ namespace lcc
         }
     }
 
+    IRGenerator::QuaternionOperator IRGenerator::UnaryOpToQuaternionOp(AST::UnaryOpType op)
+    {
+        switch (op)
+        {
+#define BINARY_OPERATION(name, disc)
+#define UNARY_OPERATION(name, disc)   \
+    case AST::UnaryOpType::UO_##name: \
+        return QuaternionOperator::name;
+#include "OperationType.inc"
+#undef UNARY_OPERATION
+#undef BINARY_OPERATION
+        default:
+            return IRGenerator::QuaternionOperator::Invalid;
+            break;
+        }
+    }
+
     IRGenerator::IRGenerator()
     {
         changeTable(mkTable(nullptr));
@@ -267,7 +284,23 @@ namespace lcc
 
     bool IRGenerator::gen(AST::UnaryOperator *unaryOperator)
     {
-        // TODO
+        if (!unaryOperator->_body->gen())
+            return false;
+
+        auto bodyResultEntry = lookup(unaryOperator->_body->place);
+
+        std::shared_ptr<SymbolTableItem> newTempResult = nullptr;
+
+        if(bodyResultEntry->type == INT)
+            newTempResult = newtemp(bodyResultEntry->type, INT32_WIDTH);
+        else 
+            newTempResult = newtemp(bodyResultEntry->type, FLOAT_WIDTH);
+
+        
+        EMIT(UnaryOpToQuaternionOp(unaryOperator->type()), MAKE_ENTRY_ARG(bodyResultEntry), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTempResult));
+
+        unaryOperator->place = newTempResult->name;
+
         return true;
     }
 
@@ -288,7 +321,7 @@ namespace lcc
         if (!whileStmt->_body->gen())
             return false;
 
-        EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(whileConditionEntryAddr));  // go back to while condition entry to calculate loop condition again
+        EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(whileConditionEntryAddr)); // go back to while condition entry to calculate loop condition again
         whileExitAddr = _codes.size();
 
         jumpToWhileExitCode.result = MAKE_ADDR_ARG(whileExitAddr); // replace 0 with while exit addr
@@ -400,7 +433,7 @@ namespace lcc
     case QuaternionOperator::name:   \
         op = disc;                   \
         break;
-#define UNARY_OPERATION(name, disc)
+#define UNARY_OPERATION(name, disc) BINARY_OPERATION(name, disc)
 #include "OperationType.inc"
 #undef UNARY_OPERATION
 #undef BINARY_OPERATION

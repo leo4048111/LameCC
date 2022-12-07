@@ -29,6 +29,7 @@ void func3(int tmp)
     {
         int d = 3;
         int e = 4;
+        int f = -d;
     }
 
     return;
