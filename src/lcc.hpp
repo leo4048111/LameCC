@@ -301,6 +301,8 @@ namespace lcc
         // Unary operator type expression
         class UnaryOperator : public Expr
         {
+            friend class lcc::IRGenerator;
+
         protected:
             UnaryOpType _type;
             std::unique_ptr<Expr> _body;
@@ -309,6 +311,8 @@ namespace lcc
             UnaryOperator(UnaryOpType type, std::unique_ptr<Expr> body) : _type(type), _body(std::move(body)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
 
             UnaryOpType type() const { return _type; };
         };
@@ -431,6 +435,8 @@ namespace lcc
         // This represents a 'while' stmt.
         class WhileStmt : public Stmt
         {
+            friend class lcc::IRGenerator;
+
         protected:
             std::unique_ptr<Expr> _condition;
             std::unique_ptr<Stmt> _body;
@@ -439,6 +445,8 @@ namespace lcc
             WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body) : _condition(std::move(condition)), _body(std::move(body)){};
 
             virtual json asJson() const override;
+
+            virtual bool gen() override;
         };
 
         // Adaptor class for mixing declarations with statements and expressions.
@@ -1140,12 +1148,14 @@ namespace lcc
         bool gen(AST::DeclRefExpr *declRefExpr);
         bool gen(AST::CastExpr *castExpr);
         bool gen(AST::BinaryOperator *binaryOperator);
+        bool gen(AST::UnaryOperator *unaryOperator);
         bool gen(AST::ParenExpr *parenExpr);
         bool gen(AST::CompoundStmt *compoundStmt);
         bool gen(AST::DeclStmt *declStmt);
         bool gen(AST::IfStmt *ifStmt);
         bool gen(AST::ValueStmt *valueStmt);
         bool gen(AST::ReturnStmt *returnStmt);
+        bool gen(AST::WhileStmt *whileStmt);
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);

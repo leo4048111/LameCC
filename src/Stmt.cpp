@@ -87,6 +87,11 @@ namespace lcc
             return lcc::IRGenerator::getInstance()->gen(this);
         }
 
+        bool WhileStmt::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
         bool ValueStmt::gen()
         {
             return lcc::IRGenerator::getInstance()->gen(this);

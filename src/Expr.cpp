@@ -174,6 +174,11 @@ namespace lcc
             return lcc::IRGenerator::getInstance()->gen(this);
         }
 
+        bool UnaryOperator::gen()
+        {
+            return lcc::IRGenerator::getInstance()->gen(this);
+        }
+
         bool ParenExpr::gen()
         {
             return lcc::IRGenerator::getInstance()->gen(this);

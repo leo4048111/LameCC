@@ -265,6 +265,38 @@ namespace lcc
         return true;
     }
 
+    bool IRGenerator::gen(AST::UnaryOperator *unaryOperator)
+    {
+        // TODO
+        return true;
+    }
+
+    bool IRGenerator::gen(AST::WhileStmt *whileStmt)
+    {
+        // TODO
+        int whileConditionEntryAddr = _codes.size();
+        if (!whileStmt->_condition->gen())
+            return false;
+
+        auto conditionExprResultEntry = lookup(whileStmt->_condition->place);
+        int whileBodyEntryAddr = _codes.size() + 2;
+        int whileExitAddr = 0; // this will be filled in after body codes are emitted
+        EMIT(QuaternionOperator::Jnz, MAKE_ENTRY_ARG(conditionExprResultEntry), MAKE_NIL_ARG(), MAKE_ADDR_ARG(whileBodyEntryAddr));
+        EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(whileExitAddr));
+
+        auto &jumpToWhileExitCode = _codes.back();
+
+        if (!whileStmt->_body->gen())
+            return false;
+
+        EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(whileConditionEntryAddr));  // go back to while condition entry to calculate loop condition again
+        whileExitAddr = _codes.size();
+
+        jumpToWhileExitCode.result = MAKE_ADDR_ARG(whileExitAddr); // replace 0 with while exit addr
+
+        return true;
+    }
+
     std::shared_ptr<IRGenerator::SymbolTable> IRGenerator::mkTable(std::shared_ptr<SymbolTable> previous)
     {
         auto tbl = std::make_shared<SymbolTable>(previous);

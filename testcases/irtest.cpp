@@ -25,5 +25,11 @@ void func3(int tmp)
     }
     else int c = 3;
 
-    return tmp;
+    while(5 < 6)
+    {
+        int d = 3;
+        int e = 4;
+    }
+
+    return;
 }
