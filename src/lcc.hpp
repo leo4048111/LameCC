@@ -1100,6 +1100,7 @@ namespace lcc
         enum class QuaternionOperator
         {
             Invalid = 0,
+            DefineEqual, // :=
 #define BINARY_OPERATION(name, disc) name,
 #define UNARY_OPERATION(name, disc) name,
 #include "OperationType.inc"

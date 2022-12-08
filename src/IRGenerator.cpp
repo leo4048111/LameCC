@@ -6,7 +6,7 @@
 #define FLOAT_WIDTH sizeof(float)
 #define INT "int"
 #define FLOAT "float"
-//#define VOID "void"
+// #define VOID "void"
 #define MAKE_NIL_ARG() std::make_shared<Arg>()
 #define MAKE_VALUE_ARG(val) std::make_shared<Value>(val)
 #define MAKE_ENTRY_ARG(entry) std::make_shared<SymbTblEntry>(entry)
@@ -81,7 +81,7 @@ namespace lcc
                 return false;
             auto arg1Entry = lookup(varDecl->_value->place);
             auto resultEntry = lookup(varDecl->name());
-            EMIT(QuaternionOperator::Assign, MAKE_ENTRY_ARG(arg1Entry), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(resultEntry));
+            EMIT(QuaternionOperator::DefineEqual, MAKE_ENTRY_ARG(arg1Entry), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(resultEntry));
         }
 
         return true;
@@ -119,7 +119,7 @@ namespace lcc
             return false;
         integerLiteral->place = newTmpEntry->name;
 
-        EMIT(QuaternionOperator::Assign, MAKE_VALUE_ARG(integerLiteral->value()), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTmpEntry));
+        EMIT(QuaternionOperator::DefineEqual, MAKE_VALUE_ARG(integerLiteral->value()), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTmpEntry));
         return true;
     }
 
@@ -130,7 +130,7 @@ namespace lcc
             return false;
         floatingLiteral->place = newTmpEntry->name;
 
-        EMIT(QuaternionOperator::Assign, MAKE_VALUE_ARG(floatingLiteral->value()), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTmpEntry));
+        EMIT(QuaternionOperator::DefineEqual, MAKE_VALUE_ARG(floatingLiteral->value()), MAKE_NIL_ARG(), MAKE_ENTRY_ARG(newTmpEntry));
         return true;
     }
 
@@ -449,6 +449,9 @@ namespace lcc
 #include "OperationType.inc"
 #undef UNARY_OPERATION
 #undef BINARY_OPERATION
+            case QuaternionOperator::DefineEqual:
+                op = ":=";
+                break;
             case QuaternionOperator::Jnz:
                 op = "Jnz";
                 break;
