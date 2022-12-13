@@ -271,8 +271,9 @@ namespace lcc
             switch (action.type)
             {
             case ActionType::INVALID:
+                action = actionTableRow["Expr"];
                 // check if there should be an expression, if positive then call our OperatorPrecedence Parser
-                if (actionTableRow["Expr"].type != ActionType::INVALID)
+                if (action.type == ActionType::SHIFT)
                 {
                     if (shouldPrintProcess)
                         INFO("Called OperatorPrecedence parser and parsed expression");
@@ -283,6 +284,20 @@ namespace lcc
                         stateStack.push(actionTableRow["Expr"].id);
                         break;
                     }
+                }
+                else if (action.type == ActionType::REDUCE)
+                {
+                    if (shouldPrintProcess)
+                        INFO("Reduced using production " << action.id << " (r" << action.id << ")");
+                    auto nonTerminal = _productionFuncMap[action.id](stateStack, symbolStack);
+                    if (nonTerminal == nullptr)
+                    {
+                        FATAL_ERROR("Internal LR1 parser error");
+                        return nullptr;
+                    }
+                    symbolStack.push(nonTerminal);                                      // push reduced nonterminal
+                    stateStack.push(_gotoTable[stateStack.top()][nonTerminal->name()]); // push new state
+                    break;
                 }
                 // invalid action, abort asap
                 FATAL_ERROR("Parsing failed at " << _pCurToken->pos.line << ", " << _pCurToken->pos.column);
