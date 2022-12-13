@@ -247,13 +247,21 @@ namespace lcc
 
         if (!ifStmt->_body->gen())
             return false;
+
         elseBodyEntryAddr = _codes.size();
 
-        _codes[jumpToElseBodyCodeAddr].result = MAKE_ADDR_ARG(elseBodyEntryAddr); // replace 0 with correct else body addr
-
         if (ifStmt->_elseBody != nullptr) // gen else body if exists
+        {
+            elseBodyEntryAddr += 1;
+            EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(0)); // jump over else body
+            auto jumpOverElseBodyCodeAddr = _codes.size() - 1;
             if (!ifStmt->_elseBody->gen())
                 return false;
+            auto elseBodyExitAddr = _codes.size();
+            _codes[jumpOverElseBodyCodeAddr].result = MAKE_ADDR_ARG(elseBodyExitAddr); // replace 0 with correct else body exit addr
+        }
+
+        _codes[jumpToElseBodyCodeAddr].result = MAKE_ADDR_ARG(elseBodyEntryAddr); // replace 0 with correct else body addr
 
         return true;
     }

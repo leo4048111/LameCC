@@ -15,21 +15,11 @@ void func(int tmp)
 
 void func3(int tmp)
 {
-    if(1 + 2)
-    {
-        tmp = 1 + 2;
+    if(g_a) {
+        g_a = 2;
     }
-    else if(5)
-    {
-        int b = 2;
-    }
-    else int c = 3;
-
-    while(5 < 6)
-    {
-        int d = 3;
-        int e = 4;
-        int f = -d;
+    else {
+        g_a = 3;
     }
 
     return;
