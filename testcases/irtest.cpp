@@ -1,5 +1,5 @@
-void func2()
+void func2(int a)
 {
-1 + 2;
-1 + 2;
+    int b = 3;
+    int b = 4;
 }
