@@ -1123,7 +1123,9 @@ namespace lcc
         typedef struct
         {
             std::string name;
+            std::string type;
             int entry;
+            bool isInitialized;
         } FunctionTableItem;
 
     private:
@@ -1167,7 +1169,7 @@ namespace lcc
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);
         void changeTable(std::shared_ptr<SymbolTable> table);
         bool enter(std::string name, std::string type, int width);
-        bool registerFunc(std::string name, int entry);
+        bool registerFunc(std::string name, std::string type, int entry, bool isInitialized);
         std::shared_ptr<SymbolTableItem> lookup(std::string name);
         std::shared_ptr<SymbolTableItem> lookupCurrentTbl(std::string name);
         void emit(QuaternionOperator op, std::shared_ptr<Arg> arg1, std::shared_ptr<Arg> arg2, std::shared_ptr<Arg> result);
@@ -1178,6 +1180,7 @@ namespace lcc
 
     public:
         void printCode() const;
+        void dumpCode(const std::string outPath) const;
 
     private:
         std::vector<std::shared_ptr<SymbolTable>> _tables;

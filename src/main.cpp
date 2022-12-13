@@ -16,7 +16,7 @@ bool g_shouldLogPrintLR1Process = false;
 
 static bool parseOpt(int argc, char **argv)
 {
-    if(argc == 1)
+    if (argc == 1)
     {
         FATAL_ERROR("Required program options, use -? to see all available options");
         return false;
@@ -158,9 +158,15 @@ int main(int argc, char **argv)
     if (astRoot == nullptr)
         WARNING("Parsed empty AST");
 
-    if(astRoot) {
-        if(!astRoot->gen()) FATAL_ERROR("Failed to generate IR.");
-        else lcc::IRGenerator::getInstance()->printCode();
+    if (astRoot)
+    {
+        if (!astRoot->gen())
+            FATAL_ERROR("Failed to generate IR.");
+        else
+        {
+            lcc::IRGenerator::getInstance()->dumpCode(g_out_path);
+            INFO("IR has been dumped to " << g_out_path);
+        }
     }
 
     if (g_shouldDumpTokens)

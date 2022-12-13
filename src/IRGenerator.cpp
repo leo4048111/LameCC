@@ -89,7 +89,7 @@ namespace lcc
 
     bool IRGenerator::gen(AST::FunctionDecl *functionDecl)
     {
-        if (!registerFunc(functionDecl->name(), _codes.size()))
+        if (!registerFunc(functionDecl->name(), functionDecl->_type, _codes.size(), false))
         {
             FATAL_ERROR("Function " << functionDecl->name() << " redeclaration.");
             return false;
@@ -105,8 +105,11 @@ namespace lcc
         }
 
         if (functionDecl->_body != nullptr)
+        {
+            _functionTable.back().isInitialized = true;
             if (!functionDecl->_body->gen())
                 return false;
+        }
 
         changeTable(previousTable);
         return true;
@@ -420,7 +423,7 @@ namespace lcc
         return lookup(name);
     }
 
-    bool IRGenerator::registerFunc(std::string name, int entry)
+    bool IRGenerator::registerFunc(std::string name, std::string type, int entry, bool isInitialized)
     {
         for (auto &item : _functionTable)
         {
@@ -428,7 +431,7 @@ namespace lcc
                 return false;
         }
 
-        _functionTable.push_back({name, entry});
+        _functionTable.push_back({name, type, entry, isInitialized});
         return true;
     }
 
@@ -443,7 +446,7 @@ namespace lcc
         {
             for (auto &item : _functionTable)
             {
-                if (id == item.entry)
+                if (item.isInitialized && (id == item.entry))
                     printf("%s:\n", item.name.c_str());
             }
 
@@ -564,5 +567,143 @@ namespace lcc
             printf("%4d: (%-10s, %-10s, %-10s, %-10s)\n", id, op.c_str(), arg1.c_str(), arg2.c_str(), result.c_str());
             id++;
         }
+    }
+
+    void IRGenerator::dumpCode(const std::string outPath) const
+    {
+        std::ofstream ofs(outPath);
+        int id = 0;
+        std::string op;
+        std::string arg1;
+        std::string arg2;
+        std::string result;
+        for (auto &code : _codes)
+        {
+            for (auto &item : _functionTable)
+            {
+                if (item.isInitialized && (id == item.entry))
+                    ofs << item.name << ":\n";
+            }
+
+            switch (code.op)
+            {
+#define BINARY_OPERATION(name, disc) \
+    case QuaternionOperator::name:   \
+        op = disc;                   \
+        break;
+#define UNARY_OPERATION(name, disc) BINARY_OPERATION(name, disc)
+#include "OperationType.inc"
+#undef UNARY_OPERATION
+#undef BINARY_OPERATION
+            case QuaternionOperator::DefineEqual:
+                op = ":=";
+                break;
+            case QuaternionOperator::Jnz:
+                op = "Jnz";
+                break;
+            case QuaternionOperator::J:
+                op = "J";
+                break;
+            case QuaternionOperator::Call:
+                op = "Call";
+                break;
+            case QuaternionOperator::Ret:
+                op = "Return";
+                break;
+            default:
+                op = "_";
+                break;
+            }
+
+            switch (code.arg1->type())
+            {
+            case ArgType::NIL:
+                arg1 = "_";
+                break;
+            case ArgType::ENTRY:
+            {
+                auto pArg1 = std::dynamic_pointer_cast<SymbTblEntry>(code.arg1);
+                arg1 = pArg1->pEntry->name;
+                break;
+            }
+            case ArgType::VALUE:
+            {
+                auto pArg1 = std::dynamic_pointer_cast<Value>(code.arg1);
+                if (pArg1->valueType == Value::ValueType::INTEGER)
+                    arg1 = std::to_string(pArg1->integerVal);
+                else
+                    arg1 = std::to_string(pArg1->floatVal);
+                break;
+            }
+            case ArgType::CODEADDR:
+            {
+                auto pArg1 = std::dynamic_pointer_cast<CodeAddr>(code.arg1);
+                arg1 = std::to_string(pArg1->codeAddr);
+                break;
+            }
+            }
+
+            switch (code.arg2->type())
+            {
+            case ArgType::NIL:
+                arg2 = "_";
+                break;
+            case ArgType::ENTRY:
+            {
+                auto pArg2 = std::dynamic_pointer_cast<SymbTblEntry>(code.arg2);
+                arg2 = pArg2->pEntry->name;
+                break;
+            }
+            case ArgType::VALUE:
+            {
+                auto pArg2 = std::dynamic_pointer_cast<Value>(code.arg2);
+                if (pArg2->valueType == Value::ValueType::INTEGER)
+                    arg2 = std::to_string(pArg2->integerVal);
+                else
+                    arg2 = std::to_string(pArg2->floatVal);
+                break;
+            }
+            case ArgType::CODEADDR:
+            {
+                auto pArg2 = std::dynamic_pointer_cast<CodeAddr>(code.arg2);
+                arg2 = std::to_string(pArg2->codeAddr);
+                break;
+            }
+            }
+
+            switch (code.result->type())
+            {
+            case ArgType::NIL:
+                result = "_";
+                break;
+            case ArgType::ENTRY:
+            {
+                auto pResult = std::dynamic_pointer_cast<SymbTblEntry>(code.result);
+                result = pResult->pEntry->name;
+                break;
+            }
+            case ArgType::VALUE:
+            {
+                auto pResult = std::dynamic_pointer_cast<Value>(code.result);
+                if (pResult->valueType == Value::ValueType::INTEGER)
+                    result = std::to_string(pResult->integerVal);
+                else
+                    result = std::to_string(pResult->floatVal);
+                break;
+            }
+            case ArgType::CODEADDR:
+            {
+                auto pResult = std::dynamic_pointer_cast<CodeAddr>(code.result);
+                result = std::to_string(pResult->codeAddr);
+                break;
+            }
+            }
+            char buf[256];
+            sprintf(buf, "%4d: (%-10s, %-10s, %-10s, %-10s)\n", id, op.c_str(), arg1.c_str(), arg2.c_str(), result.c_str());
+            ofs << buf;
+            id++;
+        }
+
+        ofs.close();
     }
 }
