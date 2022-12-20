@@ -4,8 +4,8 @@
 + **Lexer &#9745;**
 + **LR(1) Parser &#9745;**
 + **Recursive Descent Parser &#9745;**
-+ **Semantic Analysis &#9744; // TODO**
-+ **Intermediate Code Generator &#9744; // TODO**
++ **Semantic Analysis &#9745;**
++ **Intermediate Code Generator &#9745;**
 + **Code Optimization &#9744; // TODO**
 + **Assembly Generator &#9744; // TODO**
 ## Miscellaneous features
