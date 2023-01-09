@@ -1,5 +1,7 @@
 # LameCC
 **A lame c compiler which implements a basic lexer, an LR(1) parser and a recursive descent parser**
+## Download this project
+`git clone --recurse-submodules https://github.com/leo4048111/LameCC`
 ## Basic features
 + **Lexer &#9745;**
 + **LR(1) Parser &#9745;**
