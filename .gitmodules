@@ -1,0 +1,6 @@
+[submodule "third-party/ProgramOptions"]
+	path = third-party/ProgramOptions
+	url = https://github.com/Fytch/ProgramOptions.hxx
+[submodule "third-party/json"]
+	path = third-party/json
+	url = https://github.com/nlohmann/json

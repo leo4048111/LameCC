@@ -9,11 +9,11 @@
 #include <set>
 #include <queue>
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::ordered_json;
 
-#include <ProgramOptions.hpp>
+#include <ProgramOptions.hxx>
 
 #define INFO(msg) \
     std::cout << po::green << "Info: " << po::light_gray << msg << std::endl
