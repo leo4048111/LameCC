@@ -1,5 +1,7 @@
 #include "lcc.hpp"
 
+#include <ProgramOptions.hxx>
+
 #define DEFAULT_TOKEN_DUMP_PATH "tokens.json"
 #define DEFAULT_AST_DUMP_PATH "ast.json"
 #define DEFAULT_OUT_FILE "a.out"
