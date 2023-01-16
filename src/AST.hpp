@@ -13,6 +13,7 @@ namespace lcc
     class LR1Parser;
     class IRGeneratorBase;
     class QuaternionIRGenerator;
+    class LLVMIRGenerator;
 
     namespace AST
     {
@@ -71,6 +72,7 @@ namespace lcc
             friend class lcc::LR1Parser;
             friend class lcc::IRGeneratorBase;
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::vector<std::unique_ptr<Decl>> _decls;
@@ -103,6 +105,7 @@ namespace lcc
         class VarDecl : public NamedDecl
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::string _type;

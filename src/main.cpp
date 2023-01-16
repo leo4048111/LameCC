@@ -166,7 +166,7 @@ int main(int argc, char **argv)
             FATAL_ERROR("Failed to generate IR.");
         else
         {
-            lcc::LLVMIRGenerator::getInstance()->printCode();
+            //lcc::LLVMIRGenerator::getInstance()->printCode();
             lcc::LLVMIRGenerator::getInstance()->dumpCode(g_out_path);
             INFO("IR has been dumped to " << g_out_path);
         }

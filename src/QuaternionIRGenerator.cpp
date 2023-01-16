@@ -54,7 +54,7 @@ namespace lcc
 
     QuaternionIRGenerator::QuaternionIRGenerator()
     {
-        changeTable(mkTable(nullptr));
+        changeTable(mkTable());
     }
 
     bool QuaternionIRGenerator::gen(AST::TranslationUnitDecl *translationUnitDecl)
@@ -393,7 +393,7 @@ namespace lcc
     bool QuaternionIRGenerator::enter(std::string name, std::string type, int width)
     {
         auto entry = lookupCurrentTbl(name);
-        if (!INVALID_SYMBOLTBL_ENTRY(entry)) // duplication check
+        if (!INVALID_SYMBOLTBL_ENTRY(entry)) // redefinition check
             return false;
 
         _currentSymbolTable->items.push_back(std::make_shared<SymbolTableItem>(name, type, _currentSymbolTable->totalWidth));

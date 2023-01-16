@@ -3,11 +3,14 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
 
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Type.h"
 
 #include "AST.hpp"
 
@@ -186,7 +189,7 @@ namespace lcc
         virtual bool gen(AST::CallExpr *callExpr) override;
 
     private:
-        std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);
+        std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous = nullptr);
         void changeTable(std::shared_ptr<SymbolTable> table);
         bool enter(std::string name, std::string type, int width);
         bool registerFunc(std::string name, std::string type, int entry, bool isInitialized);
@@ -211,6 +214,13 @@ namespace lcc
 
     class LLVMIRGenerator : public IRGeneratorBase
     {
+        typedef struct _SymbolTable
+        {
+            _SymbolTable(std::shared_ptr<_SymbolTable> previous) : previous(previous){};
+            std::shared_ptr<_SymbolTable> previous;
+            std::map<std::string, llvm::AllocaInst*> symbls;
+        } SymbolTable;
+
     private:
         LLVMIRGenerator();
         LLVMIRGenerator(const LLVMIRGenerator &) = delete;
@@ -251,14 +261,22 @@ namespace lcc
         virtual void printCode() const override;
         virtual void dumpCode(const std::string outPath) const override;
 
-    public:
-        std::shared_ptr<llvm::Value> llvmGen(AST::ASTNode *node);
+    private:
+        std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous = nullptr);
+        llvm::Value* lookup(std::string name);
+        llvm::Value* lookupCurrentTbl(std::string name);
+        bool enter(std::string name, llvm::AllocaInst* alloca);
+        llvm::AllocaInst* createEntryBlockAlloca(llvm::Function* function, const std::string name, const std::string type);
+        void changeTable(std::shared_ptr<SymbolTable> table);
 
     private:
         llvm::LLVMContext _context;
         std::unique_ptr<llvm::IRBuilder<>> _builder;
         std::unique_ptr<llvm::Module> _module;
 
-        std::shared_ptr<llvm::Value> _retVal;
+        std::shared_ptr<SymbolTable> _currentSymbolTable;
+        std::vector<std::shared_ptr<SymbolTable>> _tables;
+
+        llvm::Value* _retVal;
     };
 }
