@@ -25,6 +25,16 @@ namespace lcc
         _module->print(llvm::outs(), nullptr);
     }
 
+    std::shared_ptr<llvm::Value> LLVMIRGenerator::llvmGen(AST::ASTNode *node)
+    {
+        auto tmp = _retVal;
+        _retVal = nullptr;
+        if (node->gen(this))
+            return tmp;
+
+        return nullptr;
+    }
+
     bool LLVMIRGenerator::gen(AST::TranslationUnitDecl *translationUnitDecl) { return true; }
     bool LLVMIRGenerator::gen(AST::FunctionDecl *functionDecl) { return true; }
     bool LLVMIRGenerator::gen(AST::VarDecl *varDecl) { return true; }

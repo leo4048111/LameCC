@@ -17,6 +17,7 @@ namespace lcc
     class IRGeneratorBase
     {
     public:
+        virtual bool gen(AST::ASTNode *astNode) { return true; };
         virtual bool gen(AST::TranslationUnitDecl *translationUnitDecl) = 0;
         virtual bool gen(AST::FunctionDecl *functionDecl) = 0;
         virtual bool gen(AST::VarDecl *varDecl) = 0;
@@ -250,9 +251,14 @@ namespace lcc
         virtual void printCode() const override;
         virtual void dumpCode(const std::string outPath) const override;
 
+    public:
+        std::shared_ptr<llvm::Value> llvmGen(AST::ASTNode *node);
+
     private:
         llvm::LLVMContext _context;
         std::unique_ptr<llvm::IRBuilder<>> _builder;
         std::unique_ptr<llvm::Module> _module;
+
+        std::shared_ptr<llvm::Value> _retVal;
     };
 }
