@@ -18,6 +18,7 @@
 ## Build prerequisites
 + **OS: Windows or GNU/Linux**
 + **Cmake version >= 3.8**
++ **Installed LLVM libraries and cpp headers, make sure you have set `CMAKE_PREFIX_PATH` or `LLVM_DIR` env variable to LLVM directory properly**
 + **If you are running Windows and have installed MinGW64, simply run `build.bat`**
 ## Parsing capability
 + **`int/float` var declaration/definition**
