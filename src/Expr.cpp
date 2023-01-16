@@ -149,44 +149,44 @@ namespace lcc
             return j;
         }
 
-        bool DeclRefExpr::gen()
+        bool DeclRefExpr::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool IntegerLiteral::gen()
+        bool IntegerLiteral::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool FloatingLiteral::gen()
+        bool FloatingLiteral::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool CastExpr::gen()
+        bool CastExpr::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool BinaryOperator::gen()
+        bool BinaryOperator::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool UnaryOperator::gen()
+        bool UnaryOperator::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool ParenExpr::gen()
+        bool ParenExpr::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool CallExpr::gen()
+        bool CallExpr::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
     }
 }

@@ -8,8 +8,35 @@
 
 namespace lcc
 {
-    // Intermediate representation generator class(IRGenerator.cpp)
-    class IRGenerator
+    // Base class for IRGenerators 
+    class IRGeneratorBase
+    {
+    public:
+        virtual bool gen(AST::TranslationUnitDecl *translationUnitDecl) = 0;
+        virtual bool gen(AST::FunctionDecl *functionDecl) = 0;
+        virtual bool gen(AST::VarDecl *varDecl) = 0;
+        virtual bool gen(AST::IntegerLiteral *integerLiteral) = 0;
+        virtual bool gen(AST::FloatingLiteral *floatingLiteral) = 0;
+        virtual bool gen(AST::DeclRefExpr *declRefExpr) = 0;
+        virtual bool gen(AST::CastExpr *castExpr) = 0;
+        virtual bool gen(AST::BinaryOperator *binaryOperator) = 0;
+        virtual bool gen(AST::UnaryOperator *unaryOperator) = 0;
+        virtual bool gen(AST::ParenExpr *parenExpr) = 0;
+        virtual bool gen(AST::CompoundStmt *compoundStmt) = 0;
+        virtual bool gen(AST::DeclStmt *declStmt) = 0;
+        virtual bool gen(AST::IfStmt *ifStmt) = 0;
+        virtual bool gen(AST::ValueStmt *valueStmt) = 0;
+        virtual bool gen(AST::ReturnStmt *returnStmt) = 0;
+        virtual bool gen(AST::WhileStmt *whileStmt) = 0;
+        virtual bool gen(AST::CallExpr* callExpr) = 0;
+
+    public:
+        virtual void printCode() const = 0;
+        virtual void dumpCode(const std::string outPath) const = 0;
+    };
+
+    // Quaternion intermediate representation generator class(QuaternionIRGenerator.cpp)
+    class QuaternionIRGenerator : public IRGeneratorBase
     {
         typedef struct _SymbolTableItem
         {
@@ -116,41 +143,41 @@ namespace lcc
         } FunctionTableItem;
 
     private:
-        IRGenerator();
-        IRGenerator(const IRGenerator &) = delete;
-        IRGenerator &operator=(const IRGenerator &) = delete;
+        QuaternionIRGenerator();
+        QuaternionIRGenerator(const QuaternionIRGenerator &) = delete;
+        QuaternionIRGenerator &operator=(const QuaternionIRGenerator &) = delete;
 
     public:
-        static IRGenerator *getInstance()
+        static QuaternionIRGenerator *getInstance()
         {
             if (_inst.get() == nullptr)
-                _inst.reset(new IRGenerator);
+                _inst.reset(new QuaternionIRGenerator);
 
             return _inst.get();
         }
 
     private:
-        static std::unique_ptr<IRGenerator> _inst;
+        static std::unique_ptr<QuaternionIRGenerator> _inst;
 
     public:
-        // gen methods
-        bool gen(AST::TranslationUnitDecl *translationUnitDecl);
-        bool gen(AST::FunctionDecl *functionDecl);
-        bool gen(AST::VarDecl *varDecl);
-        bool gen(AST::IntegerLiteral *integerLiteral);
-        bool gen(AST::FloatingLiteral *floatingLiteral);
-        bool gen(AST::DeclRefExpr *declRefExpr);
-        bool gen(AST::CastExpr *castExpr);
-        bool gen(AST::BinaryOperator *binaryOperator);
-        bool gen(AST::UnaryOperator *unaryOperator);
-        bool gen(AST::ParenExpr *parenExpr);
-        bool gen(AST::CompoundStmt *compoundStmt);
-        bool gen(AST::DeclStmt *declStmt);
-        bool gen(AST::IfStmt *ifStmt);
-        bool gen(AST::ValueStmt *valueStmt);
-        bool gen(AST::ReturnStmt *returnStmt);
-        bool gen(AST::WhileStmt *whileStmt);
-        bool gen(AST::CallExpr* callExpr);
+        // gen methods implementations for QuaternionIRGenerator
+        virtual bool gen(AST::TranslationUnitDecl *translationUnitDecl) override;
+        virtual bool gen(AST::FunctionDecl *functionDecl) override;
+        virtual bool gen(AST::VarDecl *varDecl) override;
+        virtual bool gen(AST::IntegerLiteral *integerLiteral) override;
+        virtual bool gen(AST::FloatingLiteral *floatingLiteral) override;
+        virtual bool gen(AST::DeclRefExpr *declRefExpr) override;
+        virtual bool gen(AST::CastExpr *castExpr) override;
+        virtual bool gen(AST::BinaryOperator *binaryOperator) override;
+        virtual bool gen(AST::UnaryOperator *unaryOperator) override;
+        virtual bool gen(AST::ParenExpr *parenExpr) override;
+        virtual bool gen(AST::CompoundStmt *compoundStmt) override;
+        virtual bool gen(AST::DeclStmt *declStmt) override;
+        virtual bool gen(AST::IfStmt *ifStmt) override;
+        virtual bool gen(AST::ValueStmt *valueStmt) override;
+        virtual bool gen(AST::ReturnStmt *returnStmt) override;
+        virtual bool gen(AST::WhileStmt *whileStmt) override;
+        virtual bool gen(AST::CallExpr* callExpr) override;
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);
@@ -166,8 +193,8 @@ namespace lcc
         static QuaternionOperator UnaryOpToQuaternionOp(AST::UnaryOpType op);
 
     public:
-        void printCode() const;
-        void dumpCode(const std::string outPath) const;
+        virtual void printCode() const override;
+        virtual void dumpCode(const std::string outPath) const override;
 
     private:
         std::vector<std::shared_ptr<SymbolTable>> _tables;

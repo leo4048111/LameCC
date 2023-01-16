@@ -72,34 +72,34 @@ namespace lcc
             return j;
         }
 
-        bool CompoundStmt::gen()
+        bool CompoundStmt::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool DeclStmt::gen()
+        bool DeclStmt::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool IfStmt::gen()
+        bool IfStmt::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool WhileStmt::gen()
+        bool WhileStmt::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool ValueStmt::gen()
+        bool ValueStmt::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool ReturnStmt::gen()
+        bool ReturnStmt::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
     }
 }

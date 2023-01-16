@@ -10,6 +10,10 @@ using json = nlohmann::ordered_json;
 // AST nodes
 namespace lcc
 {
+    class LR1Parser;
+    class IRGeneratorBase;
+    class QuaternionIRGenerator;
+
     namespace AST
     {
         // AST node base class
@@ -19,7 +23,7 @@ namespace lcc
             std::string place{""}; // for IR generation
         public:
             virtual json asJson() const = 0;
-            virtual bool gen() { return true; }; // CHANGE THIS TO PURE VIRTUAL LATER!!!
+            virtual bool gen(lcc::IRGeneratorBase *generator) { return true; }; // CHANGE THIS TO PURE VIRTUAL LATER!!!
             virtual ~ASTNode(){};
         };
 
@@ -53,9 +57,6 @@ namespace lcc
         class ReturnStmt;
     }
 
-    class LR1Parser;
-    class IRGenerator;
-
     // Declarations
     namespace AST
     {
@@ -68,7 +69,8 @@ namespace lcc
         class TranslationUnitDecl : public Decl
         {
             friend class lcc::LR1Parser;
-            friend class lcc::IRGenerator;
+            friend class lcc::IRGeneratorBase;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::vector<std::unique_ptr<Decl>> _decls;
@@ -79,7 +81,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
         // This represents a decl that may have a name
@@ -100,7 +102,7 @@ namespace lcc
         // Represents a variable declaration or definition.
         class VarDecl : public NamedDecl
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::string _type;
@@ -113,7 +115,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
 
             const std::string type() const { return _type; };
         };
@@ -135,7 +137,7 @@ namespace lcc
         // Represents a function declaration or definition.
         class FunctionDecl : public NamedDecl
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::string _type;
@@ -147,7 +149,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
     } // Decl end
 
@@ -188,7 +190,7 @@ namespace lcc
         // Integer literal value
         class IntegerLiteral : public Expr
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             int _value;
@@ -198,7 +200,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
 
             int value() const { return _value; };
         };
@@ -206,7 +208,7 @@ namespace lcc
         // Floating literal value
         class FloatingLiteral : public Expr
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             float _value;
@@ -216,7 +218,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
 
             float value() const { return _value; };
         };
@@ -224,7 +226,7 @@ namespace lcc
         // A reference to a declared variable, function, enum, etc.
         class DeclRefExpr : public Expr
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::string _name;
@@ -235,7 +237,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
 
             const std::string name() const { return _name; };
         };
@@ -243,7 +245,7 @@ namespace lcc
         // Binary operator type expression
         class BinaryOperator : public Expr
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         public:
             // https://en.cppreference.com/w/cpp/language/operator_precedence
@@ -274,7 +276,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
 
             bool isAssignment() const;
 
@@ -284,7 +286,7 @@ namespace lcc
         // Unary operator type expression
         class UnaryOperator : public Expr
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             UnaryOpType _type;
@@ -295,7 +297,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
 
             UnaryOpType type() const { return _type; };
         };
@@ -303,7 +305,7 @@ namespace lcc
         // This represents a parethesized expression
         class ParenExpr : public Expr
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::unique_ptr<Expr> _subExpr;
@@ -316,13 +318,13 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
         // Represents a function call (C99 6.5.2.2, C++ [expr.call]).
         class CallExpr : public Expr
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::unique_ptr<DeclRefExpr> _functionExpr;
@@ -333,13 +335,13 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
         // Base class for type casts, including both implicit casts (ImplicitCastExpr) and explicit casts
         class CastExpr : public Expr
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::string _kind;
@@ -350,7 +352,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
         // Allows us to explicitly represent implicit type conversions
@@ -388,7 +390,7 @@ namespace lcc
         // Represents a statement that could possibly have a value and type.
         class ValueStmt : public Stmt
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::unique_ptr<Expr> _expr;
@@ -398,13 +400,13 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
         // This represents an if/then/else.
         class IfStmt : public Stmt
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::unique_ptr<Expr> _condition;
@@ -416,13 +418,13 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
         // This represents a 'while' stmt.
         class WhileStmt : public Stmt
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::unique_ptr<Expr> _condition;
@@ -433,13 +435,13 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
         // Adaptor class for mixing declarations with statements and expressions.
         class DeclStmt : public Stmt
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::vector<std::unique_ptr<Decl>> _decls;
@@ -449,13 +451,13 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
         // This represents a group of statements like { stmt stmt }.
         class CompoundStmt : public Stmt
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::vector<std::unique_ptr<Stmt>> _body;
@@ -465,13 +467,13 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
         // This represents a return, optionally of an expression: return; return 4;.
         class ReturnStmt : public Stmt
         {
-            friend class lcc::IRGenerator;
+            friend class lcc::QuaternionIRGenerator;
 
         protected:
             std::unique_ptr<Expr> _value;
@@ -481,7 +483,7 @@ namespace lcc
 
             virtual json asJson() const override;
 
-            virtual bool gen() override;
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
     }
 } // AST end

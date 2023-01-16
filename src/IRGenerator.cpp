@@ -16,9 +16,9 @@
 
 namespace lcc
 {
-    std::unique_ptr<IRGenerator> IRGenerator::_inst;
+    std::unique_ptr<QuaternionIRGenerator> QuaternionIRGenerator::_inst;
 
-    IRGenerator::QuaternionOperator IRGenerator::BinaryOpToQuaternionOp(AST::BinaryOpType op)
+    QuaternionIRGenerator::QuaternionOperator QuaternionIRGenerator::BinaryOpToQuaternionOp(AST::BinaryOpType op)
     {
         switch (op)
         {
@@ -30,12 +30,12 @@ namespace lcc
 #undef UNARY_OPERATION
 #undef BINARY_OPERATION
         default:
-            return IRGenerator::QuaternionOperator::Invalid;
+            return QuaternionIRGenerator::QuaternionOperator::Invalid;
             break;
         }
     }
 
-    IRGenerator::QuaternionOperator IRGenerator::UnaryOpToQuaternionOp(AST::UnaryOpType op)
+    QuaternionIRGenerator::QuaternionOperator QuaternionIRGenerator::UnaryOpToQuaternionOp(AST::UnaryOpType op)
     {
         switch (op)
         {
@@ -47,26 +47,26 @@ namespace lcc
 #undef UNARY_OPERATION
 #undef BINARY_OPERATION
         default:
-            return IRGenerator::QuaternionOperator::Invalid;
+            return QuaternionIRGenerator::QuaternionOperator::Invalid;
             break;
         }
     }
 
-    IRGenerator::IRGenerator()
+    QuaternionIRGenerator::QuaternionIRGenerator()
     {
         changeTable(mkTable(nullptr));
     }
 
-    bool IRGenerator::gen(AST::TranslationUnitDecl *translationUnitDecl)
+    bool QuaternionIRGenerator::gen(AST::TranslationUnitDecl *translationUnitDecl)
     {
         for (auto &decl : translationUnitDecl->_decls)
-            if (!decl->gen())
+            if (!decl->gen(this))
                 return false;
 
         return true;
     }
 
-    bool IRGenerator::gen(AST::VarDecl *varDecl)
+    bool QuaternionIRGenerator::gen(AST::VarDecl *varDecl)
     {
         bool result = enter(varDecl->name(), varDecl->type(), 4);
         if (!result)
@@ -77,7 +77,7 @@ namespace lcc
 
         if (varDecl->_isInitialized)
         {
-            if (!varDecl->_value->gen())
+            if (!varDecl->_value->gen(this))
                 return false;
             auto arg1Entry = lookup(varDecl->_value->place);
             auto resultEntry = lookup(varDecl->name());
@@ -87,7 +87,7 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::FunctionDecl *functionDecl)
+    bool QuaternionIRGenerator::gen(AST::FunctionDecl *functionDecl)
     {
         if (!registerFunc(functionDecl->name(), functionDecl->_type, _codes.size(), false))
         {
@@ -100,14 +100,14 @@ namespace lcc
 
         for (auto &param : functionDecl->_params)
         {
-            if (!param->gen())
+            if (!param->gen(this))
                 return false;
         }
 
         if (functionDecl->_body != nullptr)
         {
             _functionTable.back().isInitialized = true;
-            if (!functionDecl->_body->gen())
+            if (!functionDecl->_body->gen(this))
                 return false;
         }
 
@@ -115,7 +115,7 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::IntegerLiteral *integerLiteral)
+    bool QuaternionIRGenerator::gen(AST::IntegerLiteral *integerLiteral)
     {
         auto newTmpEntry = newtemp(INT, INT32_WIDTH);
         if (INVALID_SYMBOLTBL_ENTRY(newTmpEntry))
@@ -126,7 +126,7 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::FloatingLiteral *floatingLiteral)
+    bool QuaternionIRGenerator::gen(AST::FloatingLiteral *floatingLiteral)
     {
         auto newTmpEntry = newtemp(FLOAT, FLOAT_WIDTH);
         if (INVALID_SYMBOLTBL_ENTRY(newTmpEntry))
@@ -137,7 +137,7 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::DeclRefExpr *declRefExpr)
+    bool QuaternionIRGenerator::gen(AST::DeclRefExpr *declRefExpr)
     {
         if (!declRefExpr->_isCall) // referencing a param
         {
@@ -156,21 +156,21 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::CastExpr *castExpr)
+    bool QuaternionIRGenerator::gen(AST::CastExpr *castExpr)
     {
         // CURRENTLY TYPE CAST DOES NOTHING AT ALL!
-        if (!castExpr->_subExpr->gen())
+        if (!castExpr->_subExpr->gen(this))
             return false;
 
         castExpr->place = castExpr->_subExpr->place;
         return true;
     }
 
-    bool IRGenerator::gen(AST::BinaryOperator *binaryOperator)
+    bool QuaternionIRGenerator::gen(AST::BinaryOperator *binaryOperator)
     {
-        if (!binaryOperator->_lhs->gen())
+        if (!binaryOperator->_lhs->gen(this))
             return false;
-        if (!binaryOperator->_rhs->gen())
+        if (!binaryOperator->_rhs->gen(this))
             return false;
 
         auto arg1Entry = lookup(binaryOperator->_lhs->place);
@@ -201,22 +201,22 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::ParenExpr *parenExpr)
+    bool QuaternionIRGenerator::gen(AST::ParenExpr *parenExpr)
     {
-        if (!parenExpr->_subExpr->gen())
+        if (!parenExpr->_subExpr->gen(this))
             return false;
 
         parenExpr->place = parenExpr->_subExpr->place;
         return true;
     }
 
-    bool IRGenerator::gen(AST::CompoundStmt *compoundStmt)
+    bool QuaternionIRGenerator::gen(AST::CompoundStmt *compoundStmt)
     {
         auto previousTable = _currentSymbolTable;
         changeTable(mkTable(previousTable));
         for (auto &stmt : compoundStmt->_body)
         {
-            if (!stmt->gen())
+            if (!stmt->gen(this))
                 return false;
         }
 
@@ -224,21 +224,21 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::DeclStmt *declStmt)
+    bool QuaternionIRGenerator::gen(AST::DeclStmt *declStmt)
     {
         for (auto &decl : declStmt->_decls)
         {
-            if (!decl->gen())
+            if (!decl->gen(this))
                 return false;
         }
 
         return true;
     }
 
-    bool IRGenerator::gen(AST::IfStmt *ifStmt)
+    bool QuaternionIRGenerator::gen(AST::IfStmt *ifStmt)
     {
         // currently all conditional jumps are implemented with jnz
-        if (!ifStmt->_condition->gen())
+        if (!ifStmt->_condition->gen(this))
             return false; // gen ir for condition first
         int bodyCodeEntryAddr = _codes.size() + 2;
         int elseBodyEntryAddr = 0; // this will be filled in after if body is generated
@@ -248,7 +248,7 @@ namespace lcc
 
         auto jumpToElseBodyCodeAddr = _codes.size() - 1;
 
-        if (!ifStmt->_body->gen())
+        if (!ifStmt->_body->gen(this))
             return false;
 
         elseBodyEntryAddr = _codes.size();
@@ -258,7 +258,7 @@ namespace lcc
             elseBodyEntryAddr += 1;
             EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(0)); // jump over else body
             auto jumpOverElseBodyCodeAddr = _codes.size() - 1;
-            if (!ifStmt->_elseBody->gen())
+            if (!ifStmt->_elseBody->gen(this))
                 return false;
             auto elseBodyExitAddr = _codes.size();
             _codes[jumpOverElseBodyCodeAddr].result = MAKE_ADDR_ARG(elseBodyExitAddr); // replace 0 with correct else body exit addr
@@ -269,22 +269,22 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::ValueStmt *valueStmt)
+    bool QuaternionIRGenerator::gen(AST::ValueStmt *valueStmt)
     {
-        if (!valueStmt->_expr->gen())
+        if (!valueStmt->_expr->gen(this))
             return false;
 
         return true;
     }
 
-    bool IRGenerator::gen(AST::ReturnStmt *returnStmt)
+    bool QuaternionIRGenerator::gen(AST::ReturnStmt *returnStmt)
     {
         // TODO return type check!
         if (returnStmt->_value == nullptr)
             EMIT(QuaternionOperator::Ret, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_NIL_ARG());
         else
         {
-            if (!returnStmt->_value->gen())
+            if (!returnStmt->_value->gen(this))
                 return false;
 
             auto returnValueEntry = lookup(returnStmt->_value->place);
@@ -294,9 +294,9 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::UnaryOperator *unaryOperator)
+    bool QuaternionIRGenerator::gen(AST::UnaryOperator *unaryOperator)
     {
-        if (!unaryOperator->_body->gen())
+        if (!unaryOperator->_body->gen(this))
             return false;
 
         auto bodyResultEntry = lookup(unaryOperator->_body->place);
@@ -315,10 +315,10 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::WhileStmt *whileStmt)
+    bool QuaternionIRGenerator::gen(AST::WhileStmt *whileStmt)
     {
         int whileConditionEntryAddr = _codes.size();
-        if (!whileStmt->_condition->gen())
+        if (!whileStmt->_condition->gen(this))
             return false;
 
         auto conditionExprResultEntry = lookup(whileStmt->_condition->place);
@@ -329,7 +329,7 @@ namespace lcc
 
         auto jumpToWhileExitCodeAddr = _codes.size() - 1;
 
-        if (!whileStmt->_body->gen())
+        if (!whileStmt->_body->gen(this))
             return false;
 
         EMIT(QuaternionOperator::J, MAKE_NIL_ARG(), MAKE_NIL_ARG(), MAKE_ADDR_ARG(whileConditionEntryAddr)); // go back to while condition entry to calculate loop condition again
@@ -340,7 +340,7 @@ namespace lcc
         return true;
     }
 
-    bool IRGenerator::gen(AST::CallExpr *callExpr)
+    bool QuaternionIRGenerator::gen(AST::CallExpr *callExpr)
     {
         // TODO IR Generation for call expr will be implemented later;
         auto newTempResult = newtemp(INT, INT32_WIDTH);
@@ -352,19 +352,19 @@ namespace lcc
         return true;
     }
 
-    std::shared_ptr<IRGenerator::SymbolTable> IRGenerator::mkTable(std::shared_ptr<SymbolTable> previous)
+    std::shared_ptr<QuaternionIRGenerator::SymbolTable> QuaternionIRGenerator::mkTable(std::shared_ptr<SymbolTable> previous)
     {
         auto tbl = std::make_shared<SymbolTable>(previous);
         _tables.push_back(tbl);
         return tbl;
     }
 
-    void IRGenerator::changeTable(std::shared_ptr<SymbolTable> table)
+    void QuaternionIRGenerator::changeTable(std::shared_ptr<SymbolTable> table)
     {
         _currentSymbolTable = table;
     }
 
-    std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::lookupCurrentTbl(std::string name)
+    std::shared_ptr<QuaternionIRGenerator::SymbolTableItem> QuaternionIRGenerator::lookupCurrentTbl(std::string name)
     {
         for (auto &item : _currentSymbolTable->items)
         {
@@ -375,7 +375,7 @@ namespace lcc
         return nullptr;
     }
 
-    std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::lookup(std::string name)
+    std::shared_ptr<QuaternionIRGenerator::SymbolTableItem> QuaternionIRGenerator::lookup(std::string name)
     {
         auto currentTbl = _currentSymbolTable;
         std::shared_ptr<SymbolTableItem> tblEntry = nullptr;
@@ -390,7 +390,7 @@ namespace lcc
         return tblEntry;
     }
 
-    bool IRGenerator::enter(std::string name, std::string type, int width)
+    bool QuaternionIRGenerator::enter(std::string name, std::string type, int width)
     {
         auto entry = lookupCurrentTbl(name);
         if (!INVALID_SYMBOLTBL_ENTRY(entry)) // duplication check
@@ -402,13 +402,13 @@ namespace lcc
         return true;
     }
 
-    void IRGenerator::emit(QuaternionOperator op, std::shared_ptr<Arg> arg1, std::shared_ptr<Arg> arg2, std::shared_ptr<Arg> result)
+    void QuaternionIRGenerator::emit(QuaternionOperator op, std::shared_ptr<Arg> arg1, std::shared_ptr<Arg> arg2, std::shared_ptr<Arg> result)
     {
         Quaternion code = {op, arg1, arg2, result};
         _codes.push_back(code);
     }
 
-    std::shared_ptr<IRGenerator::SymbolTableItem> IRGenerator::newtemp(std::string type, int width)
+    std::shared_ptr<QuaternionIRGenerator::SymbolTableItem> QuaternionIRGenerator::newtemp(std::string type, int width)
     {
         static int id = 0;
         std::string name = "@T" + std::to_string(id);
@@ -423,7 +423,7 @@ namespace lcc
         return lookup(name);
     }
 
-    bool IRGenerator::registerFunc(std::string name, std::string type, int entry, bool isInitialized)
+    bool QuaternionIRGenerator::registerFunc(std::string name, std::string type, int entry, bool isInitialized)
     {
         for (auto &item : _functionTable)
         {
@@ -435,7 +435,7 @@ namespace lcc
         return true;
     }
 
-    void IRGenerator::printCode() const
+    void QuaternionIRGenerator::printCode() const
     {
         int id = 0;
         std::string op;
@@ -569,7 +569,7 @@ namespace lcc
         }
     }
 
-    void IRGenerator::dumpCode(const std::string outPath) const
+    void QuaternionIRGenerator::dumpCode(const std::string outPath) const
     {
         std::ofstream ofs(outPath);
         int id = 0;

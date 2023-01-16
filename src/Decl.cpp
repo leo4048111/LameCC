@@ -70,19 +70,19 @@ namespace lcc
             return j;
         }
 
-        bool TranslationUnitDecl::gen()
+        bool TranslationUnitDecl::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool VarDecl::gen()
+        bool VarDecl::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
 
-        bool FunctionDecl::gen()
+        bool FunctionDecl::gen(lcc::IRGeneratorBase* generator)
         {
-            return lcc::IRGenerator::getInstance()->gen(this);
+            return generator->gen(this);
         }
     }
 }
