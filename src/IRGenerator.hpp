@@ -4,11 +4,16 @@
 #include <memory>
 #include <vector>
 
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+
 #include "AST.hpp"
 
 namespace lcc
 {
-    // Base class for IRGenerators 
+    // Base class for IRGenerators
     class IRGeneratorBase
     {
     public:
@@ -28,7 +33,7 @@ namespace lcc
         virtual bool gen(AST::ValueStmt *valueStmt) = 0;
         virtual bool gen(AST::ReturnStmt *returnStmt) = 0;
         virtual bool gen(AST::WhileStmt *whileStmt) = 0;
-        virtual bool gen(AST::CallExpr* callExpr) = 0;
+        virtual bool gen(AST::CallExpr *callExpr) = 0;
 
     public:
         virtual void printCode() const = 0;
@@ -177,7 +182,7 @@ namespace lcc
         virtual bool gen(AST::ValueStmt *valueStmt) override;
         virtual bool gen(AST::ReturnStmt *returnStmt) override;
         virtual bool gen(AST::WhileStmt *whileStmt) override;
-        virtual bool gen(AST::CallExpr* callExpr) override;
+        virtual bool gen(AST::CallExpr *callExpr) override;
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous);
@@ -201,5 +206,53 @@ namespace lcc
         std::shared_ptr<SymbolTable> _currentSymbolTable;
         std::vector<FunctionTableItem> _functionTable;
         std::vector<Quaternion> _codes;
+    };
+
+    class LLVMIRGenerator : public IRGeneratorBase
+    {
+    private:
+        LLVMIRGenerator();
+        LLVMIRGenerator(const LLVMIRGenerator &) = delete;
+        LLVMIRGenerator &operator=(const LLVMIRGenerator &) = delete;
+
+    public:
+        static LLVMIRGenerator *getInstance()
+        {
+            if (_inst.get() == nullptr)
+                _inst.reset(new LLVMIRGenerator);
+
+            return _inst.get();
+        }
+
+    private:
+        static std::unique_ptr<LLVMIRGenerator> _inst;
+
+    public:
+        virtual bool gen(AST::TranslationUnitDecl *translationUnitDecl) override;
+        virtual bool gen(AST::FunctionDecl *functionDecl) override;
+        virtual bool gen(AST::VarDecl *varDecl) override;
+        virtual bool gen(AST::IntegerLiteral *integerLiteral) override;
+        virtual bool gen(AST::FloatingLiteral *floatingLiteral) override;
+        virtual bool gen(AST::DeclRefExpr *declRefExpr) override;
+        virtual bool gen(AST::CastExpr *castExpr) override;
+        virtual bool gen(AST::BinaryOperator *binaryOperator) override;
+        virtual bool gen(AST::UnaryOperator *unaryOperator) override;
+        virtual bool gen(AST::ParenExpr *parenExpr) override;
+        virtual bool gen(AST::CompoundStmt *compoundStmt) override;
+        virtual bool gen(AST::DeclStmt *declStmt) override;
+        virtual bool gen(AST::IfStmt *ifStmt) override;
+        virtual bool gen(AST::ValueStmt *valueStmt) override;
+        virtual bool gen(AST::ReturnStmt *returnStmt) override;
+        virtual bool gen(AST::WhileStmt *whileStmt) override;
+        virtual bool gen(AST::CallExpr *callExpr) override;
+
+    public:
+        virtual void printCode() const override;
+        virtual void dumpCode(const std::string outPath) const override;
+
+    private:
+        llvm::LLVMContext _context;
+        std::unique_ptr<llvm::IRBuilder<>> _builder;
+        std::unique_ptr<llvm::Module> _module;
     };
 }

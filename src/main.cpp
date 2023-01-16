@@ -162,11 +162,12 @@ int main(int argc, char **argv)
 
     if (astRoot)
     {
-        if (!astRoot->gen(lcc::QuaternionIRGenerator::getInstance()))
+        if (!astRoot->gen(lcc::LLVMIRGenerator::getInstance()))
             FATAL_ERROR("Failed to generate IR.");
         else
         {
-            lcc::QuaternionIRGenerator::getInstance()->dumpCode(g_out_path);
+            lcc::LLVMIRGenerator::getInstance()->printCode();
+            lcc::LLVMIRGenerator::getInstance()->dumpCode(g_out_path);
             INFO("IR has been dumped to " << g_out_path);
         }
     }
