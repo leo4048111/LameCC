@@ -218,7 +218,7 @@ namespace lcc
         {
             _SymbolTable(std::shared_ptr<_SymbolTable> previous) : previous(previous){};
             std::shared_ptr<_SymbolTable> previous;
-            std::map<std::string, llvm::AllocaInst*> symbls;
+            std::map<std::string, llvm::AllocaInst *> symbls;
         } SymbolTable;
 
     private:
@@ -263,10 +263,10 @@ namespace lcc
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous = nullptr);
-        llvm::Value* lookup(std::string name);
-        llvm::Value* lookupCurrentTbl(std::string name);
-        bool enter(std::string name, llvm::AllocaInst* alloca);
-        llvm::AllocaInst* createEntryBlockAlloca(llvm::Function* function, const std::string name, const std::string type);
+        llvm::Value *lookup(std::string name);
+        llvm::Value *lookupCurrentTbl(std::string name);
+        bool enter(std::string name, llvm::AllocaInst *alloca);
+        llvm::AllocaInst *createEntryBlockAlloca(llvm::Function *function, const std::string &name, const std::string type);
         void changeTable(std::shared_ptr<SymbolTable> table);
 
     private:
@@ -277,6 +277,8 @@ namespace lcc
         std::shared_ptr<SymbolTable> _currentSymbolTable;
         std::vector<std::shared_ptr<SymbolTable>> _tables;
 
-        llvm::Value* _retVal;
+        llvm::Value *_retVal{nullptr};
+
+        llvm::AllocaInst *_curFuncRetAlloca{nullptr}; // this value is passed to function returnStmt gen by functionDecl gen method
     };
 }

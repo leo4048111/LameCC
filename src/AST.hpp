@@ -141,6 +141,7 @@ namespace lcc
         class FunctionDecl : public NamedDecl
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::string _type;
@@ -445,6 +446,7 @@ namespace lcc
         class DeclStmt : public Stmt
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::vector<std::unique_ptr<Decl>> _decls;
@@ -461,6 +463,7 @@ namespace lcc
         class CompoundStmt : public Stmt
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::vector<std::unique_ptr<Stmt>> _body;
