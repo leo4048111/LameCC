@@ -117,7 +117,7 @@ namespace lcc
         }
 
         llvm::FunctionType *ft = nullptr;
-        llvm::Type* funcRetType = nullptr;
+        llvm::Type *funcRetType = nullptr;
 
         if (functionDecl->_type == "void")
             funcRetType = llvm::Type::getVoidTy(_context);
@@ -168,8 +168,7 @@ namespace lcc
             _curFuncRetAlloca = nullptr;
         else if (
             functionDecl->_type == "int" ||
-            functionDecl->_type == "float"
-        )
+            functionDecl->_type == "float")
         {
             _curFuncRetAlloca = createEntryBlockAlloca(func, "retVal", functionDecl->_type);
         }
@@ -179,12 +178,13 @@ namespace lcc
             LLVMIRGEN_RET_FALSE();
         }
 
-        if(_curFuncRetAlloca)
+        if (_curFuncRetAlloca)
         {
             auto retVal = _builder->CreateLoad(funcRetType, _curFuncRetAlloca);
             _builder->CreateRet(retVal);
         }
-        else _builder->CreateRetVoid(); // emit ret void
+        else
+            _builder->CreateRetVoid(); // emit ret void
 
         _builder->SetInsertPoint(bb);
 
@@ -214,6 +214,14 @@ namespace lcc
 
         _builder->CreateBr(retvalbb); // unconditional jump to return bb after function body
 
+        std::string err;
+        llvm::raw_ostream *out = new llvm::raw_string_ostream(err);
+        if (llvm::verifyFunction(*func, out))
+        {
+            FATAL_ERROR(err);
+            LLVMIRGEN_RET_FALSE();
+        }
+        
         changeTable(previousTable);
         LLVMIRGEN_RET_TRUE(nullptr);
     }
@@ -305,8 +313,8 @@ namespace lcc
     bool LLVMIRGenerator::gen(AST::UnaryOperator *unaryOperator) { return true; }
     bool LLVMIRGenerator::gen(AST::ParenExpr *parenExpr) { return true; }
 
-    bool LLVMIRGenerator::gen(AST::CompoundStmt *compoundStmt) 
-    { 
+    bool LLVMIRGenerator::gen(AST::CompoundStmt *compoundStmt)
+    {
         auto previousTable = _currentSymbolTable;
         changeTable(mkTable(previousTable));
         for (auto &stmt : compoundStmt->_body)
@@ -319,11 +327,11 @@ namespace lcc
         LLVMIRGEN_RET_TRUE(_retVal);
     }
 
-    bool LLVMIRGenerator::gen(AST::DeclStmt *declStmt) 
+    bool LLVMIRGenerator::gen(AST::DeclStmt *declStmt)
     {
-        for(auto& decl : declStmt->_decls) 
+        for (auto &decl : declStmt->_decls)
         {
-            if(!decl->gen(this))
+            if (!decl->gen(this))
                 LLVMIRGEN_RET_FALSE();
         }
 
@@ -333,18 +341,18 @@ namespace lcc
     bool LLVMIRGenerator::gen(AST::IfStmt *ifStmt) { return true; }
     bool LLVMIRGenerator::gen(AST::ValueStmt *valueStmt) { return true; }
 
-    bool LLVMIRGenerator::gen(AST::ReturnStmt *returnStmt) 
+    bool LLVMIRGenerator::gen(AST::ReturnStmt *returnStmt)
     {
-        llvm::Function* func = _builder->GetInsertBlock()->getParent(); 
-        auto& retBB = func->back();
+        llvm::Function *func = _builder->GetInsertBlock()->getParent();
+        auto &retBB = func->back();
 
-        if(returnStmt->_value == nullptr)
+        if (returnStmt->_value == nullptr)
         {
             _builder->CreateBr(&retBB);
         }
         else
         {
-            if(!returnStmt->_value->gen(this))
+            if (!returnStmt->_value->gen(this))
                 LLVMIRGEN_RET_FALSE();
 
             _builder->CreateStore(_retVal, _curFuncRetAlloca);
