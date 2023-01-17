@@ -117,19 +117,21 @@ namespace lcc
         }
 
         llvm::FunctionType *ft = nullptr;
+        llvm::Type* funcRetType = nullptr;
 
         if (functionDecl->_type == "void")
-            ft = llvm::FunctionType::get(llvm::Type::getVoidTy(_context), params, false);
+            funcRetType = llvm::Type::getVoidTy(_context);
         else if (functionDecl->_type == "int")
-            ft = llvm::FunctionType::get(llvm::Type::getInt32Ty(_context), params, false);
+            funcRetType = llvm::Type::getInt32Ty(_context);
         else if (functionDecl->_type == "float")
-            ft = llvm::FunctionType::get(llvm::Type::getFloatTy(_context), params, false);
+            funcRetType = llvm::Type::getFloatTy(_context);
         else
         {
             FATAL_ERROR("Unsupported return type for function " << functionDecl->name());
             LLVMIRGEN_RET_FALSE();
         }
 
+        ft = llvm::FunctionType::get(funcRetType, params, false);
         auto func = _module->getFunction(functionDecl->name());
 
         if (func != nullptr)
@@ -179,9 +181,8 @@ namespace lcc
 
         if(_curFuncRetAlloca)
         {
-            // Probably need a load here
-            //auto retVal = _builder->CreateLoad(_curFuncRetAlloca);
-            _builder->CreateRet(_curFuncRetAlloca);
+            auto retVal = _builder->CreateLoad(funcRetType, _curFuncRetAlloca);
+            _builder->CreateRet(retVal);
         }
         else _builder->CreateRetVoid(); // emit ret void
 
@@ -328,10 +329,29 @@ namespace lcc
 
         LLVMIRGEN_RET_TRUE(_retVal);
     }
-    
+
     bool LLVMIRGenerator::gen(AST::IfStmt *ifStmt) { return true; }
     bool LLVMIRGenerator::gen(AST::ValueStmt *valueStmt) { return true; }
-    bool LLVMIRGenerator::gen(AST::ReturnStmt *returnStmt) { return true; }
+
+    bool LLVMIRGenerator::gen(AST::ReturnStmt *returnStmt) 
+    {
+        llvm::Function* func = _builder->GetInsertBlock()->getParent(); 
+        auto& retBB = func->back();
+
+        if(returnStmt->_value == nullptr)
+        {
+            _builder->CreateBr(&retBB);
+        }
+        else
+        {
+            if(!returnStmt->_value->gen(this))
+                LLVMIRGEN_RET_FALSE();
+
+            _builder->CreateStore(_retVal, _curFuncRetAlloca);
+        }
+
+    }
+
     bool LLVMIRGenerator::gen(AST::WhileStmt *whileStmt) { return true; }
     bool LLVMIRGenerator::gen(AST::CallExpr *callExpr) { return true; }
 }

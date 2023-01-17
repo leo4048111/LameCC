@@ -480,6 +480,7 @@ namespace lcc
         class ReturnStmt : public Stmt
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::unique_ptr<Expr> _value;
