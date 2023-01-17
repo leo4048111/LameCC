@@ -350,6 +350,7 @@ namespace lcc
             _builder->CreateStore(_retVal, _curFuncRetAlloca);
         }
 
+        LLVMIRGEN_RET_TRUE(_retVal);
     }
 
     bool LLVMIRGenerator::gen(AST::WhileStmt *whileStmt) { return true; }
