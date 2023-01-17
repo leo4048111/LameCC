@@ -329,6 +329,7 @@ namespace lcc
         class CallExpr : public Expr
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::unique_ptr<DeclRefExpr> _functionExpr;
@@ -346,6 +347,7 @@ namespace lcc
         class CastExpr : public Expr
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::string _kind;
@@ -395,6 +397,7 @@ namespace lcc
         class ValueStmt : public Stmt
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::unique_ptr<Expr> _expr;

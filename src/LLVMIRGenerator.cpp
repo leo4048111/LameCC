@@ -70,6 +70,11 @@ namespace lcc
         }
         changeTable(currentTbl);
 
+        if (pVal != nullptr)
+            return pVal;
+
+        pVal = _module->getGlobalVariable(name);
+
         return pVal;
     }
 
@@ -221,7 +226,7 @@ namespace lcc
             FATAL_ERROR(err);
             LLVMIRGEN_RET_FALSE();
         }
-        
+
         changeTable(previousTable);
         LLVMIRGEN_RET_TRUE(nullptr);
     }
@@ -306,11 +311,40 @@ namespace lcc
         LLVMIRGEN_RET_TRUE(val);
     }
 
-    bool LLVMIRGenerator::gen(AST::DeclRefExpr *declRefExpr) { return true; }
+    bool LLVMIRGenerator::gen(AST::DeclRefExpr *declRefExpr)
+    {
+        auto alloca = lookup(declRefExpr->name());
 
-    bool LLVMIRGenerator::gen(AST::CastExpr *castExpr) { return true; }
-    bool LLVMIRGenerator::gen(AST::BinaryOperator *binaryOperator) { return true; }
-    bool LLVMIRGenerator::gen(AST::UnaryOperator *unaryOperator) { return true; }
+        if (alloca == nullptr)
+        {
+            FATAL_ERROR("Referencing undefined symbol " << declRefExpr->name());
+            LLVMIRGEN_RET_FALSE();
+        }
+
+        declRefExpr->place = declRefExpr->name();
+
+        LLVMIRGEN_RET_TRUE(alloca);
+    }
+
+    bool LLVMIRGenerator::gen(AST::CastExpr *castExpr)
+    {
+        if (!castExpr->_subExpr->gen(this))
+            LLVMIRGEN_RET_FALSE();
+
+        auto ld = _builder->CreateLoad(_retVal->getType(), _retVal);
+
+        LLVMIRGEN_RET_TRUE(ld);
+    }
+
+    bool LLVMIRGenerator::gen(AST::BinaryOperator *binaryOperator)
+    {
+        return true;
+    }
+
+    bool LLVMIRGenerator::gen(AST::UnaryOperator *unaryOperator)
+    {
+        return true;
+    }
     bool LLVMIRGenerator::gen(AST::ParenExpr *parenExpr) { return true; }
 
     bool LLVMIRGenerator::gen(AST::CompoundStmt *compoundStmt)
@@ -339,7 +373,10 @@ namespace lcc
     }
 
     bool LLVMIRGenerator::gen(AST::IfStmt *ifStmt) { return true; }
-    bool LLVMIRGenerator::gen(AST::ValueStmt *valueStmt) { return true; }
+    bool LLVMIRGenerator::gen(AST::ValueStmt *valueStmt)
+    {
+        LLVMIRGEN_RET_TRUE(nullptr);
+    }
 
     bool LLVMIRGenerator::gen(AST::ReturnStmt *returnStmt)
     {
@@ -362,5 +399,8 @@ namespace lcc
     }
 
     bool LLVMIRGenerator::gen(AST::WhileStmt *whileStmt) { return true; }
-    bool LLVMIRGenerator::gen(AST::CallExpr *callExpr) { return true; }
+    bool LLVMIRGenerator::gen(AST::CallExpr *callExpr)
+    {
+        return true;
+    }
 }
