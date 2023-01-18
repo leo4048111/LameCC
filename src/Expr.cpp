@@ -39,9 +39,9 @@ namespace lcc
         BinaryOperator::BinaryOperator(BinaryOpType type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs) : _type(type)
         {
             if (!isAssignment() && lhs->isLValue())
-                lhs = std::make_unique<ImplicitCastExpr>(std::move(lhs), "LValueToRValue");
+                lhs = std::make_unique<ImplicitCastExpr>(std::move(lhs), AST::CastExpr::CastType::LValueToRValue);
             if (rhs->isLValue())
-                rhs = std::make_unique<ImplicitCastExpr>(std::move(rhs), "LValueToRValue");
+                rhs = std::make_unique<ImplicitCastExpr>(std::move(rhs), AST::CastExpr::CastType::LValueToRValue);
 
             _lhs = std::move(lhs);
             _rhs = std::move(rhs);
@@ -135,7 +135,16 @@ namespace lcc
         {
             json j;
             j["type"] = "CastExpr";
-            j["castKind"] = _kind;
+            switch (_type)
+            {
+            case CastExpr::CastType::LValueToRValue:
+                j["castType"] = AST::CastExpr::CastType::LValueToRValue;
+                break;
+            
+            default:
+                j["castType"] = "Undefined";
+                break;
+            }
             j["expr"] = json::array({_subExpr->asJson()});
             return j;
         }
@@ -144,7 +153,16 @@ namespace lcc
         {
             json j;
             j["type"] = "ImplicitCastExpr";
-            j["castKind"] = _kind;
+            switch (_type)
+            {
+            case CastExpr::CastType::LValueToRValue:
+                j["castType"] = AST::CastExpr::CastType::LValueToRValue;
+                break;
+            
+            default:
+                j["castType"] = "Undefined";
+                break;
+            }
             j["expr"] = json::array({_subExpr->asJson()});
             return j;
         }

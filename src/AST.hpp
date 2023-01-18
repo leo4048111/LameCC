@@ -348,13 +348,19 @@ namespace lcc
         {
             friend class lcc::QuaternionIRGenerator;
             friend class lcc::LLVMIRGenerator;
+        
+        public:
+            enum class CastType
+            {
+                LValueToRValue = 0
+            };
 
         protected:
-            std::string _kind;
+            CastType _type;
             std::unique_ptr<Expr> _subExpr;
 
         public:
-            CastExpr(std::unique_ptr<Expr> expr, const std::string type) : _subExpr(std::move(expr)), _kind(type){};
+            CastExpr(std::unique_ptr<Expr> expr, const CastType type) : _subExpr(std::move(expr)), _type(type){};
 
             virtual json asJson() const override;
 
@@ -365,7 +371,7 @@ namespace lcc
         class ImplicitCastExpr : public CastExpr
         {
         public:
-            ImplicitCastExpr(std::unique_ptr<Expr> expr, const std::string &type) : CastExpr(std::move(expr), type){};
+            ImplicitCastExpr(std::unique_ptr<Expr> expr, CastType type) : CastExpr(std::move(expr), type){};
 
             virtual json asJson() const override;
         };
@@ -414,6 +420,7 @@ namespace lcc
         class IfStmt : public Stmt
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::unique_ptr<Expr> _condition;

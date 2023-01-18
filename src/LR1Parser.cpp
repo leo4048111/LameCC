@@ -893,7 +893,7 @@ namespace lcc
 
         auto conditionNode = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
         if (conditionNode->isLValue()) // a RValue is needed for condition so if LValue, implicitly cast to RValue
-            conditionNode = std::make_unique<AST::ImplicitCastExpr>(std::move(conditionNode), "LValueToRValue");
+            conditionNode = std::make_unique<AST::ImplicitCastExpr>(std::move(conditionNode), AST::CastExpr::CastType::LValueToRValue);
 
         auto body = dynamic_pointer_cast<AST::Stmt>(std::move(stmt->_node));
         auto whileStmtNode = std::make_unique<AST::WhileStmt>(std::move(conditionNode), std::move(body));
@@ -923,7 +923,7 @@ namespace lcc
 
         auto conditionNode = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
         if (conditionNode->isLValue()) // a RValue is needed for condition so if LValue, implicitly cast to RValue
-            conditionNode = std::make_unique<AST::ImplicitCastExpr>(std::move(conditionNode), "LValueToRValue");
+            conditionNode = std::make_unique<AST::ImplicitCastExpr>(std::move(conditionNode), AST::CastExpr::CastType::LValueToRValue);
 
         auto body = dynamic_pointer_cast<AST::Stmt>(std::move(stmt->_node));
         auto ifStmtNode = std::make_unique<AST::IfStmt>(std::move(conditionNode), std::move(body));
@@ -957,7 +957,7 @@ namespace lcc
 
         auto conditionNode = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
         if (conditionNode->isLValue()) // a RValue is needed for condition so if LValue, implicitly cast to RValue
-            conditionNode = std::make_unique<AST::ImplicitCastExpr>(std::move(conditionNode), "LValueToRValue");
+            conditionNode = std::make_unique<AST::ImplicitCastExpr>(std::move(conditionNode), AST::CastExpr::CastType::LValueToRValue);
 
         auto body = dynamic_pointer_cast<AST::Stmt>(std::move(stmt->_node));
         auto elseBody = dynamic_pointer_cast<AST::Stmt>(std::move(elseStmt->_node));
@@ -1004,7 +1004,7 @@ namespace lcc
         auto returnVal = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
 
         if (returnVal->isLValue()) // a RValue is needed for return value so if LValue, implicitly cast to RValue
-            returnVal = std::make_unique<AST::ImplicitCastExpr>(std::move(returnVal), "LValueToRValue");
+            returnVal = std::make_unique<AST::ImplicitCastExpr>(std::move(returnVal), AST::CastExpr::CastType::LValueToRValue);
 
         auto returnStmtNode = std::make_unique<AST::ReturnStmt>(std::move(returnVal));
 
@@ -1162,7 +1162,7 @@ namespace lcc
     {
         std::unique_ptr<AST::Expr> expr = nextExpression();
         if (expr->isLValue())
-            expr = std::make_unique<AST::ImplicitCastExpr>(std::move(expr), "LValueToRValue");
+            expr = std::make_unique<AST::ImplicitCastExpr>(std::move(expr), AST::CastExpr::CastType::LValueToRValue);
 
         return expr;
     }

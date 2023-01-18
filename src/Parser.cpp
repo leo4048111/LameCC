@@ -269,7 +269,7 @@ namespace lcc
         {
             nextToken(); // eat ';'
             if (val->isLValue())
-                val = std::make_unique<AST::ImplicitCastExpr>(std::move(val), "LValueToRValue");
+                val = std::make_unique<AST::ImplicitCastExpr>(std::move(val), AST::CastExpr::CastType::LValueToRValue);
             break;
         }
         default:
@@ -731,7 +731,7 @@ namespace lcc
     {
         std::unique_ptr<AST::Expr> expr = nextExpression();
         if (expr->isLValue())
-            expr = std::make_unique<AST::ImplicitCastExpr>(std::move(expr), "LValueToRValue");
+            expr = std::make_unique<AST::ImplicitCastExpr>(std::move(expr), AST::CastExpr::CastType::LValueToRValue);
 
         return expr;
     }
