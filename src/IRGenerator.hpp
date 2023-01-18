@@ -29,6 +29,7 @@ namespace lcc
         virtual bool gen(AST::FloatingLiteral *floatingLiteral) = 0;
         virtual bool gen(AST::DeclRefExpr *declRefExpr) = 0;
         virtual bool gen(AST::CastExpr *castExpr) = 0;
+        virtual bool gen(AST::ImplicitCastExpr* implicitCastExpr) = 0;
         virtual bool gen(AST::BinaryOperator *binaryOperator) = 0;
         virtual bool gen(AST::UnaryOperator *unaryOperator) = 0;
         virtual bool gen(AST::ParenExpr *parenExpr) = 0;
@@ -178,6 +179,7 @@ namespace lcc
         virtual bool gen(AST::FloatingLiteral *floatingLiteral) override;
         virtual bool gen(AST::DeclRefExpr *declRefExpr) override;
         virtual bool gen(AST::CastExpr *castExpr) override;
+        virtual bool gen(AST::ImplicitCastExpr* implicitCastExpr) override;
         virtual bool gen(AST::BinaryOperator *binaryOperator) override;
         virtual bool gen(AST::UnaryOperator *unaryOperator) override;
         virtual bool gen(AST::ParenExpr *parenExpr) override;
@@ -224,7 +226,6 @@ namespace lcc
 
         typedef struct _FuncContext
         {
-            llvm::Function *pFunc{nullptr};
             llvm::BasicBlock *entryBB{nullptr};
             llvm::BasicBlock *retBB{nullptr};
             llvm::AllocaInst *retValAlloca{nullptr};
@@ -255,6 +256,7 @@ namespace lcc
         virtual bool gen(AST::FloatingLiteral *floatingLiteral) override;
         virtual bool gen(AST::DeclRefExpr *declRefExpr) override;
         virtual bool gen(AST::CastExpr *castExpr) override;
+        virtual bool gen(AST::ImplicitCastExpr* implicitCastExpr) override;
         virtual bool gen(AST::BinaryOperator *binaryOperator) override;
         virtual bool gen(AST::UnaryOperator *unaryOperator) override;
         virtual bool gen(AST::ParenExpr *parenExpr) override;
@@ -277,7 +279,7 @@ namespace lcc
         bool enter(std::string name, llvm::AllocaInst *alloca);
         llvm::AllocaInst *createEntryBlockAlloca(llvm::Function *function, const std::string &name, const std::string type);
         void changeTable(std::shared_ptr<SymbolTable> table);
-        void updateFuncContext(llvm::Function* pFunc, llvm::BasicBlock* entryBB, llvm::BasicBlock* retBB, llvm::AllocaInst* retValAlloca);
+        void updateFuncContext(llvm::BasicBlock* entryBB, llvm::BasicBlock* retBB, llvm::AllocaInst* retValAlloca);
 
     private:
         llvm::LLVMContext _context;

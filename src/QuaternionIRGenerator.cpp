@@ -166,6 +166,13 @@ namespace lcc
         return true;
     }
 
+    bool QuaternionIRGenerator::gen(AST::ImplicitCastExpr* implicitCastExpr)
+    {
+        // Simply does nothing
+        AST::CastExpr* tmp = implicitCastExpr;
+        return this->gen(tmp);
+    }
+
     bool QuaternionIRGenerator::gen(AST::BinaryOperator *binaryOperator)
     {
         if (!binaryOperator->_lhs->gen(this))
