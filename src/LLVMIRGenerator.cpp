@@ -345,7 +345,14 @@ namespace lcc
     {
         return true;
     }
-    bool LLVMIRGenerator::gen(AST::ParenExpr *parenExpr) { return true; }
+
+    bool LLVMIRGenerator::gen(AST::ParenExpr *parenExpr)
+    {
+        if (!parenExpr->gen(this))
+            LLVMIRGEN_RET_FALSE();
+
+        LLVMIRGEN_RET_TRUE(_retVal);
+    }
 
     bool LLVMIRGenerator::gen(AST::CompoundStmt *compoundStmt)
     {
