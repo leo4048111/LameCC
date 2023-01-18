@@ -222,6 +222,14 @@ namespace lcc
             std::map<std::string, llvm::AllocaInst *> symbls;
         } SymbolTable;
 
+        typedef struct _FuncContext
+        {
+            llvm::Function *pFunc{nullptr};
+            llvm::BasicBlock *entryBB{nullptr};
+            llvm::BasicBlock *retBB{nullptr};
+            llvm::AllocaInst *retValAlloca{nullptr};
+        } FuncContext;
+
     private:
         LLVMIRGenerator();
         LLVMIRGenerator(const LLVMIRGenerator &) = delete;
@@ -269,6 +277,7 @@ namespace lcc
         bool enter(std::string name, llvm::AllocaInst *alloca);
         llvm::AllocaInst *createEntryBlockAlloca(llvm::Function *function, const std::string &name, const std::string type);
         void changeTable(std::shared_ptr<SymbolTable> table);
+        void updateFuncContext(llvm::Function* pFunc, llvm::BasicBlock* entryBB, llvm::BasicBlock* retBB, llvm::AllocaInst* retValAlloca);
 
     private:
         llvm::LLVMContext _context;
@@ -278,8 +287,8 @@ namespace lcc
         std::shared_ptr<SymbolTable> _currentSymbolTable;
         std::vector<std::shared_ptr<SymbolTable>> _tables;
 
-        llvm::Value *_retVal{nullptr};
+        FuncContext _fc;
 
-        llvm::AllocaInst *_curFuncRetAlloca{nullptr}; // this value is passed to function returnStmt gen by functionDecl gen method
+        llvm::Value* _retVal { nullptr };
     };
 }

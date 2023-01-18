@@ -99,6 +99,14 @@ namespace lcc
             return nullptr;
     }
 
+    void LLVMIRGenerator::updateFuncContext(llvm::Function *pFunc, llvm::BasicBlock *entryBB, llvm::BasicBlock *retBB, llvm::AllocaInst *retValAlloca)
+    {
+        _fc.pFunc = pFunc;
+        _fc.entryBB = entryBB;
+        _fc.retBB = retBB;
+        _fc.retValAlloca = retValAlloca;
+    }
+
     bool LLVMIRGenerator::gen(AST::TranslationUnitDecl *translationUnitDecl)
     {
         for (auto &decl : translationUnitDecl->_decls)
@@ -164,18 +172,19 @@ namespace lcc
         if (functionDecl->_body == nullptr)
             LLVMIRGEN_RET_TRUE(func);
 
-        llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
-        llvm::BasicBlock *retvalbb = llvm::BasicBlock::Create(_context, "return", func);
+        llvm::BasicBlock *entryBB = llvm::BasicBlock::Create(_context, "entry", func);
+        llvm::BasicBlock *retBB = llvm::BasicBlock::Create(_context, "return", func);
+        llvm::AllocaInst *retValAlloca = nullptr;
 
-        _builder->SetInsertPoint(retvalbb);
+        _builder->SetInsertPoint(retBB);
 
         if (functionDecl->_type == "void")
-            _curFuncRetAlloca = nullptr;
+            retValAlloca = nullptr;
         else if (
             functionDecl->_type == "int" ||
             functionDecl->_type == "float")
         {
-            _curFuncRetAlloca = createEntryBlockAlloca(func, "retVal", functionDecl->_type);
+            retValAlloca = createEntryBlockAlloca(func, "retVal", functionDecl->_type);
         }
         else
         {
@@ -183,15 +192,15 @@ namespace lcc
             LLVMIRGEN_RET_FALSE();
         }
 
-        if (_curFuncRetAlloca)
+        if (retValAlloca)
         {
-            auto retVal = _builder->CreateLoad(funcRetType, _curFuncRetAlloca);
+            auto retVal = _builder->CreateLoad(funcRetType, retValAlloca);
             _builder->CreateRet(retVal);
         }
         else
             _builder->CreateRetVoid(); // emit ret void
 
-        _builder->SetInsertPoint(bb);
+        _builder->SetInsertPoint(entryBB);
 
         auto previousTable = _currentSymbolTable;
         changeTable(mkTable(previousTable)); // create a new scope for function params
@@ -215,9 +224,11 @@ namespace lcc
             enter(arg.getName().str(), alloca);
         }
 
+        updateFuncContext(func, entryBB, retBB, retValAlloca);
+
         functionDecl->_body->gen(this);
 
-        _builder->CreateBr(retvalbb); // unconditional jump to return bb after function body
+        _builder->CreateBr(retBB); // unconditional jump to return bb after function body
 
         std::string err;
         llvm::raw_ostream *out = new llvm::raw_string_ostream(err);
@@ -388,18 +399,17 @@ namespace lcc
     bool LLVMIRGenerator::gen(AST::ReturnStmt *returnStmt)
     {
         llvm::Function *func = _builder->GetInsertBlock()->getParent();
-        auto &retBB = func->back();
 
         if (returnStmt->_value == nullptr)
         {
-            _builder->CreateBr(&retBB);
+            _builder->CreateBr(_fc.retBB);
         }
         else
         {
             if (!returnStmt->_value->gen(this))
                 LLVMIRGEN_RET_FALSE();
 
-            _builder->CreateStore(_retVal, _curFuncRetAlloca);
+            _builder->CreateStore(_retVal, _fc.retValAlloca);
         }
 
         LLVMIRGEN_RET_TRUE(_retVal);
