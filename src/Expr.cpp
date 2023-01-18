@@ -138,7 +138,7 @@ namespace lcc
             switch (_type)
             {
             case CastExpr::CastType::LValueToRValue:
-                j["castType"] = AST::CastExpr::CastType::LValueToRValue;
+                j["castType"] = "LValueToRValue";
                 break;
             
             default:
@@ -156,7 +156,7 @@ namespace lcc
             switch (_type)
             {
             case CastExpr::CastType::LValueToRValue:
-                j["castType"] = AST::CastExpr::CastType::LValueToRValue;
+                j["castType"] = "LValueToRValue";
                 break;
             
             default:
@@ -183,6 +183,11 @@ namespace lcc
         }
 
         bool CastExpr::gen(lcc::IRGeneratorBase* generator)
+        {
+            return generator->gen(this);
+        }
+
+        bool ImplicitCastExpr::gen(lcc::IRGeneratorBase* generator)
         {
             return generator->gen(this);
         }

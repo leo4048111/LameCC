@@ -343,6 +343,8 @@ namespace lcc
 
         auto ld = _builder->CreateLoad(_retVal->getType(), _retVal);
 
+        castExpr->place = castExpr->_subExpr->place;
+
         LLVMIRGEN_RET_TRUE(ld);
     }
 
@@ -353,10 +355,12 @@ namespace lcc
 
         if (implicitCastExpr->_type == AST::CastExpr::CastType::LValueToRValue)
         {
-            auto ld = _builder->CreateLoad(_retVal->getType(), _retVal);
+            auto alloca = static_cast<llvm::AllocaInst*>(_retVal);
+            auto ld = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
             LLVMIRGEN_RET_TRUE(ld);
         }
-
+        
+        implicitCastExpr->place = implicitCastExpr->_subExpr->place;
         LLVMIRGEN_RET_TRUE(_retVal);
     }
 
@@ -372,9 +376,10 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::ParenExpr *parenExpr)
     {
-        if (!parenExpr->gen(this))
+        if (!parenExpr->_subExpr->gen(this))
             LLVMIRGEN_RET_FALSE();
 
+        parenExpr->place = parenExpr->_subExpr->place;
         LLVMIRGEN_RET_TRUE(_retVal);
     }
 
@@ -405,19 +410,43 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::IfStmt *ifStmt)
     {
-        // llvm::Function* func = _builder->GetInsertBlock()->getParent();
-        // llvm::BasicBlock *condBB = llvm::BasicBlock::Create(_context, "if.cond", func);
-        // llvm::BasicBlock *bodyBB = llvm::BasicBlock::Create(_context, "if.body", func);
-        // llvm::BasicBlock *elseBB = nullptr;
-        // if (ifStmt->_elseBody != nullptr)
-        //     elseBB = llvm::BasicBlock::Create(_context, "if.else", func);
+        if (!ifStmt->_condition->gen(this))
+            LLVMIRGEN_RET_FALSE();
 
-        // _builder->SetInsertPoint(condBB);
+        auto tmpCondVal = static_cast<llvm::AllocaInst*>(_retVal);
+        llvm::Value* condVal = _retVal;
 
-        // if (!ifStmt->_condition->gen(this))
-        //     LLVMIRGEN_RET_FALSE();
+        if (tmpCondVal->getAllocatedType() != llvm::Type::getInt1Ty(_context)) // bool type check & convertion
+            condVal = _builder->CreateICmpNE(condVal, llvm::ConstantInt::get(_context, llvm::APInt(32, 0)), "ifcond");
 
-        // _builder->CreateCondBr(_retVal, bodyBB, elseBB);
+        llvm::Function* func = _builder->GetInsertBlock()->getParent();
+
+        llvm::BasicBlock* endBB = llvm::BasicBlock::Create(_context, "if.end", func, _builder->GetInsertBlock()->getNextNode());
+        llvm::BasicBlock* elseBB = endBB;
+
+        if(ifStmt->_elseBody != nullptr)
+            elseBB = llvm::BasicBlock::Create(_context, "if.else", func, endBB);
+
+        llvm::BasicBlock* bodyBB = llvm::BasicBlock::Create(_context, "if.body", func, elseBB);
+
+        _builder->CreateCondBr(condVal, bodyBB, elseBB);
+        
+        _builder->SetInsertPoint(bodyBB); // gen body ir
+
+        if(!ifStmt->_body->gen(this))
+            LLVMIRGEN_RET_FALSE();
+
+        _builder->CreateBr(endBB);
+
+        if(ifStmt->_elseBody != nullptr)
+        {
+            _builder->SetInsertPoint(elseBB);
+            if(!ifStmt->_elseBody->gen(this))
+                LLVMIRGEN_RET_FALSE();
+            _builder->CreateBr(endBB);
+        }
+
+        _builder->SetInsertPoint(endBB);
 
         LLVMIRGEN_RET_TRUE(_retVal);
     }
@@ -447,6 +476,7 @@ namespace lcc
     }
 
     bool LLVMIRGenerator::gen(AST::WhileStmt *whileStmt) { return true; }
+
     bool LLVMIRGenerator::gen(AST::CallExpr *callExpr)
     {
         return true;
