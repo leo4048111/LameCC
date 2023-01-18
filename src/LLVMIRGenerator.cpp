@@ -235,7 +235,7 @@ namespace lcc
         if (llvm::verifyFunction(*func, out))
         {
             FATAL_ERROR(err);
-            LLVMIRGEN_RET_FALSE();
+            //LLVMIRGEN_RET_FALSE();
         }
 
         changeTable(previousTable);
