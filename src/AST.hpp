@@ -442,6 +442,7 @@ namespace lcc
         class WhileStmt : public Stmt
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::unique_ptr<Expr> _condition;
