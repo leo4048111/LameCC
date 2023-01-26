@@ -291,6 +291,7 @@ namespace lcc
         class UnaryOperator : public Expr
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             UnaryOpType _type;

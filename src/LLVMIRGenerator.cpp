@@ -2,7 +2,7 @@
 
 #define LLVMIRGEN_RET_TRUE(val) \
     {                           \
-        _retVal = val;          \
+        _retVal = (val);        \
         return true;            \
     }
 #define LLVMIRGEN_RET_FALSE() \
@@ -371,7 +371,66 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::UnaryOperator *unaryOperator)
     {
-        return true;
+        if (!unaryOperator->_body->gen(this))
+            LLVMIRGEN_RET_FALSE();
+
+        llvm::Value *bodyStore = _retVal;
+
+        if(llvm::AllocaInst* alloca = llvm::dyn_cast<llvm::AllocaInst>(bodyStore))
+        {
+            bodyStore = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
+        }
+
+        switch (unaryOperator->type())
+        {
+        case AST::UnaryOpType::UO_PreInc:
+        {
+            llvm::Value *addVal = _builder->CreateNSWAdd(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "preInc");
+            llvm::Value *addStore = _builder->CreateStore(addVal, bodyStore);
+            LLVMIRGEN_RET_TRUE(addStore);
+        }
+        case AST::UnaryOpType::UO_PreDec:
+        {
+            llvm::Value *decVal = _builder->CreateNSWSub(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "preDec");
+            llvm::Value *decStore = _builder->CreateStore(decVal, bodyStore);
+            LLVMIRGEN_RET_TRUE(decStore);
+        }
+        case AST::UnaryOpType::UO_PostInc:
+        {
+            llvm::Value *addVal = _builder->CreateNSWAdd(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "postInc");
+            llvm::Value *addStore = _builder->CreateStore(addVal, bodyStore);
+            LLVMIRGEN_RET_TRUE(addVal);
+        }
+        case AST::UnaryOpType::UO_PostDec:
+        {
+            llvm::Value *decVal = _builder->CreateNSWSub(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "postDec");
+            llvm::Value *decStore = _builder->CreateStore(decVal, bodyStore);
+            LLVMIRGEN_RET_TRUE(decVal);
+        }
+        case AST::UnaryOpType::UO_Not:
+        {
+            llvm::Value *notVal = _builder->CreateNot(bodyStore, "not");
+            LLVMIRGEN_RET_TRUE(notVal);
+        }
+        case AST::UnaryOpType::UO_Minus:
+        {
+            llvm::Value *minusVal = _builder->CreateNeg(bodyStore, "neg");
+            LLVMIRGEN_RET_TRUE(minusVal);
+        }
+        case AST::UnaryOpType::UO_Plus:
+        {
+            LLVMIRGEN_RET_TRUE(bodyStore);
+        }
+        case AST::UnaryOpType::UO_LNot:
+        {
+            llvm::Value* lnotVal = _builder->CreateICmpEQ(bodyStore, llvm::ConstantInt::get(_context, llvm::APInt(32, 0, true)));
+            LLVMIRGEN_RET_TRUE(lnotVal);
+        }
+        default:
+            LLVMIRGEN_RET_TRUE(bodyStore);
+        }
+
+        LLVMIRGEN_RET_FALSE();
     }
 
     bool LLVMIRGenerator::gen(AST::ParenExpr *parenExpr)
@@ -453,7 +512,10 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::ValueStmt *valueStmt)
     {
-        LLVMIRGEN_RET_TRUE(nullptr);
+        if(!valueStmt->_expr->gen(this))
+            LLVMIRGEN_RET_FALSE();
+
+        LLVMIRGEN_RET_TRUE(_retVal);
     }
 
     bool LLVMIRGenerator::gen(AST::ReturnStmt *returnStmt)

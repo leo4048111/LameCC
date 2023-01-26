@@ -1,18 +1,7 @@
-int func(int a, int b)
+
+void func2()
 {
-    int b = 2;
-
-    while(b)
-    {
-        int a = 1;
-    }
-
-    return b;
-}
-
-int main()
-{
-    int a = 1;
-
-    return 0;
+    int b = 3;
+    b;
+    -b;
 }
