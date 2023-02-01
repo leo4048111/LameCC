@@ -160,18 +160,6 @@ int main(int argc, char **argv)
     if (astRoot == nullptr)
         WARNING("Parsed empty AST");
 
-    if (astRoot)
-    {
-        if (!astRoot->gen(lcc::LLVMIRGenerator::getInstance()))
-            FATAL_ERROR("Failed to generate IR.");
-        else
-        {
-            //lcc::LLVMIRGenerator::getInstance()->printCode();
-            lcc::LLVMIRGenerator::getInstance()->dumpCode(g_out_path);
-            INFO("IR has been dumped to " << g_out_path);
-        }
-    }
-
     if (g_shouldDumpTokens)
     {
         lcc::dumpJson(lcc::jsonifyTokens(tokens), g_dump_token_out_path);
@@ -182,5 +170,17 @@ int main(int argc, char **argv)
     {
         lcc::dumpJson(astRoot->asJson(), g_dump_ast_out_path);
         INFO("AST has been dumped to " << g_dump_ast_out_path);
+    }
+
+    if (astRoot)
+    {
+        if (!astRoot->gen(lcc::LLVMIRGenerator::getInstance()))
+            FATAL_ERROR("Failed to generate IR.");
+        else
+        {
+            // lcc::LLVMIRGenerator::getInstance()->printCode();
+            lcc::LLVMIRGenerator::getInstance()->dumpCode(g_out_path);
+            INFO("IR has been dumped to " << g_out_path);
+        }
     }
 }

@@ -73,7 +73,7 @@ namespace lcc
         if (pVal != nullptr)
             return pVal;
 
-        pVal = _module->getGlobalVariable(name);
+        pVal = _module->getGlobalVariable(name); // llvm::GlobalVariable is a pointer to the actual global var
 
         return pVal;
     }
@@ -323,9 +323,9 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::DeclRefExpr *declRefExpr)
     {
-        auto alloca = lookup(declRefExpr->name());
+        auto var = lookup(declRefExpr->name());
 
-        if (alloca == nullptr)
+        if (var == nullptr)
         {
             FATAL_ERROR("Referencing undefined symbol " << declRefExpr->name());
             LLVMIRGEN_RET_FALSE();
@@ -333,7 +333,7 @@ namespace lcc
 
         declRefExpr->place = declRefExpr->name();
 
-        LLVMIRGEN_RET_TRUE(alloca);
+        LLVMIRGEN_RET_TRUE(var);
     }
 
     bool LLVMIRGenerator::gen(AST::CastExpr *castExpr)
@@ -355,9 +355,20 @@ namespace lcc
 
         if (implicitCastExpr->_type == AST::CastExpr::CastType::LValueToRValue)
         {
-            auto alloca = static_cast<llvm::AllocaInst *>(_retVal);
-            auto ld = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
-            LLVMIRGEN_RET_TRUE(ld);
+            if (auto alloca = llvm::dyn_cast<llvm::AllocaInst>(_retVal))
+            {
+                auto ld = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
+                LLVMIRGEN_RET_TRUE(ld);
+            }
+            else if (auto glbVar = llvm::dyn_cast<llvm::GlobalVariable>(_retVal))
+            {
+                auto ld = _builder->CreateLoad(glbVar->getValueType(), glbVar);
+                LLVMIRGEN_RET_TRUE(ld);
+            }
+            else
+            {
+                LLVMIRGEN_RET_TRUE(_retVal);
+            }
         }
 
         implicitCastExpr->place = implicitCastExpr->_subExpr->place;
@@ -366,7 +377,60 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::BinaryOperator *binaryOperator)
     {
-        return true;
+        if (binaryOperator->isAssignment())
+        {
+            auto lhs = dynamic_pointer_cast<AST::DeclRefExpr>(std::move(binaryOperator->_lhs));
+
+            if (lhs == nullptr)
+            {
+                FATAL_ERROR("Invalid lhs expression for an assignment");
+                LLVMIRGEN_RET_FALSE();
+            }
+
+            if (!binaryOperator->_rhs->gen(this))
+                LLVMIRGEN_RET_FALSE();
+
+            llvm::Value *rhsVal = _retVal;
+            llvm::Value *lhsVar = lookup(lhs->name());
+
+            if (!lhsVar)
+            {
+                FATAL_ERROR("Referencing undefined symbol" << lhs->name());
+                LLVMIRGEN_RET_FALSE();
+            }
+
+            switch (binaryOperator->type())
+            {
+            case AST::BinaryOpType::BO_Assign:
+            {
+                _builder->CreateStore(rhsVal, lhsVar);
+                LLVMIRGEN_RET_TRUE(rhsVal);
+            }
+            case AST::BinaryOpType::BO_AddAssign:
+            {
+                if (llvm::AllocaInst *alloca = llvm::dyn_cast<llvm::AllocaInst>(lhsVar))
+                {
+                    llvm::Value *lhsVal = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
+                    llvm::Value *addVal = _builder->CreateAdd(lhsVal, rhsVal, "tmpaddassign");
+                    _builder->CreateStore(addVal, alloca);
+                    LLVMIRGEN_RET_TRUE(addVal);
+                }
+                else if (llvm::GlobalVariable *glbVar = llvm::dyn_cast<llvm::GlobalVariable>(lhsVar))
+                {
+                    llvm::Value *lhsVal = _builder->CreateLoad(glbVar->getValueType(), glbVar);
+                    llvm::Value *addVal = _builder->CreateAdd(lhsVal, rhsVal, "tmpaddassign");
+                    _builder->CreateStore(addVal, glbVar);
+                    LLVMIRGEN_RET_TRUE(addVal);
+                }
+                else
+                    LLVMIRGEN_RET_TRUE(_retVal)
+            }
+            default:
+                LLVMIRGEN_RET_TRUE(_retVal);
+            }
+        }
+
+        LLVMIRGEN_RET_TRUE(_retVal);
     }
 
     bool LLVMIRGenerator::gen(AST::UnaryOperator *unaryOperator)
@@ -376,7 +440,7 @@ namespace lcc
 
         llvm::Value *bodyStore = _retVal;
 
-        if(llvm::AllocaInst* alloca = llvm::dyn_cast<llvm::AllocaInst>(bodyStore))
+        if (llvm::AllocaInst *alloca = llvm::dyn_cast<llvm::AllocaInst>(bodyStore))
         {
             bodyStore = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
         }
@@ -423,7 +487,7 @@ namespace lcc
         }
         case AST::UnaryOpType::UO_LNot:
         {
-            llvm::Value* lnotVal = _builder->CreateICmpEQ(bodyStore, llvm::ConstantInt::get(_context, llvm::APInt(32, 0, true)));
+            llvm::Value *lnotVal = _builder->CreateICmpEQ(bodyStore, llvm::ConstantInt::get(_context, llvm::APInt(32, 0, true)));
             LLVMIRGEN_RET_TRUE(lnotVal);
         }
         default:
@@ -512,7 +576,7 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::ValueStmt *valueStmt)
     {
-        if(!valueStmt->_expr->gen(this))
+        if (!valueStmt->_expr->gen(this))
             LLVMIRGEN_RET_FALSE();
 
         LLVMIRGEN_RET_TRUE(_retVal);

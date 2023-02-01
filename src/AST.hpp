@@ -250,6 +250,7 @@ namespace lcc
         class BinaryOperator : public Expr
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         public:
             // https://en.cppreference.com/w/cpp/language/operator_precedence

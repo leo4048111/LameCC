@@ -1,7 +1,8 @@
+int a;
 
-void func2()
+int main()
 {
-    int b = 3;
-    b;
-    -b;
+    a += 1;
+
+    return a;
 }
