@@ -424,7 +424,47 @@ namespace lcc
             }
             case AST::BinaryOpType::BO_SubAssign:
             {
-                exprVal = _builder->CreateSub(lhsVal, rhsVal, "addassigntmp");
+                exprVal = _builder->CreateSub(lhsVal, rhsVal, "subassigntmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_MulAssign:
+            {
+                exprVal = _builder->CreateMul(lhsVal, rhsVal, "mulassigntmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_DivAssign:
+            {
+                exprVal = _builder->CreateMul(lhsVal, rhsVal, "mulassigntmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_RemAssign:
+            {
+                exprVal = _builder->CreateSRem(lhsVal, rhsVal, "remassigntmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_ShlAssign:
+            {
+                exprVal = _builder->CreateShl(lhsVal, rhsVal, "shlassigntmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_ShrAssign:
+            {
+                exprVal = _builder->CreateAShr(lhsVal, rhsVal, "shrassigntmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_AndAssign:
+            {
+                exprVal = _builder->CreateAnd(lhsVal, rhsVal, "andassigntmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_XorAssign:
+            {
+                exprVal = _builder->CreateXor(lhsVal, rhsVal, "xorassigntmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_OrAssign:
+            {
+                exprVal = _builder->CreateOr(lhsVal, rhsVal, "orassigntmp");
                 break;
             }
             default:
