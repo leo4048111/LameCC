@@ -341,9 +341,19 @@ namespace lcc
         case '=':
             return forwardSearch('=', TokenType::TOKEN_EQEQ, TokenType::TOKEN_EQ);
         case '<':
+        {
+            if (isNextChar('<'))
+                return forwardSearch('=', TokenType::TOKEN_LESSLESSEQ, TokenType::TOKEN_LESSLESS);
+
             return forwardSearch('=', TokenType::TOKEN_LESSEQ, TokenType::TOKEN_LESS);
+        }
         case '>':
+        {
+            if (isNextChar('>'))
+                return forwardSearch('=', TokenType::TOKEN_GREATERGREATEREQ, TokenType::TOKEN_GREATERGREATER);
+
             return forwardSearch('=', TokenType::TOKEN_GREATEREQ, TokenType::TOKEN_GREATER);
+        }
         case '+':
             return forwardSearch('=', TokenType::TOKEN_PLUSEQ, '+', TokenType::TOKEN_PLUSPLUS, TokenType::TOKEN_PLUS);
         case '-':
@@ -356,6 +366,10 @@ namespace lcc
             return forwardSearch('=', TokenType::TOKEN_PERCENTEQ, TokenType::TOKEN_PERCENT);
         case '^':
             return forwardSearch('=', TokenType::TOKEN_CARETEQ, TokenType::TOKEN_CARET);
+        case '|':
+            return forwardSearch('=', TokenType::TOKEN_PIPEEQ, TokenType::TOKEN_PIPE);
+        case '&':
+            return forwardSearch('=', TokenType::TOKEN_AMPEQ, TokenType::TOKEN_AMP);
         case '(':
             return makePunctuatorToken(TokenType::TOKEN_LPAREN);
         case ')':
