@@ -1,8 +1,21 @@
 int a;
 
-int main()
+void assignmentTest()
 {
     a += 1;
+    a *= 1;
+    a /= 1;
+    a %= 1;
+    a += 1;
+    a -= 1;
+    a >>= 1;
+    a <<= 1;
+    a &= 1;
+    a ^= 1;
+    a |= 1;
+}
 
-    return a;
+int main()
+{
+    return 0;
 }
