@@ -399,35 +399,41 @@ namespace lcc
                 LLVMIRGEN_RET_FALSE();
             }
 
+            llvm::Value *lhsVal = nullptr;
+
+            if (llvm::AllocaInst *alloca = llvm::dyn_cast<llvm::AllocaInst>(lhsVar))
+                lhsVal = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
+            else if (llvm::GlobalVariable *glbVar = llvm::dyn_cast<llvm::GlobalVariable>(lhsVar))
+                lhsVal = _builder->CreateLoad(glbVar->getValueType(), glbVar);
+            else
+                LLVMIRGEN_RET_FALSE();
+
+            llvm::Value *exprVal = nullptr;
+
             switch (binaryOperator->type())
             {
             case AST::BinaryOpType::BO_Assign:
             {
-                _builder->CreateStore(rhsVal, lhsVar);
-                LLVMIRGEN_RET_TRUE(rhsVal);
+                exprVal = rhsVal;
+                break;
             }
             case AST::BinaryOpType::BO_AddAssign:
             {
-                if (llvm::AllocaInst *alloca = llvm::dyn_cast<llvm::AllocaInst>(lhsVar))
-                {
-                    llvm::Value *lhsVal = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
-                    llvm::Value *addVal = _builder->CreateAdd(lhsVal, rhsVal, "tmpaddassign");
-                    _builder->CreateStore(addVal, alloca);
-                    LLVMIRGEN_RET_TRUE(addVal);
-                }
-                else if (llvm::GlobalVariable *glbVar = llvm::dyn_cast<llvm::GlobalVariable>(lhsVar))
-                {
-                    llvm::Value *lhsVal = _builder->CreateLoad(glbVar->getValueType(), glbVar);
-                    llvm::Value *addVal = _builder->CreateAdd(lhsVal, rhsVal, "tmpaddassign");
-                    _builder->CreateStore(addVal, glbVar);
-                    LLVMIRGEN_RET_TRUE(addVal);
-                }
-                else
-                    LLVMIRGEN_RET_TRUE(_retVal)
+                exprVal = _builder->CreateAdd(lhsVal, rhsVal, "addassigntmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_SubAssign:
+            {
+                exprVal = _builder->CreateSub(lhsVal, rhsVal, "addassigntmp");
+                break;
             }
             default:
-                LLVMIRGEN_RET_TRUE(_retVal);
+                FATAL_ERROR("Unsupported binary operator type.");
+                LLVMIRGEN_RET_FALSE();
             }
+
+            _builder->CreateStore(exprVal, lhsVar);
+            LLVMIRGEN_RET_TRUE(exprVal);
         }
 
         LLVMIRGEN_RET_TRUE(_retVal);
