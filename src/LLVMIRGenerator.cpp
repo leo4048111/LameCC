@@ -475,8 +475,108 @@ namespace lcc
             _builder->CreateStore(exprVal, lhsVar);
             LLVMIRGEN_RET_TRUE(exprVal);
         }
+        else
+        {
+            if (!binaryOperator->_lhs->gen(this))
+                LLVMIRGEN_RET_FALSE();
 
-        LLVMIRGEN_RET_TRUE(_retVal);
+            llvm::Value *lhsVal = _retVal;
+
+            if (!binaryOperator->_rhs->gen(this))
+                LLVMIRGEN_RET_FALSE();
+
+            llvm::Value *rhsVal = _retVal;
+
+            if (!lhsVal || !rhsVal)
+                LLVMIRGEN_RET_FALSE();
+
+            if (lhsVal->getType() != rhsVal->getType())
+            {
+                if (lhsVal->getType() == llvm::Type::getFloatTy(_context))
+                    rhsVal = _builder->CreateFPCast(rhsVal, llvm::Type::getFloatTy(_context), "integralToFloating");
+                else if (rhsVal->getType() == llvm::Type::getFloatTy(_context))
+                    lhsVal = _builder->CreateFPCast(lhsVal, llvm::Type::getFloatTy(_context), "integralToFloating");
+                else
+                {
+                    if (lhsVal->getType() != llvm::Type::getInt32Ty(_context))
+                        lhsVal = _builder->CreateIntCast(lhsVal, llvm::Type::getInt32Ty(_context), true);
+                    if (rhsVal->getType() != llvm::Type::getInt32Ty(_context))
+                        rhsVal = _builder->CreateIntCast(rhsVal, llvm::Type::getInt32Ty(_context), true);
+                }
+            }
+
+            llvm::Value *exprVal = nullptr;
+
+            switch (binaryOperator->type())
+            {
+            case AST::BinaryOpType::BO_Mul:
+                exprVal = _builder->CreateMul(lhsVal, rhsVal, "multmp");
+                break;
+            case AST::BinaryOpType::BO_Div:
+                exprVal = _builder->CreateSDiv(lhsVal, rhsVal, "divtmp");
+                break;
+            case AST::BinaryOpType::BO_Add:
+                exprVal = _builder->CreateAdd(lhsVal, rhsVal, "addtmp");
+                break;
+            case AST::BinaryOpType::BO_Sub:
+                exprVal = _builder->CreateSub(lhsVal, rhsVal, "subtmp");
+                break;
+            case AST::BinaryOpType::BO_Rem:
+                exprVal = _builder->CreateSRem(lhsVal, rhsVal, "remtmp");
+                break;
+            case AST::BinaryOpType::BO_Shl:
+                exprVal = _builder->CreateShl(lhsVal, rhsVal, "shltmp");
+                break;
+            case AST::BinaryOpType::BO_Shr:
+                exprVal = _builder->CreateAShr(lhsVal, rhsVal, "shrtmp");
+                break;
+            case AST::BinaryOpType::BO_LT:
+                exprVal = _builder->CreateICmpSLT(lhsVal, rhsVal, "lttmp");
+                break;
+            case AST::BinaryOpType::BO_GT:
+                exprVal = _builder->CreateICmpSGT(lhsVal, rhsVal, "gttmp");
+                break;
+            case AST::BinaryOpType::BO_LE:
+                exprVal = _builder->CreateICmpSLE(lhsVal, rhsVal, "letmp");
+                break;
+            case AST::BinaryOpType::BO_GE:
+                exprVal = _builder->CreateICmpSGE(lhsVal, rhsVal, "getmp");
+                break;
+            case AST::BinaryOpType::BO_EQ:
+                exprVal = _builder->CreateICmpEQ(lhsVal, rhsVal, "eqtmp");
+                break;
+            case AST::BinaryOpType::BO_NE:
+                exprVal = _builder->CreateICmpNE(lhsVal, rhsVal, "netmp");
+                break;
+            case AST::BinaryOpType::BO_And:
+                exprVal = _builder->CreateAnd(lhsVal, rhsVal, "andtmp");
+                break;
+            case AST::BinaryOpType::BO_Xor:
+                exprVal = _builder->CreateXor(lhsVal, rhsVal, "xortmp");
+                break;
+            case AST::BinaryOpType::BO_Or:
+                exprVal = _builder->CreateOr(lhsVal, rhsVal, "ortmp");
+                break;
+            case AST::BinaryOpType::BO_LAnd:
+            {
+                llvm::Value *l = _builder->CreateICmpNE(lhsVal, llvm::ConstantInt::get(_context, llvm::APInt(32, 0, true)));
+                llvm::Value *r = _builder->CreateICmpNE(rhsVal, llvm::ConstantInt::get(_context, llvm::APInt(32, 0, true)));
+                exprVal = _builder->CreateAnd(l, r, "landtmp");
+                break;
+            }
+            case AST::BinaryOpType::BO_LOr:
+            {
+                llvm::Value *l = _builder->CreateICmpNE(lhsVal, llvm::ConstantInt::get(_context, llvm::APInt(32, 0, true)));
+                llvm::Value *r = _builder->CreateICmpNE(rhsVal, llvm::ConstantInt::get(_context, llvm::APInt(32, 0, true)));
+                exprVal = _builder->CreateOr(l, r, "lortmp");
+                break;
+            }
+            default:
+                break;
+            }
+
+            LLVMIRGEN_RET_TRUE(exprVal);
+        }
     }
 
     bool LLVMIRGenerator::gen(AST::UnaryOperator *unaryOperator)
