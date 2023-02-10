@@ -13,9 +13,16 @@ void assignmentTest()
     a &= 1;
     a ^= 1;
     a |= 1;
+}
 
-    int b = 1;
-    int c = a + b;
+int func(int a)
+{
+    return a;
+}
+
+void callExprTest()
+{
+    func(1);
 }
 
 int main()

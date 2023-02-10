@@ -782,6 +782,33 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::CallExpr *callExpr)
     {
-        return true;
+        std::string funcName = callExpr->_functionExpr->name();
+        llvm::Function* func = _module->getFunction(funcName);
+
+        if(func == nullptr)
+        {
+            FATAL_ERROR("Referencing undefined function " << funcName);
+            LLVMIRGEN_RET_FALSE();
+        }
+
+        if(callExpr->_params.size() != func->arg_size())
+        {
+            FATAL_ERROR("Function " << funcName << " required for " << std::to_string(func->arg_size()) << " arguments, but " <<
+             std::to_string(callExpr->_params.size()) << " were given");
+            LLVMIRGEN_RET_FALSE();
+        }
+
+        std::vector<llvm::Value*> argVals;
+
+        for(auto& param : callExpr->_params)
+        {
+            if(!param->gen(this))
+                LLVMIRGEN_RET_FALSE();
+            argVals.push_back(_retVal);
+        }
+
+        llvm::Value* funcCall = _builder->CreateCall(func, argVals, "calltmp");
+
+        LLVMIRGEN_RET_TRUE(funcCall);
     }
 }
