@@ -29,6 +29,8 @@ namespace lcc
             return "TOKEN_KWWHILE";
         case TokenType::TOKEN_KWRETURN:
             return "TOKEN_KWRETURN";
+        case TokenType::TOKEN_KWASM:
+            return "TOKEN_KWASM";
         case TokenType::TOKEN_IDENTIFIER:
             return "TOKEN_IDENTIFIER";
         case TokenType::TOKEN_INTEGER:

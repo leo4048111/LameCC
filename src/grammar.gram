@@ -14,6 +14,7 @@ ReturnStmt
 NullStmt
 DeclStmt
 ValueStmt
+ASMStmt
 /* Terminals (Tokens plus Expr since it's parsed by OperatorPrecedence Parser and passed to LR1Parser as a single symbol) */
 Expr
 TOKEN_VARTYPE
@@ -25,6 +26,7 @@ TOKEN_KWRETURN
 TOKEN_IDENTIFIER
 TOKEN_INTEGER
 TOKEN_FLOAT
+TOKEN_STRING
 +
 ++
 +=
