@@ -15,13 +15,6 @@ NullStmt
 DeclStmt
 ValueStmt
 AsmStmt
-AssemblerTemplates
-AsmConstraints
-AsmConstraint
-NextAsmConstraint
-ClobberedRegisters
-ClobberedRegister
-NextClobberedRegister
 /* Terminals (Tokens plus Expr since it's parsed by OperatorPrecedence Parser and passed to LR1Parser as a single symbol) */
 Expr
 TOKEN_VARTYPE
@@ -30,7 +23,6 @@ TOKEN_KWIF
 TOKEN_KWELSE
 TOKEN_KWWHILE
 TOKEN_KWRETURN
-TOKEN_KWASM
 TOKEN_IDENTIFIER
 TOKEN_INTEGER
 TOKEN_FLOAT
@@ -116,18 +108,5 @@ NullStmt -> ;
 DeclStmt -> Decl
 ValueStmt -> Expr ;
 Stmt -> AsmStmt
-AsmStmt -> TOKEN_KWASM ( AssemblerTemplates : AsmConstraints : AsmConstraints : ClobberedRegisters ) ;
-AssemblerTemplates -> TOKEN_STRING 
-AssemblerTemplates -> TOKEN_STRING AssemblerTemplates
-AsmConstraints -> $
-AsmConstraints -> AsmConstraint NextAsmConstraint
-NextAsmConstraint -> $
-NextAsmConstraint -> , AsmConstraint
-AsmConstraint -> TOKEN_STRING ( TOKEN_IDENTIFIER )
-ClobberedRegisters -> $
-ClobberedRegisters -> ClobberedRegister NextClobberedRegister
-ClobberedRegister -> TOKEN_STRING
-NextClobberedRegister -> , ClobberedRegister
-NextClobberedRegister -> $
 /* StartSymbol */
 S

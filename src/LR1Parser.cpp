@@ -218,20 +218,6 @@ namespace lcc
         _productionFuncMap.insert(std::make_pair(35, &nextDeclStmtR35));
         _productionFuncMap.insert(std::make_pair(36, &nextValueStmtR36));
         _productionFuncMap.insert(std::make_pair(37, &nextStmt));
-        _productionFuncMap.insert(std::make_pair(38, &nextAsmStmtR38));
-        _productionFuncMap.insert(std::make_pair(39, &nextAssemblerTemplatesR39));
-        _productionFuncMap.insert(std::make_pair(40, &nextAssemblerTemplatesR40));
-        _productionFuncMap.insert(std::make_pair(41, &nextAsmConstraintsR41));
-        _productionFuncMap.insert(std::make_pair(42, &nextAsmConstraintsR42));
-        _productionFuncMap.insert(std::make_pair(43, &nextNextAsmConstraintR43));
-        _productionFuncMap.insert(std::make_pair(44, &nextNextAsmConstraintR44));
-        _productionFuncMap.insert(std::make_pair(45, &nextAsmConstraintR45));
-        _productionFuncMap.insert(std::make_pair(46, &nextClobberedRegistersR46));
-        _productionFuncMap.insert(std::make_pair(47, &nextClobberedRegistersR47));
-        _productionFuncMap.insert(std::make_pair(48, &nextClobberedRegisterR48));
-        _productionFuncMap.insert(std::make_pair(49, &nextNextClobberedRegisterR49));
-        _productionFuncMap.insert(std::make_pair(50, &nextNextClobberedRegisterR50));
-
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath, bool shouldPrintProcess)
@@ -1088,90 +1074,6 @@ namespace lcc
         auto exprNode = dynamic_pointer_cast<AST::Expr>(std::move(expr->_node));
 
         return std::make_shared<NonTerminal>("ValueStmt", std::make_unique<AST::ValueStmt>(std::move(exprNode)));
-    }
-
-    // AsmStmt -> TOKEN_KWASM ( AssemblerTemplates : AsmConstraints : AsmConstraints : ClobberedRegisters ) ;
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAsmStmtR38(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        for (int i = 0; i < 11; i++)
-            stateStack.pop(); // pop 11 states
-
-        for(int i = 0; i < 11; i++)
-            symbolStack.pop(); // pop 11 symbs
-
-        return nullptr;
-    }
-
-    // AssemblerTemplates -> TOKEN_STRING
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAssemblerTemplatesR39(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // AssemblerTemplates -> TOKEN_STRING AssemblerTemplates
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAssemblerTemplatesR40(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // AsmConstraints -> $
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAsmConstraintsR41(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // AsmConstraints -> AsmConstraint NextAsmConstraint
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAsmConstraintsR42(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // NextAsmConstraint -> $
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextNextAsmConstraintR43(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // NextAsmConstraint -> , AsmConstraint
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextNextAsmConstraintR44(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // AsmConstraint -> TOKEN_STRING ( TOKEN_IDENTIFIER )
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAsmConstraintR45(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // ClobberedRegisters -> $
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextClobberedRegistersR46(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // ClobberedRegisters -> ClobberedRegister NextClobberedRegister
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextClobberedRegistersR47(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // ClobberedRegister -> TOKEN_STRING
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextClobberedRegisterR48(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // NextClobberedRegister -> , ClobberedRegister
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextNextClobberedRegisterR49(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
-    }
-
-    // NextClobberedRegister -> $
-    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextNextClobberedRegisterR50(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
-    {
-        return nullptr;
     }
 
     // Expression parser imeplemented with OperatorPrecedence Parse
