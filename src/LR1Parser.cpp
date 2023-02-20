@@ -861,6 +861,7 @@ namespace lcc
     // Stmt -> NullStmt
     // Stmt -> DeclStmt
     // Stmt -> ValueStmt
+    // Stmt -> AsmStmt
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextStmt(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
     {
         stateStack.pop(); // pop state
@@ -868,7 +869,15 @@ namespace lcc
         auto stmt = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce possible Stmt type
         symbolStack.pop();
 
-        if (stmt->name() != "CompoundStmt" && stmt->name() != "WhileStmt" && stmt->name() != "IfStmt" && stmt->name() != "ReturnStmt" && stmt->name() != "NullStmt" && stmt->name() != "DeclStmt" && stmt->name() != "ValueStmt")
+        if (
+            stmt->name() != "CompoundStmt" &&
+            stmt->name() != "WhileStmt" &&
+            stmt->name() != "IfStmt" &&
+            stmt->name() != "ReturnStmt" &&
+            stmt->name() != "NullStmt" &&
+            stmt->name() != "DeclStmt" &&
+            stmt->name() != "ValueStmt" &&
+            stmt->name() != "AsmStmt")
             return nullptr;
 
         return std::make_shared<NonTerminal>("Stmt", std::move(stmt->_node));
