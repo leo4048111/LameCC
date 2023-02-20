@@ -276,6 +276,19 @@ namespace lcc
         static std::shared_ptr<NonTerminal> nextNullStmtR34(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 34
         static std::shared_ptr<NonTerminal> nextDeclStmtR35(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 35
         static std::shared_ptr<NonTerminal> nextValueStmtR36(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 36
+        static std::shared_ptr<NonTerminal> nextAsmStmtR38(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 38
+        static std::shared_ptr<NonTerminal> nextAssemblerTemplatesR39(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 39
+        static std::shared_ptr<NonTerminal> nextAssemblerTemplatesR40(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 40
+        static std::shared_ptr<NonTerminal> nextAsmConstraintsR41(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 41
+        static std::shared_ptr<NonTerminal> nextAsmConstraintsR42(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 42
+        static std::shared_ptr<NonTerminal> nextNextAsmConstraintR43(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 43
+        static std::shared_ptr<NonTerminal> nextNextAsmConstraintR44(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 44
+        static std::shared_ptr<NonTerminal> nextAsmConstraintR45(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 45
+        static std::shared_ptr<NonTerminal> nextClobberedRegistersR46(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 46
+        static std::shared_ptr<NonTerminal> nextClobberedRegistersR47(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 47
+        static std::shared_ptr<NonTerminal> nextClobberedRegisterR48(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 48
+        static std::shared_ptr<NonTerminal> nextNextClobberedRegisterR49(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 49
+        static std::shared_ptr<NonTerminal> nextNextClobberedRegisterR50(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 50
 
         // grammar initialization
     private:
