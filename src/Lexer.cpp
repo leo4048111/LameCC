@@ -386,6 +386,8 @@ namespace lcc
             return makePunctuatorToken(TokenType::TOKEN_SEMI);
         case ',':
             return makePunctuatorToken(TokenType::TOKEN_COMMA);
+        case ':':
+            return makePunctuatorToken(TokenType::TOKEN_COLON);
         case '\"':
             return readString();
         case '\'':

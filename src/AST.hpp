@@ -351,7 +351,7 @@ namespace lcc
         {
             friend class lcc::QuaternionIRGenerator;
             friend class lcc::LLVMIRGenerator;
-        
+
         public:
             enum class CastType
             {
@@ -503,6 +503,21 @@ namespace lcc
 
         public:
             ReturnStmt(std::unique_ptr<Expr> value = nullptr) : _value(std::move(value)){};
+
+            virtual json asJson() const override;
+
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
+        };
+
+        // AsmStmt is the base class for GCCAsmStmt and MSAsmStmt, in LameCC this statement
+        // uses default AT&T/UNIX assembly syntax
+        class AsmStmt : public Stmt
+        {
+            friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
+
+        public:
+            AsmStmt() {};
 
             virtual json asJson() const override;
 

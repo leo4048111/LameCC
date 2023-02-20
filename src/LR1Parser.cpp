@@ -217,6 +217,7 @@ namespace lcc
         _productionFuncMap.insert(std::make_pair(34, &nextNullStmtR34));
         _productionFuncMap.insert(std::make_pair(35, &nextDeclStmtR35));
         _productionFuncMap.insert(std::make_pair(36, &nextValueStmtR36));
+        _productionFuncMap.insert(std::make_pair(37, &nextStmt));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath, bool shouldPrintProcess)

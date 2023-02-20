@@ -72,6 +72,13 @@ namespace lcc
             return j;
         }
 
+        json AsmStmt::asJson() const 
+        {
+            // TODO
+            json j;
+            return j;
+        }
+
         bool CompoundStmt::gen(lcc::IRGeneratorBase* generator)
         {
             return generator->gen(this);
@@ -98,6 +105,11 @@ namespace lcc
         }
 
         bool ReturnStmt::gen(lcc::IRGeneratorBase* generator)
+        {
+            return generator->gen(this);
+        }
+
+        bool AsmStmt::gen(lcc::IRGeneratorBase* generator)
         {
             return generator->gen(this);
         }
