@@ -246,6 +246,9 @@ namespace lcc
         std::unique_ptr<AST::Expr> nextParenExpr();
         std::unique_ptr<AST::Expr> nextRValue();
 
+        // AsmStmt parser
+        std::shared_ptr<NonTerminal> nextAsmStmt();
+
         // production func
         static std::shared_ptr<NonTerminal> nextStartSymbolR1(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);         // production 1
         static std::shared_ptr<NonTerminal> nextTranslationUnitDeclR2(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack); // production 2

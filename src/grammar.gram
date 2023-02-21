@@ -14,15 +14,16 @@ ReturnStmt
 NullStmt
 DeclStmt
 ValueStmt
-AsmStmt
 /* Terminals (Tokens plus Expr since it's parsed by OperatorPrecedence Parser and passed to LR1Parser as a single symbol) */
 Expr
+AsmStmt
 TOKEN_VARTYPE
 TOKEN_KWVOID
 TOKEN_KWIF
 TOKEN_KWELSE
 TOKEN_KWWHILE
 TOKEN_KWRETURN
+TOKEN_KWASM
 TOKEN_IDENTIFIER
 TOKEN_INTEGER
 TOKEN_FLOAT

@@ -302,7 +302,37 @@ namespace lcc
                     stateStack.push(_gotoTable[stateStack.top()][nonTerminal->name()]); // push new state
                     break;
                 }
-                // invalid action, abort asap
+
+                action = actionTableRow["AsmStmt"];
+                // check if there is an AsmStmt to be parsed
+                if (action.type == ActionType::SHIFT)
+                {
+                    if (shouldPrintProcess)
+                        INFO("Called Asm parser and parsed AsmStmt");
+                    auto asmStmt = nextAsmStmt(); // parse next AsmStmt
+                    if (asmStmt != nullptr)
+                    {
+                        symbolStack.push(asmStmt);
+                        stateStack.push(actionTableRow["AsmStmt"].id);
+                        break;
+                    }
+                }
+                else if (action.type == ActionType::REDUCE)
+                {
+                    if (shouldPrintProcess)
+                        INFO("Reduced using production " << action.id << " (r" << action.id << ")");
+                    auto nonTerminal = _productionFuncMap[action.id](stateStack, symbolStack);
+                    if (nonTerminal == nullptr)
+                    {
+                        FATAL_ERROR("Internal LR1 parser error");
+                        return nullptr;
+                    }
+                    symbolStack.push(nonTerminal);                                      // push reduced nonterminal
+                    stateStack.push(_gotoTable[stateStack.top()][nonTerminal->name()]); // push new state
+                    break;
+                }
+
+                // invalid action, abort
                 FATAL_ERROR("Parsing failed at " << _pCurToken->pos.line << ", " << _pCurToken->pos.column);
                 return nullptr;
             case ActionType::SHIFT:
@@ -1268,6 +1298,13 @@ namespace lcc
         default:
             return nullptr;
         }
+    }
+
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAsmStmt()
+    {
+        // TODO
+        
+        return nullptr;
     }
 
     bool LR1Parser::parseProductionsFromFile(const std::string &grammarFilePath)
