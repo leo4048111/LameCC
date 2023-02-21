@@ -1302,9 +1302,187 @@ namespace lcc
 
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAsmStmt()
     {
-        // TODO
+        auto kwasm = _pCurToken;
+
+        if(kwasm->type != TokenType::TOKEN_KWASM)
+        {
+            FATAL_ERROR(kwasm->pos.line << ", " << kwasm->pos.column << " unsupported statement.");
+            return nullptr;
+        }
+
+        nextToken(); // eat TOKEN_KWASM
+
+        auto lparen = _pCurToken;
+        if(lparen->type != TokenType::TOKEN_LPAREN)
+        {
+            FATAL_ERROR(kwasm->pos.line << ", " << kwasm->pos.column << " expected (");
+            return nullptr;
+        }
+
+        nextToken(); // eat (
+
+        do
+        {
+            auto asmOpStrToken = _pCurToken;
+
+            if(asmOpStrToken->type != TokenType::TOKEN_STRING)
+            {
+                FATAL_ERROR("Expected string literal in \'asm\'");
+                return nullptr;
+            }
+
+            nextToken(); // eat asm string literal
+        } while (_pCurToken->type == TokenType::TOKEN_STRING);
         
-        return nullptr;
+        auto colon = _pCurToken;
+        if(colon->type != TokenType::TOKEN_COLON)
+        {
+            FATAL_ERROR("Expected : after assembler template");
+            return nullptr;
+        }
+
+        nextToken(); // eat :
+
+        // parse output operand
+        while(_pCurToken->type != TokenType::TOKEN_COLON)
+        {
+            auto asmConstraintStr = _pCurToken;
+            if(asmConstraintStr->type != TokenType::TOKEN_STRING)
+            {
+                FATAL_ERROR("Expected constraint string");
+                return nullptr;
+            }
+
+            nextToken(); // eat constraint string
+
+            auto lparen = _pCurToken;
+
+            if(lparen->type != TokenType::TOKEN_LPAREN)
+            {
+                FATAL_ERROR("Expected (");
+                return nullptr;
+            }
+
+            nextToken(); // eat (
+
+            auto identifier = _pCurToken;
+            if(identifier->type != TokenType::TOKEN_IDENTIFIER)
+            {
+                FATAL_ERROR("Expected identifier");
+                return nullptr;
+            }
+
+            nextToken(); // eat identifier
+
+            auto rparen = _pCurToken;
+
+            if(rparen->type != TokenType::TOKEN_RPAREN)
+            {
+                FATAL_ERROR("No matching rparen found for lparen at " << rparen->pos.line << ", " << rparen->pos.column);
+                return nullptr;
+            }
+
+            nextToken(); // eat )
+
+            if(_pCurToken->type == TokenType::TOKEN_COMMA)
+                nextToken(); // eat ,
+        }
+
+        colon = _pCurToken;
+        if(colon->type != TokenType::TOKEN_COLON)
+        {
+            FATAL_ERROR("Expected : after output operands");
+            return nullptr;
+        }
+
+        nextToken(); // eat :
+
+        // parse input operand
+        while(_pCurToken->type != TokenType::TOKEN_COLON)
+        {
+            auto asmConstraintStr = _pCurToken;
+            if(asmConstraintStr->type != TokenType::TOKEN_STRING)
+            {
+                FATAL_ERROR("Expected constraint string");
+                return nullptr;
+            }
+
+            nextToken(); // eat constraint string
+
+            auto lparen = _pCurToken;
+
+            if(lparen->type != TokenType::TOKEN_LPAREN)
+            {
+                FATAL_ERROR("Expected (");
+                return nullptr;
+            }
+
+            nextToken(); // eat (
+
+            auto identifier = _pCurToken;
+            if(identifier->type != TokenType::TOKEN_IDENTIFIER)
+            {
+                FATAL_ERROR("Expected identifier");
+                return nullptr;
+            }
+
+            nextToken(); // eat identifier
+
+            auto rparen = _pCurToken;
+
+            if(rparen->type != TokenType::TOKEN_RPAREN)
+            {
+                FATAL_ERROR("No matching rparen found for lparen at " << rparen->pos.line << ", " << rparen->pos.column);
+                return nullptr;
+            }
+
+            nextToken(); // eat )
+
+            if(_pCurToken->type == TokenType::TOKEN_COMMA)
+                nextToken(); // eat ,
+        }
+
+        colon = _pCurToken;
+        if(colon->type != TokenType::TOKEN_COLON)
+        {
+            FATAL_ERROR("Expected : after input operands");
+            return nullptr;
+        }
+
+        while(_pCurToken->type != TokenType::TOKEN_RPAREN)
+        {
+            auto clobberedRegStr = _pCurToken;
+
+            if(clobberedRegStr->type != TokenType::TOKEN_STRING)
+            {
+                FATAL_ERROR("Expected string literal to describe clobbered register");
+                return nullptr;
+            }
+
+            nextToken(); // eat string literal
+
+            if(_pCurToken->type == TokenType::TOKEN_COMMA)
+                nextToken(); // eat ,
+        }
+
+        auto rparen = _pCurToken;
+        if(rparen->type != TokenType::TOKEN_RPAREN)
+        {
+            FATAL_ERROR("No matching rparen found for lparen at " << rparen->pos.line << ", " << rparen->pos.column);
+            return nullptr;
+        }
+        nextToken(); // eat )
+
+        auto semi = _pCurToken;
+        if(semi->type != TokenType::TOKEN_SEMI)
+        {
+            FATAL_ERROR("Missing ; at the end of asm statement");
+            return nullptr;
+        }
+
+        nextToken(); // eat ;
+
+        return nullptr; // TODO return nonterminal AsmStmt
     }
 
     bool LR1Parser::parseProductionsFromFile(const std::string &grammarFilePath)
