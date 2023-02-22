@@ -74,8 +74,10 @@ namespace lcc
 
         json AsmStmt::asJson() const 
         {
-            // TODO
+            // TODO: Content json print
             json j;
+            j["type"] = "AsmStmt";
+            j["AsmStmt"] = _asmString;
             return j;
         }
 

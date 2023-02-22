@@ -516,8 +516,19 @@ namespace lcc
             friend class lcc::QuaternionIRGenerator;
             friend class lcc::LLVMIRGenerator;
 
+        protected:
+            std::string _asmString;
+            std::vector<std::pair<std::string, std::string>> _outputConstraints;
+            std::vector<std::pair<std::string, std::string>> _inputConstraints;
+            std::vector<std::string> _clbRegs;
+
         public:
-            AsmStmt() {};
+            AsmStmt(
+                std::string asmString, 
+                std::vector<std::pair<std::string, std::string>> outputConstraints,
+                std::vector<std::pair<std::string, std::string>> inputConstraints,
+                std::vector<std::string> clbRegs
+                ) : _asmString(asmString), _outputConstraints(outputConstraints), _inputConstraints(inputConstraints), _clbRegs(clbRegs){};
 
             virtual json asJson() const override;
 
