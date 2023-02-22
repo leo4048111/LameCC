@@ -811,4 +811,10 @@ namespace lcc
 
         LLVMIRGEN_RET_TRUE(funcCall);
     }
+
+    bool LLVMIRGenerator::gen(AST::AsmStmt* asmStmt)
+    {
+        LLVMIRGEN_RET_TRUE(_retVal);
+    }
+
 }

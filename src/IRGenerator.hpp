@@ -40,6 +40,7 @@ namespace lcc
         virtual bool gen(AST::ReturnStmt *returnStmt) = 0;
         virtual bool gen(AST::WhileStmt *whileStmt) = 0;
         virtual bool gen(AST::CallExpr *callExpr) = 0;
+        virtual bool gen(AST::AsmStmt* asmStmt) = 0;
 
     public:
         virtual void printCode() const = 0;
@@ -190,6 +191,7 @@ namespace lcc
         virtual bool gen(AST::ReturnStmt *returnStmt) override;
         virtual bool gen(AST::WhileStmt *whileStmt) override;
         virtual bool gen(AST::CallExpr *callExpr) override;
+        virtual bool gen(AST::AsmStmt* asmStmt) override;
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous = nullptr);
@@ -267,6 +269,7 @@ namespace lcc
         virtual bool gen(AST::ReturnStmt *returnStmt) override;
         virtual bool gen(AST::WhileStmt *whileStmt) override;
         virtual bool gen(AST::CallExpr *callExpr) override;
+        virtual bool gen(AST::AsmStmt* asmStmt) override;
 
     public:
         virtual void printCode() const override;
