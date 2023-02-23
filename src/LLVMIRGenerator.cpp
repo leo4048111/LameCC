@@ -783,37 +783,61 @@ namespace lcc
     bool LLVMIRGenerator::gen(AST::CallExpr *callExpr)
     {
         std::string funcName = callExpr->_functionExpr->name();
-        llvm::Function* func = _module->getFunction(funcName);
+        llvm::Function *func = _module->getFunction(funcName);
 
-        if(func == nullptr)
+        if (func == nullptr)
         {
             FATAL_ERROR("Referencing undefined function " << funcName);
             LLVMIRGEN_RET_FALSE();
         }
 
-        if(callExpr->_params.size() != func->arg_size())
+        if (callExpr->_params.size() != func->arg_size())
         {
-            FATAL_ERROR("Function " << funcName << " required for " << std::to_string(func->arg_size()) << " arguments, but " <<
-             std::to_string(callExpr->_params.size()) << " were given");
+            FATAL_ERROR("Function " << funcName << " required for " << std::to_string(func->arg_size()) << " arguments, but " << std::to_string(callExpr->_params.size()) << " were given");
             LLVMIRGEN_RET_FALSE();
         }
 
-        std::vector<llvm::Value*> argVals;
+        std::vector<llvm::Value *> argVals;
 
-        for(auto& param : callExpr->_params)
+        for (auto &param : callExpr->_params)
         {
-            if(!param->gen(this))
+            if (!param->gen(this))
                 LLVMIRGEN_RET_FALSE();
             argVals.push_back(_retVal);
         }
 
-        llvm::Value* funcCall = _builder->CreateCall(func, argVals, "calltmp");
+        llvm::Value *funcCall = _builder->CreateCall(func, argVals, "calltmp");
 
         LLVMIRGEN_RET_TRUE(funcCall);
     }
 
-    bool LLVMIRGenerator::gen(AST::AsmStmt* asmStmt)
+    // Only AT&T style inline asm is supported
+    std::string LLVMIRGenerator::generateAsmString(std::string oldAsmStr)
     {
+        // Analyze the asm string to decompose it into its pieces.  We know that Sema
+        // has already done this, so it is guaranteed to be successful.
+        llvm::SmallVector<AST::AsmStmt::AsmStringPiece, 4> Pieces;
+        unsigned DiagOffs;
+        //AnalyzeAsmString(Pieces, C, DiagOffs);
+
+        std::string AsmString;
+        for (const auto &Piece : Pieces)
+        {
+            if (Piece.isString())
+                AsmString += Piece.getString();
+            else if (Piece.getModifier() == '\0')
+                AsmString += '$' + llvm::utostr(Piece.getOperandNo());
+            else
+                AsmString += "${" + llvm::utostr(Piece.getOperandNo()) + ':' +
+                             Piece.getModifier() + '}';
+        }
+        return AsmString;
+    }
+
+    bool LLVMIRGenerator::gen(AST::AsmStmt *asmStmt)
+    {
+        std::string asmString = generateAsmString(asmStmt->_asmString);
+        FATAL_ERROR(asmString);
         LLVMIRGEN_RET_TRUE(_retVal);
     }
 

@@ -524,15 +524,50 @@ namespace lcc
 
         public:
             AsmStmt(
-                std::string asmString, 
+                std::string asmString,
                 std::vector<std::pair<std::string, std::string>> outputConstraints,
                 std::vector<std::pair<std::string, std::string>> inputConstraints,
-                std::vector<std::string> clbRegs
-                ) : _asmString(asmString), _outputConstraints(outputConstraints), _inputConstraints(inputConstraints), _clbRegs(clbRegs){};
+                std::vector<std::string> clbRegs) : _asmString(asmString), _outputConstraints(outputConstraints), _inputConstraints(inputConstraints), _clbRegs(clbRegs){};
 
             virtual json asJson() const override;
 
             virtual bool gen(lcc::IRGeneratorBase *generator) override;
+
+            /// AsmStringPiece - this is part of a decomposed asm string specification
+            /// (for use with the AnalyzeAsmString function below).  An asm string is
+            /// considered to be a concatenation of these parts.
+            class AsmStringPiece
+            {
+            public:
+                enum Kind
+                {
+                    String, // String in .ll asm string form, "$" -> "$$" and "%%" -> "%".
+                    Operand // Operand reference, with optional modifier %c4.
+                };
+
+            private:
+                Kind MyKind;
+                std::string Str;
+                unsigned OperandNo;
+
+            public:
+                AsmStringPiece(const std::string &S) : MyKind(String), Str(S) {}
+
+                bool isString() const { return MyKind == String; }
+                bool isOperand() const { return MyKind == Operand; }
+
+                const std::string &getString() const { return Str; }
+
+                unsigned getOperandNo() const
+                {
+                    assert(isOperand());
+                    return OperandNo;
+                }
+
+                /// getModifier - Get the modifier for this operand, if present.  This
+                /// returns '\0' if there was no modifier.
+                char getModifier() const { return 0; };
+            };
         };
     }
 } // AST end

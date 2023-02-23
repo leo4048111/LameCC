@@ -12,6 +12,7 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/IR/InlineAsm.h"
 
 #include "AST.hpp"
 
@@ -283,6 +284,10 @@ namespace lcc
         llvm::AllocaInst *createEntryBlockAlloca(llvm::Function *function, const std::string &name, const std::string type);
         void changeTable(std::shared_ptr<SymbolTable> table);
         void updateFuncContext(llvm::BasicBlock* entryBB, llvm::BasicBlock* retBB, llvm::AllocaInst* retValAlloca);
+
+    // some pasted methods for ir gen, thanks clang
+    private:
+        static std::string generateAsmString(std::string oldAsmStr);
 
     private:
         llvm::LLVMContext _context;
