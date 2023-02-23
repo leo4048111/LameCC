@@ -1,10 +1,21 @@
 #include "lcc.hpp"
+#include <cctype>
 
 namespace lcc
 {
     bool isSpace(const char c)
     {
         return (c == ' ' || c == '\t' || c == '\f' || c == '\v');
+    }
+
+    bool isLetter(const char c)
+    {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    bool isDigit(const char c)
+    {
+        return std::isdigit(c);
     }
 
     json jsonifyTokens(const std::vector<std::shared_ptr<Token>> &tokens)

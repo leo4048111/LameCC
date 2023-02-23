@@ -13,6 +13,8 @@ namespace lcc
 {
     // some util funcs(Utils.cpp)
     bool isSpace(const char c);
+    bool isLetter(const char c);
+    bool isSpace(const char c);
     json jsonifyTokens(const std::vector<std::shared_ptr<Token>> &tokens);
     bool dumpJson(const json &j, const std::string outPath);
 
