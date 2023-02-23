@@ -1204,7 +1204,7 @@ namespace lcc
     {
         std::unique_ptr<AST::Expr> expr = nextExpression();
 
-        if(expr == nullptr)
+        if (expr == nullptr)
             return nullptr;
 
         if (expr->isLValue())
@@ -1306,6 +1306,12 @@ namespace lcc
 
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAsmStmt()
     {
+        // FIXME LATER: Need to add support for basic asm syntax, which doesn't have any colon.
+        // eg.     __asm__("movl %eax, %ebx\n\t"
+        // "movl $56, %esi\n\t"
+        // "movl %ecx, $label(%edx,%ebx,$4)\n\t"
+        // "movb %ah, (%ebx)"
+        // );
         auto kwasm = _pCurToken;
 
         if (kwasm->type != TokenType::TOKEN_KWASM)
