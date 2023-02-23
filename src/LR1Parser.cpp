@@ -1203,6 +1203,10 @@ namespace lcc
     std::unique_ptr<AST::Expr> LR1Parser::nextRValue()
     {
         std::unique_ptr<AST::Expr> expr = nextExpression();
+
+        if(expr == nullptr)
+            return nullptr;
+
         if (expr->isLValue())
             expr = std::make_unique<AST::ImplicitCastExpr>(std::move(expr), AST::CastExpr::CastType::LValueToRValue);
 
