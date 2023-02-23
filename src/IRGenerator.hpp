@@ -30,7 +30,7 @@ namespace lcc
         virtual bool gen(AST::FloatingLiteral *floatingLiteral) = 0;
         virtual bool gen(AST::DeclRefExpr *declRefExpr) = 0;
         virtual bool gen(AST::CastExpr *castExpr) = 0;
-        virtual bool gen(AST::ImplicitCastExpr* implicitCastExpr) = 0;
+        virtual bool gen(AST::ImplicitCastExpr *implicitCastExpr) = 0;
         virtual bool gen(AST::BinaryOperator *binaryOperator) = 0;
         virtual bool gen(AST::UnaryOperator *unaryOperator) = 0;
         virtual bool gen(AST::ParenExpr *parenExpr) = 0;
@@ -41,7 +41,7 @@ namespace lcc
         virtual bool gen(AST::ReturnStmt *returnStmt) = 0;
         virtual bool gen(AST::WhileStmt *whileStmt) = 0;
         virtual bool gen(AST::CallExpr *callExpr) = 0;
-        virtual bool gen(AST::AsmStmt* asmStmt) = 0;
+        virtual bool gen(AST::AsmStmt *asmStmt) = 0;
 
     public:
         virtual void printCode() const = 0;
@@ -181,7 +181,7 @@ namespace lcc
         virtual bool gen(AST::FloatingLiteral *floatingLiteral) override;
         virtual bool gen(AST::DeclRefExpr *declRefExpr) override;
         virtual bool gen(AST::CastExpr *castExpr) override;
-        virtual bool gen(AST::ImplicitCastExpr* implicitCastExpr) override;
+        virtual bool gen(AST::ImplicitCastExpr *implicitCastExpr) override;
         virtual bool gen(AST::BinaryOperator *binaryOperator) override;
         virtual bool gen(AST::UnaryOperator *unaryOperator) override;
         virtual bool gen(AST::ParenExpr *parenExpr) override;
@@ -192,7 +192,7 @@ namespace lcc
         virtual bool gen(AST::ReturnStmt *returnStmt) override;
         virtual bool gen(AST::WhileStmt *whileStmt) override;
         virtual bool gen(AST::CallExpr *callExpr) override;
-        virtual bool gen(AST::AsmStmt* asmStmt) override;
+        virtual bool gen(AST::AsmStmt *asmStmt) override;
 
     private:
         std::shared_ptr<SymbolTable> mkTable(std::shared_ptr<SymbolTable> previous = nullptr);
@@ -259,7 +259,7 @@ namespace lcc
         virtual bool gen(AST::FloatingLiteral *floatingLiteral) override;
         virtual bool gen(AST::DeclRefExpr *declRefExpr) override;
         virtual bool gen(AST::CastExpr *castExpr) override;
-        virtual bool gen(AST::ImplicitCastExpr* implicitCastExpr) override;
+        virtual bool gen(AST::ImplicitCastExpr *implicitCastExpr) override;
         virtual bool gen(AST::BinaryOperator *binaryOperator) override;
         virtual bool gen(AST::UnaryOperator *unaryOperator) override;
         virtual bool gen(AST::ParenExpr *parenExpr) override;
@@ -270,7 +270,7 @@ namespace lcc
         virtual bool gen(AST::ReturnStmt *returnStmt) override;
         virtual bool gen(AST::WhileStmt *whileStmt) override;
         virtual bool gen(AST::CallExpr *callExpr) override;
-        virtual bool gen(AST::AsmStmt* asmStmt) override;
+        virtual bool gen(AST::AsmStmt *asmStmt) override;
 
     public:
         virtual void printCode() const override;
@@ -283,11 +283,12 @@ namespace lcc
         bool enter(std::string name, llvm::AllocaInst *alloca);
         llvm::AllocaInst *createEntryBlockAlloca(llvm::Function *function, const std::string &name, const std::string type);
         void changeTable(std::shared_ptr<SymbolTable> table);
-        void updateFuncContext(llvm::BasicBlock* entryBB, llvm::BasicBlock* retBB, llvm::AllocaInst* retValAlloca);
+        void updateFuncContext(llvm::BasicBlock *entryBB, llvm::BasicBlock *retBB, llvm::AllocaInst *retValAlloca);
 
-    // some pasted methods for ir gen, thanks clang
+        // some pasted methods for ir gen, thanks clang
     private:
-        static std::string generateAsmString(std::string oldAsmStr);
+        static std::string generateAsmString(AST::AsmStmt *asmStmt);
+        static bool analyzeAsmString(AST::AsmStmt *asmStmt, llvm::SmallVectorImpl<AST::AsmStmt::AsmStringPiece> &Pieces);
 
     private:
         llvm::LLVMContext _context;
@@ -299,6 +300,6 @@ namespace lcc
 
         FuncContext _fc;
 
-        llvm::Value* _retVal { nullptr };
+        llvm::Value *_retVal{nullptr};
     };
 }

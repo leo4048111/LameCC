@@ -522,6 +522,11 @@ namespace lcc
             std::vector<std::pair<std::string, std::string>> _inputConstraints;
             std::vector<std::string> _clbRegs;
 
+        private:
+                bool isExtendedAsm() const {
+                    return !(_outputConstraints.empty() && _inputConstraints.empty());
+                }
+
         public:
             AsmStmt(
                 std::string asmString,

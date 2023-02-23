@@ -812,13 +812,12 @@ namespace lcc
     }
 
     // Only AT&T style inline asm is supported
-    std::string LLVMIRGenerator::generateAsmString(std::string oldAsmStr)
+    std::string LLVMIRGenerator::generateAsmString(AST::AsmStmt *asmStmt)
     {
         // Analyze the asm string to decompose it into its pieces.  We know that Sema
         // has already done this, so it is guaranteed to be successful.
         llvm::SmallVector<AST::AsmStmt::AsmStringPiece, 4> Pieces;
-        unsigned DiagOffs;
-        //AnalyzeAsmString(Pieces, C, DiagOffs);
+        analyzeAsmString(asmStmt, Pieces);
 
         std::string AsmString;
         for (const auto &Piece : Pieces)
@@ -834,9 +833,111 @@ namespace lcc
         return AsmString;
     }
 
+    bool LLVMIRGenerator::analyzeAsmString(AST::AsmStmt *asmStmt, llvm::SmallVectorImpl<AST::AsmStmt::AsmStringPiece> &Pieces)
+    {
+        llvm::StringRef Str = asmStmt->_asmString;
+        const char *StrStart = Str.begin();
+        const char *StrEnd = Str.end();
+        const char *CurPtr = StrStart;
+
+        // "Simple" inline asms have no constraints or operands, just convert the asm
+        // string to escape $'s.
+        if (!asmStmt->isExtendedAsm())
+        {
+            std::string Result;
+            for (; CurPtr != StrEnd; ++CurPtr)
+            {
+                switch (*CurPtr)
+                {
+                case '$':
+                    Result += "$$";
+                    break;
+                default:
+                    Result += *CurPtr;
+                    break;
+                }
+            }
+            Pieces.push_back(AST::AsmStmt::AsmStringPiece(Result));
+            return 0;
+        }
+
+        // CurStringPiece - The current string that we are building up as we scan the
+        // asm string.
+        std::string CurStringPiece;
+
+        // Fixme: wtf does hasVariants do idk, leave it = true for now
+        bool HasVariants = true;
+
+        unsigned LastAsmStringToken = 0;
+        unsigned LastAsmStringOffset = 0;
+
+        while (true)
+        {
+            // Done with the string?
+            if (CurPtr == StrEnd)
+            {
+                if (!CurStringPiece.empty())
+                    Pieces.push_back(AST::AsmStmt::AsmStringPiece(CurStringPiece));
+                return 0;
+            }
+
+            char CurChar = *CurPtr++;
+            switch (CurChar)
+            {
+            case '$':
+                CurStringPiece += "$$";
+                continue;
+            case '{':
+                CurStringPiece += (HasVariants ? "$(" : "{");
+                continue;
+            case '|':
+                CurStringPiece += (HasVariants ? "$|" : "|");
+                continue;
+            case '}':
+                CurStringPiece += (HasVariants ? "$)" : "}");
+                continue;
+            case '%':
+                break;
+            default:
+                CurStringPiece += CurChar;
+                continue;
+            }
+
+            char EscapedChar = *CurPtr++;
+            switch (EscapedChar)
+            {
+            default: // the letter might be a digit or letter, will be parsed later...
+                break;
+            case '%': // %% -> %
+            case '{': // %{ -> {
+            case '}': // %} -> }
+                CurStringPiece += EscapedChar;
+                continue;
+            case '=': // %= -> Generate a unique ID.
+                CurStringPiece += "${:uid}";
+                continue;
+            }
+
+            const char *Begin = CurPtr - 1;  // Points to the character following '%'.
+            const char *Percent = Begin - 1; // Points to '%'.
+
+            if (isLetter(EscapedChar))
+            {
+                if (CurPtr == StrEnd) // Premature end.
+                {
+                    return false;
+                }
+                EscapedChar = *CurPtr++;
+            }
+
+            // TODO CodeGen for operands such as %0.
+            
+        }
+    }
+
     bool LLVMIRGenerator::gen(AST::AsmStmt *asmStmt)
     {
-        std::string asmString = generateAsmString(asmStmt->_asmString);
+        std::string asmString = generateAsmString(asmStmt);
         FATAL_ERROR(asmString);
         LLVMIRGEN_RET_TRUE(_retVal);
     }
