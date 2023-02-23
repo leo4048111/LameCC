@@ -72,7 +72,7 @@ namespace lcc
             return j;
         }
 
-        json AsmStmt::asJson() const 
+        json AsmStmt::asJson() const
         {
             // TODO: Content json print
             json j;
@@ -81,37 +81,37 @@ namespace lcc
             return j;
         }
 
-        bool CompoundStmt::gen(lcc::IRGeneratorBase* generator)
+        bool CompoundStmt::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool DeclStmt::gen(lcc::IRGeneratorBase* generator)
+        bool DeclStmt::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool IfStmt::gen(lcc::IRGeneratorBase* generator)
+        bool IfStmt::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool WhileStmt::gen(lcc::IRGeneratorBase* generator)
+        bool WhileStmt::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool ValueStmt::gen(lcc::IRGeneratorBase* generator)
+        bool ValueStmt::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool ReturnStmt::gen(lcc::IRGeneratorBase* generator)
+        bool ReturnStmt::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool AsmStmt::gen(lcc::IRGeneratorBase* generator)
+        bool AsmStmt::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
