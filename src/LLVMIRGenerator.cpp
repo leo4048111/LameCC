@@ -981,7 +981,19 @@ namespace lcc
     bool LLVMIRGenerator::gen(AST::AsmStmt *asmStmt)
     {
         std::string asmString = generateAsmString(asmStmt);
-        FATAL_ERROR(asmString);
+        
+        bool hasSideEffect = asmStmt->isVolatile() || asmStmt->getNumOutputs() == 0;
+        
+        std::string constraintStr = "Some bullshit test str for fun.";
+
+        auto ia = llvm::InlineAsm::get(
+            llvm::FunctionType::get(llvm::Type::getVoidTy(_context), false),
+            asmString, constraintStr, hasSideEffect
+        );
+
+        _builder->CreateCall(ia);
+
+        printCode();
         LLVMIRGEN_RET_TRUE(_retVal);
     }
 }

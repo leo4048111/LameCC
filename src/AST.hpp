@@ -518,8 +518,8 @@ namespace lcc
 
         protected:
             std::string _asmString;
-            std::vector<std::pair<std::string, std::string>> _outputConstraints;
-            std::vector<std::pair<std::string, std::string>> _inputConstraints;
+            std::vector<std::pair<std::string, std::unique_ptr<DeclRefExpr>>> _outputConstraints;
+            std::vector<std::pair<std::string, std::unique_ptr<Expr>>> _inputConstraints;
             std::vector<std::string> _clbRegs;
 
         private:
@@ -528,12 +528,22 @@ namespace lcc
                 return !(_outputConstraints.empty() && _inputConstraints.empty());
             }
 
+            bool isVolatile() const
+            {
+                return false;
+            }
+
+            int getNumOutputs() const
+            {
+                return _outputConstraints.size();
+            }
+
         public:
             AsmStmt(
-                std::string asmString,
-                std::vector<std::pair<std::string, std::string>> outputConstraints,
-                std::vector<std::pair<std::string, std::string>> inputConstraints,
-                std::vector<std::string> clbRegs) : _asmString(asmString), _outputConstraints(outputConstraints), _inputConstraints(inputConstraints), _clbRegs(clbRegs){};
+                std::string& asmString,
+                std::vector<std::pair<std::string, std::unique_ptr<DeclRefExpr>>>& outputConstraints,
+                std::vector<std::pair<std::string, std::unique_ptr<Expr>>>& inputConstraints,
+                std::vector<std::string>& clbRegs) : _asmString(asmString), _outputConstraints(std::move(outputConstraints)), _inputConstraints(std::move(inputConstraints)), _clbRegs(clbRegs){};
 
             virtual json asJson() const override;
 
