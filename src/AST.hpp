@@ -523,9 +523,10 @@ namespace lcc
             std::vector<std::string> _clbRegs;
 
         private:
-                bool isExtendedAsm() const {
-                    return !(_outputConstraints.empty() && _inputConstraints.empty());
-                }
+            bool isExtendedAsm() const
+            {
+                return !(_outputConstraints.empty() && _inputConstraints.empty());
+            }
 
         public:
             AsmStmt(
@@ -556,10 +557,10 @@ namespace lcc
                 unsigned OperandNo;
 
             public:
-                AsmStringPiece(const std::string &S) : MyKind(String), Str(S) {}
-
-                bool isString() const { return MyKind == String; }
-                bool isOperand() const { return MyKind == Operand; }
+                AsmStringPiece(const std::string &S) : MyKind(Kind::String), Str(S) {}
+                AsmStringPiece(unsigned OpNo, const std::string &S) : MyKind(Kind::Operand), Str(S), OperandNo(OpNo){};
+                bool isString() const { return MyKind == Kind::String; }
+                bool isOperand() const { return MyKind == Kind::Operand; }
 
                 const std::string &getString() const { return Str; }
 
@@ -571,7 +572,7 @@ namespace lcc
 
                 /// getModifier - Get the modifier for this operand, if present.  This
                 /// returns '\0' if there was no modifier.
-                char getModifier() const { return 0; };
+                char getModifier() const;
             };
         };
     }

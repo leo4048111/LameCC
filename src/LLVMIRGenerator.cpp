@@ -970,6 +970,9 @@ namespace lcc
 
                 // Str contains "x4" (Operand without the leading %).
                 std::string Str(Begin, CurPtr - Begin);
+
+                Pieces.emplace_back(N, std::move(Str));
+                continue;
             }
         }
         return true;
