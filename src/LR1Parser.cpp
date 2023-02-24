@@ -1306,12 +1306,18 @@ namespace lcc
 
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextAsmStmt()
     {
-        // FIXME LATER: Need to add support for basic asm syntax, which doesn't have any colon.
+        // Fixed: Need to add support for basic asm syntax, which doesn't have any colon.
         // eg.     __asm__("movl %eax, %ebx\n\t"
         // "movl $56, %esi\n\t"
         // "movl %ecx, $label(%edx,%ebx,$4)\n\t"
         // "movb %ah, (%ebx)"
         // );
+
+        std::string asmStr = "";
+        std::vector<std::pair<std::string, std::string>> outputConstraints;
+        std::vector<std::pair<std::string, std::string>> inputConstraints;
+        std::vector<std::string> clbRegs;
+
         auto kwasm = _pCurToken;
 
         if (kwasm->type != TokenType::TOKEN_KWASM)
@@ -1331,7 +1337,6 @@ namespace lcc
 
         nextToken(); // eat (
 
-        std::string asmStr = "";
         do
         {
             auto asmOpStrToken = _pCurToken;
@@ -1346,16 +1351,13 @@ namespace lcc
             nextToken(); // eat asm string literal
         } while (_pCurToken->type == TokenType::TOKEN_STRING);
 
-        auto colon = _pCurToken;
-        if (colon->type != TokenType::TOKEN_COLON)
+        if (_pCurToken->type == TokenType::TOKEN_COLON)
+            nextToken(); // eat :
+        else if (_pCurToken->type == TokenType::TOKEN_RPAREN)
         {
-            FATAL_ERROR("Expected : after assembler template");
-            return nullptr;
+            nextToken(); // eat )
+            goto ret;
         }
-
-        nextToken(); // eat :
-
-        std::vector<std::pair<std::string, std::string>> outputConstraints;
 
         // parse output operand
         while (_pCurToken->type != TokenType::TOKEN_COLON)
@@ -1404,16 +1406,13 @@ namespace lcc
             outputConstraints.push_back(std::make_pair(asmConstraintStr->content, identifier->content));
         }
 
-        colon = _pCurToken;
-        if (colon->type != TokenType::TOKEN_COLON)
+        if (_pCurToken->type == TokenType::TOKEN_COLON)
+            nextToken(); // eat :
+        else if (_pCurToken->type == TokenType::TOKEN_RPAREN)
         {
-            FATAL_ERROR("Expected : after output operands");
-            return nullptr;
+            nextToken(); // eat )
+            goto ret;
         }
-
-        nextToken(); // eat :
-
-        std::vector<std::pair<std::string, std::string>> inputConstraints;
 
         // parse input operand
         while (_pCurToken->type != TokenType::TOKEN_COLON)
@@ -1462,16 +1461,13 @@ namespace lcc
             inputConstraints.push_back(std::make_pair(asmConstraintStr->content, identifier->content));
         }
 
-        colon = _pCurToken;
-        if (colon->type != TokenType::TOKEN_COLON)
+        if (_pCurToken->type == TokenType::TOKEN_COLON)
+            nextToken(); // eat :
+        else if (_pCurToken->type == TokenType::TOKEN_RPAREN)
         {
-            FATAL_ERROR("Expected : after input operands");
-            return nullptr;
+            nextToken(); // eat )
+            goto ret;
         }
-
-        nextToken(); // eat :
-
-        std::vector<std::string> clbRegs;
 
         while (_pCurToken->type != TokenType::TOKEN_RPAREN)
         {
@@ -1491,14 +1487,14 @@ namespace lcc
             clbRegs.push_back(clobberedRegStr->content);
         }
 
-        auto rparen = _pCurToken;
-        if (rparen->type != TokenType::TOKEN_RPAREN)
+        if (_pCurToken->type != TokenType::TOKEN_RPAREN)
         {
-            FATAL_ERROR("No matching rparen found for lparen at " << rparen->pos.line << ", " << rparen->pos.column);
+            FATAL_ERROR("No matching rparen found for lparen at " << _pCurToken->pos.line << ", " << _pCurToken->pos.column);
             return nullptr;
         }
         nextToken(); // eat )
 
+    ret:
         auto semi = _pCurToken;
         if (semi->type != TokenType::TOKEN_SEMI)
         {
@@ -1509,7 +1505,6 @@ namespace lcc
         nextToken(); // eat ;
 
         auto asmStmtNode = std::make_unique<AST::AsmStmt>(asmStr, outputConstraints, inputConstraints, clbRegs);
-
         return std::make_shared<NonTerminal>("AsmStmt", std::move(asmStmtNode));
     }
 
