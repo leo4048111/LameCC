@@ -11,7 +11,7 @@ float NonVoidFuncDefWithoutParamsWithEmptyBody()
 }
 
 // nonvoid return type function definition with params
-int NonVoidFuncDefWithParamsWithEmptyBody(int param1, char param2)
+int NonVoidFuncDefWithParamsWithEmptyBody(int param1, int param2)
 {
     return 0;
 }
