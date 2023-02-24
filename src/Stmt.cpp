@@ -115,5 +115,10 @@ namespace lcc
         {
             return generator->gen(this);
         }
+
+        char AsmStmt::AsmStringPiece::getModifier() const
+        {
+            return isLetter(Str[0]) ? Str[0] : '\0';
+        };
     }
 }
