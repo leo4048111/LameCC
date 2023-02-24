@@ -95,6 +95,8 @@ namespace lcc
             return builder.CreateAlloca(llvm::Type::getInt32Ty(_context), 0, name.c_str());
         else if (type == "float")
             return builder.CreateAlloca(llvm::Type::getFloatTy(_context), 0, name.c_str());
+        else if (type == "char")
+            return builder.CreateAlloca(llvm::Type::getInt8Ty(_context), 0, name.c_str());
         else
             return nullptr;
     }
@@ -137,6 +139,8 @@ namespace lcc
             funcRetType = llvm::Type::getInt32Ty(_context);
         else if (functionDecl->_type == "float")
             funcRetType = llvm::Type::getFloatTy(_context);
+        else if (functionDecl->_type == "char")
+            funcRetType = llvm::Type::getInt8Ty(_context);
         else
         {
             FATAL_ERROR("Unsupported return type for function " << functionDecl->name());
@@ -181,7 +185,8 @@ namespace lcc
             retValAlloca = nullptr;
         else if (
             functionDecl->_type == "int" ||
-            functionDecl->_type == "float")
+            functionDecl->_type == "float" ||
+            functionDecl->_type == "char")
         {
             retValAlloca = createEntryBlockAlloca(func, "retVal", functionDecl->_type);
         }
@@ -682,10 +687,18 @@ namespace lcc
         if (!ifStmt->_condition->gen(this))
             LLVMIRGEN_RET_FALSE();
 
-        auto tmpCondVal = static_cast<llvm::AllocaInst *>(_retVal);
+        llvm::Type *type = nullptr;
         llvm::Value *condVal = _retVal;
 
-        if (tmpCondVal->getAllocatedType() != llvm::Type::getInt1Ty(_context)) // bool type check & convertion
+        if (llvm::AllocaInst *alloca = llvm::dyn_cast<llvm::AllocaInst>(condVal))
+        {
+            type = alloca->getAllocatedType();
+            condVal = _builder->CreateLoad(type, alloca, "");
+        }
+        else
+            type = condVal->getType();
+
+        if (type != llvm::Type::getInt1Ty(_context))
             condVal = _builder->CreateICmpNE(condVal, llvm::ConstantInt::get(_context, llvm::APInt(32, 0)), "ifcond");
 
         llvm::Function *func = _builder->GetInsertBlock()->getParent();
@@ -761,10 +774,18 @@ namespace lcc
         if (!whileStmt->_condition->gen(this))
             LLVMIRGEN_RET_FALSE();
 
-        auto tmpCondVal = static_cast<llvm::AllocaInst *>(_retVal);
+        llvm::Type *type = nullptr;
         llvm::Value *condVal = _retVal;
 
-        if (tmpCondVal->getAllocatedType() != llvm::Type::getInt1Ty(_context))
+        if (llvm::AllocaInst *alloca = llvm::dyn_cast<llvm::AllocaInst>(condVal))
+        {
+            type = alloca->getAllocatedType();
+            condVal = _builder->CreateLoad(type, alloca, "");
+        }
+        else
+            type = condVal->getType();
+
+        if (type != llvm::Type::getInt1Ty(_context))
             condVal = _builder->CreateICmpNE(condVal, llvm::ConstantInt::get(_context, llvm::APInt(32, 0)), "whilecond");
 
         _builder->CreateCondBr(condVal, bodyBB, endBB);
@@ -918,6 +939,14 @@ namespace lcc
                 continue;
             }
 
+            // Otherwise, we have an operand.  If we have accumulated a string so far,
+            // add it to the Pieces list.
+            if (!CurStringPiece.empty())
+            {
+                Pieces.push_back(AST::AsmStmt::AsmStringPiece(CurStringPiece));
+                CurStringPiece.clear();
+            }
+
             const char *Begin = CurPtr - 1;  // Points to the character following '%'.
             const char *Percent = Begin - 1; // Points to '%'.
 
@@ -930,9 +959,20 @@ namespace lcc
                 EscapedChar = *CurPtr++;
             }
 
-            // TODO CodeGen for operands such as %0.
-            
+            if (isDigit(EscapedChar))
+            {
+                // %n - Assembler operand n
+                unsigned N = 0;
+
+                --CurPtr;
+                while (CurPtr != StrEnd && isDigit(*CurPtr))
+                    N = N * 10 + ((*CurPtr++) - '0');
+
+                // Str contains "x4" (Operand without the leading %).
+                std::string Str(Begin, CurPtr - Begin);
+            }
         }
+        return true;
     }
 
     bool LLVMIRGenerator::gen(AST::AsmStmt *asmStmt)
@@ -941,5 +981,4 @@ namespace lcc
         FATAL_ERROR(asmString);
         LLVMIRGEN_RET_TRUE(_retVal);
     }
-
 }
