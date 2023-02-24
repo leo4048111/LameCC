@@ -1314,8 +1314,8 @@ namespace lcc
         // );
 
         std::string asmStr = "";
-        std::vector<std::pair<std::string, std::string>> outputConstraints;
-        std::vector<std::pair<std::string, std::string>> inputConstraints;
+        std::vector<std::pair<std::string, std::unique_ptr<AST::DeclRefExpr>>> outputConstraints;
+        std::vector<std::pair<std::string, std::unique_ptr<AST::Expr>>> inputConstraints;
         std::vector<std::string> clbRegs;
 
         auto kwasm = _pCurToken;
@@ -1381,14 +1381,14 @@ namespace lcc
 
             nextToken(); // eat (
 
-            auto identifier = _pCurToken;
-            if (identifier->type != TokenType::TOKEN_IDENTIFIER)
+            if (_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
             {
-                FATAL_ERROR("Expected identifier");
+                FATAL_ERROR(_pCurToken->pos.line << ", " << _pCurToken->pos.column << "Expected LValue");
                 return nullptr;
             }
 
-            nextToken(); // eat identifier
+            auto tmpLValue = nextVarRefOrFuncCall();
+            auto referencedLValue = dynamic_pointer_cast<AST::DeclRefExpr>(std::move(tmpLValue));
 
             auto rparen = _pCurToken;
 
@@ -1403,7 +1403,7 @@ namespace lcc
             if (_pCurToken->type == TokenType::TOKEN_COMMA)
                 nextToken(); // eat ,
 
-            outputConstraints.push_back(std::make_pair(asmConstraintStr->content, identifier->content));
+            outputConstraints.push_back(std::make_pair(asmConstraintStr->content, std::move(referencedLValue)));
         }
 
         if (_pCurToken->type == TokenType::TOKEN_COLON)
@@ -1436,14 +1436,7 @@ namespace lcc
 
             nextToken(); // eat (
 
-            auto identifier = _pCurToken;
-            if (identifier->type != TokenType::TOKEN_IDENTIFIER)
-            {
-                FATAL_ERROR("Expected identifier");
-                return nullptr;
-            }
-
-            nextToken(); // eat identifier
+            auto inputVal = nextExpression();
 
             auto rparen = _pCurToken;
 
@@ -1458,7 +1451,7 @@ namespace lcc
             if (_pCurToken->type == TokenType::TOKEN_COMMA)
                 nextToken(); // eat ,
 
-            inputConstraints.push_back(std::make_pair(asmConstraintStr->content, identifier->content));
+            inputConstraints.push_back(std::make_pair(asmConstraintStr->content, std::move(inputVal)));
         }
 
         if (_pCurToken->type == TokenType::TOKEN_COLON)
