@@ -188,7 +188,7 @@ namespace lcc
         std::shared_ptr<Token> pLParen = _pCurToken;
         nextToken(); // eat '('
 
-        // parse all funciton params
+        // parse all function params
         std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
         while (_pCurToken->type != TokenType::TOKEN_RPAREN)
         {
@@ -232,7 +232,7 @@ namespace lcc
         }
 
         nextToken(); // eat ')'
-        // parse top level funciton body
+        // parse top level function body
         std::unique_ptr<AST::Stmt> body = nullptr;
         switch (_pCurToken->type)
         {
