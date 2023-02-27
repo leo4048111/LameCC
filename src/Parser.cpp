@@ -1,3 +1,5 @@
+// This parser is deprecated, now the LameCC uses LR1Parser as the default parser.
+
 #include "lcc.hpp"
 
 #define TOKEN_INFO(pTok) pTok->file->path() << ' ' << pTok->pos.line << ", " << pTok->pos.column << ": "

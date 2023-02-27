@@ -1,3 +1,6 @@
+// This IR Generator was designed solely to meet my last semester's assignment requirements and has been deprecated.
+// Codegen methods for new features will only be implemented in LLVMIRGenerator.cpp.
+
 #include "lcc.hpp"
 
 #define EMIT(op, arg1, arg2, result) emit(op, arg1, arg2, result)
