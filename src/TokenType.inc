@@ -9,6 +9,7 @@ keyword(TOKEN_KWELSE, "else")
 keyword(TOKEN_KWWHILE, "while")
 keyword(TOKEN_KWRETURN, "return")
 keyword(TOKEN_KWASM, "__asm__")
+keyword(TOKEN_KWEXTERN, "extern")
 
 punctuator(TOKEN_PLUS, "+")
 punctuator(TOKEN_PLUSPLUS, "++")
