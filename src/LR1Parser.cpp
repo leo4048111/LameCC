@@ -1436,7 +1436,7 @@ namespace lcc
 
             nextToken(); // eat (
 
-            auto inputVal = nextExpression();
+            auto inputVal = nextRValue();
 
             auto rparen = _pCurToken;
 
