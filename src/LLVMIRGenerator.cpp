@@ -978,22 +978,192 @@ namespace lcc
         return true;
     }
 
+    // Basically the simplified clang::X86TargetInfo::convertConstraint
+    std::string LLVMIRGenerator::convertConstraint(const char *&constraint)
+    {
+        switch (*constraint)
+        {
+        case '@':
+            // Deleted for simplicity
+            return std::string(1, *constraint);
+        case 'a':
+            return std::string("{ax}");
+        case 'b':
+            return std::string("{bx}");
+        case 'c':
+            return std::string("{cx}");
+        case 'd':
+            return std::string("{dx}");
+        case 'S':
+            return std::string("{si}");
+        case 'D':
+            return std::string("{di}");
+        case 'p': // Keep 'p' constraint (address).
+            return std::string("p");
+        case 't': // top of floating point stack.
+            return std::string("{st}");
+        case 'u':                          // second from top of floating point stack.
+            return std::string("{st(1)}"); // second from top of floating point stack.
+        case 'Y':
+            switch (constraint[1])
+            {
+            default:
+                // Break from inner switch and fall through (copy single char),
+                // continue parsing after copying the current constraint into
+                // the return string.
+                break;
+            case 'k':
+            case 'm':
+            case 'i':
+            case 't':
+            case 'z':
+            case '2':
+                // "^" hints llvm that this is a 2 letter constraint.
+                // "Constraint++" is used to promote the string iterator
+                // to the next constraint.
+                return std::string("^") + std::string(constraint++, 2);
+            }
+            [[fallthrough]];
+        default:
+            return std::string(1, *constraint);
+        }
+    }
+
+    std::string LLVMIRGenerator::generateConstraintString(std::string constraint)
+    {
+        auto constraintStr = constraint.c_str();
+
+        std::string result;
+
+        while (*constraintStr)
+        {
+            switch (*constraintStr)
+            {
+            default:
+                result += convertConstraint(constraintStr);
+                break;
+            // Ignore these
+            case '*':
+            case '?':
+            case '!':
+            case '=': // Will see this and the following in mult-alt constraintStrs.
+            case '+':
+                result += *constraintStr;
+                break;
+            case '#': // Ignore the rest of the constraintStr alternative.
+                while (constraintStr[1] && constraintStr[1] != ',')
+                    constraintStr++;
+                break;
+            case '&':
+            case '%':
+                result += *constraintStr;
+                while (constraintStr[1] && constraintStr[1] == *constraintStr)
+                    constraintStr++;
+                break;
+            case ',':
+                result += "|";
+                break;
+            case 'g':
+                result += "imr";
+                break;
+            case '[':
+            {
+                // Currently not supported
+                break;
+            }
+            }
+
+            constraintStr++;
+        }
+
+        return result;
+    }
+
     bool LLVMIRGenerator::gen(AST::AsmStmt *asmStmt)
     {
         std::string asmString = generateAsmString(asmStmt);
-        
+
         bool hasSideEffect = asmStmt->isVolatile() || asmStmt->getNumOutputs() == 0;
-        
-        std::string constraintStr = "Some bullshit test str for fun.";
+
+        std::string constraintStr = "";
+
+        if (!asmStmt->isExtendedAsm())
+        {
+            auto ia = llvm::InlineAsm::get(
+                llvm::FunctionType::get(llvm::Type::getVoidTy(_context), false),
+                asmString, constraintStr, hasSideEffect);
+
+            auto callInst = _builder->CreateCall(ia);
+
+            LLVMIRGEN_RET_TRUE(callInst);
+        }
+
+        llvm::Type *asmStmtRetType = nullptr;
+        llvm::Value* outputLVal = nullptr;
+
+        // Currently only single output is supported
+        for (auto &constraint : asmStmt->_outputConstraints)
+        {
+            std::string curConstraintStr = generateConstraintString(constraint.first);
+            constraintStr.append(curConstraintStr); // add constraint to constraint string
+            constraintStr += ",";
+            outputLVal = lookup(constraint.second->name());
+            if (llvm::AllocaInst *alloca = llvm::dyn_cast<llvm::AllocaInst>(outputLVal))
+                asmStmtRetType = alloca->getAllocatedType();
+            else if (llvm::GlobalVariable *glbVar = llvm::dyn_cast<llvm::GlobalVariable>(outputLVal))
+                asmStmtRetType = glbVar->getValueType();
+            else
+            {
+                FATAL_ERROR("Unable to determine the return type for asm statement");
+                LLVMIRGEN_RET_FALSE();
+            }
+        }
+
+        std::vector<llvm::Type *> paramType;
+        std::vector<llvm::Value *> params;
+
+        // Gen IR for input params
+        for (auto &constraint : asmStmt->_inputConstraints)
+        {
+            if (!constraint.second->gen(this))
+                LLVMIRGEN_RET_FALSE();
+
+            auto rval = _retVal;
+
+            paramType.push_back(rval->getType());
+            params.push_back(rval);
+
+            std::string curConstraintStr = generateConstraintString(constraint.first);
+            constraintStr.append(curConstraintStr);
+            constraintStr += ',';
+        }
+
+        // Gen IR for clobbered registers
+        for (auto &reg : asmStmt->_clbRegs)
+        {
+            if (reg[0] != '%')
+            {
+                LLVMIRGEN_RET_FALSE();
+            }
+
+            std::string clobber = reg.substr(1, reg.size() - 1);
+
+            constraintStr.append("~{");
+            constraintStr.append(clobber);
+            constraintStr.append("}");
+            constraintStr += ',';
+        }
+
+        constraintStr.pop_back(); // pop last ','
 
         auto ia = llvm::InlineAsm::get(
-            llvm::FunctionType::get(llvm::Type::getVoidTy(_context), false),
-            asmString, constraintStr, hasSideEffect
-        );
+            llvm::FunctionType::get(asmStmtRetType, paramType, false),
+            asmString, constraintStr, hasSideEffect);
 
-        _builder->CreateCall(ia);
+        auto callInst = _builder->CreateCall(ia, params, "asmcalltmp");
 
-        printCode();
-        LLVMIRGEN_RET_TRUE(_retVal);
+        auto asmRetVal = _builder->CreateStore(callInst, outputLVal);
+
+        LLVMIRGEN_RET_TRUE(asmRetVal);
     }
 }

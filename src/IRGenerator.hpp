@@ -290,6 +290,8 @@ namespace lcc
     private:
         static std::string generateAsmString(AST::AsmStmt *asmStmt);
         static bool analyzeAsmString(AST::AsmStmt *asmStmt, llvm::SmallVectorImpl<AST::AsmStmt::AsmStringPiece> &Pieces);
+        static std::string convertConstraint(const char *&constraint);
+        static std::string generateConstraintString(std::string constraint);
 
     private:
         llvm::LLVMContext _context;
