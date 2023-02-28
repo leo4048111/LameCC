@@ -67,6 +67,7 @@ namespace lcc
                 j["body"] = json::array({_body->asJson()});
             else
                 j["body"] = "empty";
+            j["extern"] = (_isExtern ? "true" : "false");
             return j;
         }
 
