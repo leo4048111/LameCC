@@ -140,7 +140,7 @@ namespace lcc
             case CastExpr::CastType::LValueToRValue:
                 j["castType"] = "LValueToRValue";
                 break;
-            
+
             default:
                 j["castType"] = "Undefined";
                 break;
@@ -158,7 +158,7 @@ namespace lcc
             case CastExpr::CastType::LValueToRValue:
                 j["castType"] = "LValueToRValue";
                 break;
-            
+
             default:
                 j["castType"] = "Undefined";
                 break;
@@ -167,47 +167,60 @@ namespace lcc
             return j;
         }
 
-        bool DeclRefExpr::gen(lcc::IRGeneratorBase* generator)
+        json CharacterLiteral::asJson() const
+        {
+            json j;
+            j["type"] = "CharacterLiteral";
+            j["value"] = std::to_string(_value);
+            return j;
+        }
+
+        bool DeclRefExpr::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool IntegerLiteral::gen(lcc::IRGeneratorBase* generator)
+        bool IntegerLiteral::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool FloatingLiteral::gen(lcc::IRGeneratorBase* generator)
+        bool CharacterLiteral::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool CastExpr::gen(lcc::IRGeneratorBase* generator)
+        bool FloatingLiteral::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool ImplicitCastExpr::gen(lcc::IRGeneratorBase* generator)
+        bool CastExpr::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool BinaryOperator::gen(lcc::IRGeneratorBase* generator)
+        bool ImplicitCastExpr::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool UnaryOperator::gen(lcc::IRGeneratorBase* generator)
+        bool BinaryOperator::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool ParenExpr::gen(lcc::IRGeneratorBase* generator)
+        bool UnaryOperator::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
 
-        bool CallExpr::gen(lcc::IRGeneratorBase* generator)
+        bool ParenExpr::gen(lcc::IRGeneratorBase *generator)
+        {
+            return generator->gen(this);
+        }
+
+        bool CallExpr::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }
