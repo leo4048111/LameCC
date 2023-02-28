@@ -197,6 +197,141 @@ AST dump:
     },
     ...
 ```
+LLVM IR:
+```
+; ModuleID = 'LCC_LLVMIRGenerator'
+source_filename = "LCC_LLVMIRGenerator"
+
+declare i32 @NonVoidFuncDeclWithParams(i32, i32)
+
+declare i8 @NonVoidFuncDeclWithoutParams()
+
+define float @NonVoidFuncDefWithoutParamsWithEmptyBody() {
+entry:
+  %retVal = alloca float, align 4
+  store float 0x4015FACA00000000, ptr %retVal, align 4
+  br label %return
+
+return:                                           ; preds = %entry
+  %0 = load float, ptr %retVal, align 4
+  ret float %0
+}
+
+define i32 @NonVoidFuncDefWithParamsWithEmptyBody(i32 %param1, i32 %param2) {
+entry:
+  %param22 = alloca i32, align 4
+  %param11 = alloca i32, align 4
+  %retVal = alloca i32, align 4
+  store i32 %param1, ptr %param11, align 4
+  store i32 %param2, ptr %param22, align 4
+  store i32 0, ptr %retVal, align 4
+  br label %return
+
+return:                                           ; preds = %entry
+  %0 = load i32, ptr %retVal, align 4
+  ret i32 %0
+}
+
+declare void @VoidFuncDeclWithParams(i32, i32)
+
+declare void @VoidFuncDeclWithoutParams()
+
+define void @VoidFuncDefWithoutParamsWithEmptyBody() {
+entry:
+  br label %return
+
+return:                                           ; preds = %entry
+  ret void
+}
+
+define void @VoidFuncDefWithParamsWithEmptyBody(i32 %param1, i32 %param2) {
+entry:
+  %param22 = alloca i32, align 4
+  %param11 = alloca i32, align 4
+  store i32 %param1, ptr %param11, align 4
+  store i32 %param2, ptr %param22, align 4
+  br label %return
+
+return:                                           ; preds = %entry
+  ret void
+}
+
+define i32 @main() {
+entry:
+  %mid = alloca i32, align 4
+  %target = alloca i32, align 4
+  %right = alloca i32, align 4
+  %left = alloca i32, align 4
+  %retVal = alloca i32, align 4
+  store i32 0, ptr %left, align 4
+  store i32 100, ptr %right, align 4
+  %calltmp = call i32 @NonVoidFuncDefWithParamsWithEmptyBody(i32 99, i32 100)
+  %remtmp = srem i32 %calltmp, 2
+  %addtmp = add i32 %remtmp, 5
+  %0 = load i32, ptr %right, align 4
+  %1 = load i32, ptr %left, align 4
+  %multmp = mul i32 %0, %1
+  %subtmp = sub i32 %addtmp, %multmp
+  store i32 %subtmp, ptr %target, align 4
+  br label %while.cond
+
+while.cond:                                       ; preds = %if.end, %entry
+  %2 = load i32, ptr %left, align 4
+  %3 = load i32, ptr %right, align 4
+  %lttmp = icmp slt i32 %2, %3
+  br i1 %lttmp, label %while.body, label %while.end
+
+while.body:                                       ; preds = %while.cond
+  %4 = load i32, ptr %left, align 4
+  %5 = load i32, ptr %right, align 4
+  %addtmp1 = add i32 %4, %5
+  %divtmp = sdiv i32 %addtmp1, 2
+  store i32 %divtmp, ptr %mid, align 4
+  %6 = load i32, ptr %mid, align 4
+  %7 = load i32, ptr %target, align 4
+  %eqtmp = icmp eq i32 %6, %7
+  br i1 %eqtmp, label %if.body, label %if.else
+
+if.body:                                          ; preds = %while.body
+  %8 = load i32, ptr %mid, align 4
+  store i32 %8, ptr %retVal, align 4
+  br label %if.end
+
+if.else:                                          ; preds = %while.body
+  %9 = load i32, ptr %mid, align 4
+  %10 = load i32, ptr %target, align 4
+  %lttmp2 = icmp slt i32 %9, %10
+  br i1 %lttmp2, label %if.body5, label %if.else4
+
+if.body5:                                         ; preds = %if.else
+  %11 = load i32, ptr %mid, align 4
+  %addtmp6 = add i32 %11, 1
+  %12 = load i32, ptr %left, align 4
+  store i32 %addtmp6, ptr %left, align 4
+  br label %if.end3
+
+if.else4:                                         ; preds = %if.else
+  %13 = load i32, ptr %mid, align 4
+  %14 = load i32, ptr %right, align 4
+  store i32 %13, ptr %right, align 4
+  br label %if.end3
+
+if.end3:                                          ; preds = %if.else4, %if.body5
+  br label %if.end
+
+if.end:                                           ; preds = %if.end3, %if.body
+  br label %while.cond
+
+while.end:                                        ; preds = %while.cond
+  %15 = load i32, ptr %left, align 4
+  store i32 %15, ptr %retVal, align 4
+  br label %return
+
+return:                                           ; preds = %while.end
+  %16 = load i32, ptr %retVal, align 4
+  ret i32 %16
+}
+```
 LR(1) Canonical Collections:  
 ![image](https://user-images.githubusercontent.com/74029782/201459552-b618b6cf-a947-4ea0-8bd2-84cfb20fd7a2.png)  
 ACTION GOTO Table:  
