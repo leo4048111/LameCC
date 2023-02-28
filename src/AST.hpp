@@ -148,8 +148,10 @@ namespace lcc
             std::vector<std::unique_ptr<ParmVarDecl>> _params;
             std::unique_ptr<Stmt> _body;
 
+            bool _isExtern{false};
+
         public:
-            FunctionDecl(const std::string &name, const std::string &type, std::vector<std::unique_ptr<ParmVarDecl>> &params, std::unique_ptr<Stmt> body) : NamedDecl(name), _type(type), _params(std::move(params)), _body(std::move(body)){};
+            FunctionDecl(const std::string &name, const std::string &type, std::vector<std::unique_ptr<ParmVarDecl>> &params, std::unique_ptr<Stmt> body = nullptr, bool isExtern = false) : NamedDecl(name), _type(type), _params(std::move(params)), _body(std::move(body)), _isExtern(isExtern){};
 
             virtual json asJson() const override;
 
@@ -225,6 +227,24 @@ namespace lcc
             virtual bool gen(lcc::IRGeneratorBase *generator) override;
 
             float value() const { return _value; };
+        };
+
+        // Char literal value
+        class CharacterLiteral : public Expr
+        {
+            friend class lcc::QuaternionIRGenerator;
+
+        protected:
+            char _value;
+
+        public:
+            CharacterLiteral(char value) : _value(value) { _isLValue = false; }; // Char literal should be LValue instead of RValue
+
+            virtual json asJson() const override;
+
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
+
+            char value() const { return _value; };
         };
 
         // A reference to a declared variable, function, enum, etc.
@@ -540,10 +560,10 @@ namespace lcc
 
         public:
             AsmStmt(
-                std::string& asmString,
-                std::vector<std::pair<std::string, std::unique_ptr<DeclRefExpr>>>& outputConstraints,
-                std::vector<std::pair<std::string, std::unique_ptr<Expr>>>& inputConstraints,
-                std::vector<std::string>& clbRegs) : _asmString(asmString), _outputConstraints(std::move(outputConstraints)), _inputConstraints(std::move(inputConstraints)), _clbRegs(clbRegs){};
+                std::string &asmString,
+                std::vector<std::pair<std::string, std::unique_ptr<DeclRefExpr>>> &outputConstraints,
+                std::vector<std::pair<std::string, std::unique_ptr<Expr>>> &inputConstraints,
+                std::vector<std::string> &clbRegs) : _asmString(asmString), _outputConstraints(std::move(outputConstraints)), _inputConstraints(std::move(inputConstraints)), _clbRegs(clbRegs){};
 
             virtual json asJson() const override;
 
