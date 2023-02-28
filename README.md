@@ -21,12 +21,14 @@
 + **Installed LLVM libraries and cpp headers, make sure you have set `CMAKE_PREFIX_PATH` or `LLVM_DIR` env variable to LLVM directory properly**
 + **If you are running Windows and have installed MinGW64, simply run `build.bat`**
 ## Parsing capability
-+ **`int/float` var declaration/definition**
++ **function definitions/local & extern declarations**
++ **`int/float/char` var declaration/definition**
 + **`if-else` statement**
-+ **`int/float/void` function declaration/definition**
++ **`int/float/void/char` function declaration/definition**
 + **`while` statement**
 + **value statement(complex expression, function call, etc...)**
 + **`return` statement**
++ **GCC dialect `__asm__` statement**
 ## Usage
 Example input source file(see `./testcases/test.cpp`):
 ```cpp
