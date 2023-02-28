@@ -368,6 +368,13 @@ namespace lcc
         return true;
     }
 
+    bool QuaternionIRGenerator::gen(AST::CharacterLiteral* charLiteral)
+    {
+        // This is implemented in LLVM IR generator
+        return true;
+    }
+
+
     std::shared_ptr<QuaternionIRGenerator::SymbolTable> QuaternionIRGenerator::mkTable(std::shared_ptr<SymbolTable> previous)
     {
         auto tbl = std::make_shared<SymbolTable>(previous);
