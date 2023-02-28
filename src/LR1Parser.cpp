@@ -1609,7 +1609,7 @@ namespace lcc
                     j["Productions"].push_back(production);
                     break;
                 }
-                case 4: // get start sysmbol
+                case 4: // get start symbol
                 {
                     std::string symbol;
                     for (auto &c : line)
