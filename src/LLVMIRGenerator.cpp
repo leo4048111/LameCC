@@ -125,6 +125,8 @@ namespace lcc
             if (param->type() == "int")
                 params.push_back(llvm::Type::getInt32Ty(_context));
             else if (param->type() == "char")
+                params.push_back(llvm::Type::getInt8Ty(_context));
+            else if (param->type() == "float")
                 params.push_back(llvm::Type::getFloatTy(_context));
             else
                 LLVMIRGEN_RET_FALSE();
@@ -323,6 +325,12 @@ namespace lcc
     bool LLVMIRGenerator::gen(AST::FloatingLiteral *floatingLiteral)
     {
         auto val = llvm::ConstantFP::get(_context, llvm::APFloat(floatingLiteral->value()));
+        LLVMIRGEN_RET_TRUE(val);
+    }
+
+    bool LLVMIRGenerator::gen(AST::CharacterLiteral *charLiteral)
+    {
+        auto val = llvm::ConstantInt::get(_context, llvm::APInt(8, charLiteral->value(), true));
         LLVMIRGEN_RET_TRUE(val);
     }
 
@@ -600,27 +608,75 @@ namespace lcc
         {
         case AST::UnaryOpType::UO_PreInc:
         {
-            llvm::Value *addVal = _builder->CreateNSWAdd(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "preInc");
+            llvm::Value *addVal = nullptr;
+            if (bodyStore->getType() == llvm::Type::getInt32Ty(_context)) // int32
+                addVal = _builder->CreateNSWAdd(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "preInc");
+            else if (bodyStore->getType() == llvm::Type::getFloatTy(_context)) // float
+                addVal = _builder->CreateFAdd(bodyStore, llvm::ConstantFP::get(llvm::Type::getFloatTy(_context), llvm::APFloat(1.0f)), "preInc");
+            else if (bodyStore->getType() == llvm::Type::getInt8Ty(_context)) // char
+                addVal = _builder->CreateNSWAdd(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt8Ty(_context), llvm::APInt(8, 1, true)), "preInc");
+            else
+            {
+                FATAL_ERROR("Unknown type for preInc");
+                LLVMIRGEN_RET_FALSE();
+            }
+
             llvm::Value *addStore = _builder->CreateStore(addVal, bodyStore);
             LLVMIRGEN_RET_TRUE(addStore);
         }
         case AST::UnaryOpType::UO_PreDec:
         {
-            llvm::Value *decVal = _builder->CreateNSWSub(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "preDec");
-            llvm::Value *decStore = _builder->CreateStore(decVal, bodyStore);
-            LLVMIRGEN_RET_TRUE(decStore);
+            llvm::Value *subVal = nullptr;
+            if (bodyStore->getType() == llvm::Type::getInt32Ty(_context)) // int32
+                subVal = _builder->CreateNSWSub(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "preDec");
+            else if (bodyStore->getType() == llvm::Type::getFloatTy(_context)) // float
+                subVal = _builder->CreateFSub(bodyStore, llvm::ConstantFP::get(llvm::Type::getFloatTy(_context), llvm::APFloat(1.0f)), "preDec");
+            else if (bodyStore->getType() == llvm::Type::getInt8Ty(_context)) // char
+                subVal = _builder->CreateNSWSub(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt8Ty(_context), llvm::APInt(8, 1, true)), "preDec");
+            else
+            {
+                FATAL_ERROR("Unknown type for preDec");
+                LLVMIRGEN_RET_FALSE();
+            }
+
+            llvm::Value *subStore = _builder->CreateStore(subVal, bodyStore);
+            LLVMIRGEN_RET_TRUE(subStore);
         }
         case AST::UnaryOpType::UO_PostInc:
         {
-            llvm::Value *addVal = _builder->CreateNSWAdd(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "postInc");
+            llvm::Value *addVal = nullptr;
+            if (bodyStore->getType() == llvm::Type::getInt32Ty(_context)) // int32
+                addVal = _builder->CreateNSWAdd(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "postInc");
+            else if (bodyStore->getType() == llvm::Type::getFloatTy(_context)) // float
+                addVal = _builder->CreateFAdd(bodyStore, llvm::ConstantFP::get(llvm::Type::getFloatTy(_context), llvm::APFloat(1.0f)), "postInc");
+            else if (bodyStore->getType() == llvm::Type::getInt8Ty(_context)) // char
+                addVal = _builder->CreateNSWAdd(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt8Ty(_context), llvm::APInt(8, 1, true)), "postInc");
+            else
+            {
+                FATAL_ERROR("Unknown type for preInc");
+                LLVMIRGEN_RET_FALSE();
+            }
+
             llvm::Value *addStore = _builder->CreateStore(addVal, bodyStore);
             LLVMIRGEN_RET_TRUE(addVal);
         }
         case AST::UnaryOpType::UO_PostDec:
         {
-            llvm::Value *decVal = _builder->CreateNSWSub(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "postDec");
-            llvm::Value *decStore = _builder->CreateStore(decVal, bodyStore);
-            LLVMIRGEN_RET_TRUE(decVal);
+            llvm::Value *subVal = nullptr;
+            if (bodyStore->getType() == llvm::Type::getInt32Ty(_context)) // int32
+                subVal = _builder->CreateNSWSub(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(_context), llvm::APInt(32, 1, true)), "postDec");
+            else if (bodyStore->getType() == llvm::Type::getFloatTy(_context)) // float
+                subVal = _builder->CreateFSub(bodyStore, llvm::ConstantFP::get(llvm::Type::getFloatTy(_context), llvm::APFloat(1.0f)), "postDec");
+            else if (bodyStore->getType() == llvm::Type::getInt8Ty(_context)) // char
+                subVal = _builder->CreateNSWSub(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt8Ty(_context), llvm::APInt(8, 1, true)), "postDec");
+            else
+            {
+                FATAL_ERROR("Unknown type for preDec");
+                LLVMIRGEN_RET_FALSE();
+            }
+
+            llvm::Value *subStore = _builder->CreateStore(subVal, bodyStore);
+            LLVMIRGEN_RET_TRUE(subVal);
         }
         case AST::UnaryOpType::UO_Not:
         {
@@ -1099,7 +1155,7 @@ namespace lcc
         }
 
         llvm::Type *asmStmtRetType = nullptr;
-        llvm::Value* outputLVal = nullptr;
+        llvm::Value *outputLVal = nullptr;
 
         // Currently only single output is supported
         for (auto &constraint : asmStmt->_outputConstraints)
