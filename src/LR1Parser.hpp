@@ -279,6 +279,7 @@ namespace lcc
         static std::shared_ptr<NonTerminal> nextNullStmtR34(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 34
         static std::shared_ptr<NonTerminal> nextDeclStmtR35(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 35
         static std::shared_ptr<NonTerminal> nextValueStmtR36(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 36
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR38(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 38
 
         // grammar initialization
     private:

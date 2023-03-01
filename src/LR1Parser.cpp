@@ -41,6 +41,8 @@ namespace lcc
             return "TOKEN_CHAR";
         case TokenType::TOKEN_STRING:
             return "TOKEN_STRING";
+        case TokenType::TOKEN_KWEXTERN:
+            return "TOKEN_KWEXTERN";
         case TokenType::TOKEN_EOF:
             return "#";
         default:
@@ -218,6 +220,8 @@ namespace lcc
         _productionFuncMap.insert(std::make_pair(35, &nextDeclStmtR35));
         _productionFuncMap.insert(std::make_pair(36, &nextValueStmtR36));
         _productionFuncMap.insert(std::make_pair(37, &nextStmt));
+        _productionFuncMap.insert(std::make_pair(38, &nextFunctionDeclR38));
+        _productionFuncMap.insert(std::make_pair(39, &nextFunctionDeclR38));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath, bool shouldPrintProcess)
@@ -1106,6 +1110,51 @@ namespace lcc
         return std::make_shared<NonTerminal>("ValueStmt", std::make_unique<AST::ValueStmt>(std::move(exprNode)));
     }
 
+    // FunctionDecl -> TOKEN_KWEXTERN TOKEN_STRING TOKEN_VARTYPE TOKEN_IDENTIFIER ( ) ;
+    // FunctionDecl -> TOKEN_KWEXTERN TOKEN_STRING TOKEN_KWVOID TOKEN_IDENTIFIER ( ) ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR38(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
+    {
+        for (int i = 0; i < 7; i++)
+            stateStack.pop(); // pop 7 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto varTypeOrVoid = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE or TOKEN_KWVOID
+        symbolStack.pop();
+        auto literalCStr = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_STRING
+        symbolStack.pop();
+        auto kwextern = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWEXTERN
+        symbolStack.pop();
+
+        if (semi->name() != ";" ||
+            rparen->name() != ")" ||
+            lparen->name() != "(" ||
+            identifier->name() != "TOKEN_IDENTIFIER" ||
+            (varTypeOrVoid->name() != "TOKEN_VARTYPE" && varTypeOrVoid->name() != "TOKEN_KWVOID") ||
+            literalCStr->name() != "TOKEN_STRING" ||
+            kwextern->name() != "TOKEN_KWEXTERN")
+            return nullptr;
+
+        if (literalCStr->_token->content != "C")
+        {
+            FATAL_ERROR("Unknown extern function type, expected C");
+            return nullptr;
+        }
+
+        std::string type = varTypeOrVoid->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr, true);
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
     // Expression parser imeplemented with OperatorPrecedence Parse
     std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextExpr()
     {
@@ -1225,6 +1274,7 @@ namespace lcc
             return nextVarRefOrFuncCall();
         case TokenType::TOKEN_INTEGER:
         case TokenType::TOKEN_FLOAT:
+        case TokenType::TOKEN_CHAR:
             return nextNumber();
         case TokenType::TOKEN_LPAREN:
             return nextParenExpr();
@@ -1280,10 +1330,19 @@ namespace lcc
             nextToken(); // eat number
             return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
         }
-        else
+        else if(_pCurToken->type == TokenType::TOKEN_FLOAT)
         {
             nextToken(); // eat number
             return std::make_unique<AST::FloatingLiteral>(std::stof(number));
+        }
+        else if (_pCurToken->type == TokenType::TOKEN_CHAR)
+        {
+            nextToken(); // eat number
+            return std::make_unique<AST::CharacterLiteral>(number[0]);
+        }
+        else
+        {
+            return nullptr;
         }
     }
 
