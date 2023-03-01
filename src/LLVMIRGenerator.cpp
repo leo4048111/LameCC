@@ -621,7 +621,7 @@ namespace lcc
                 LLVMIRGEN_RET_FALSE();
             }
 
-            llvm::Value *addStore = _builder->CreateStore(addVal, bodyStore);
+            llvm::Value *addStore = _builder->CreateStore(addVal, _retVal);
             LLVMIRGEN_RET_TRUE(addStore);
         }
         case AST::UnaryOpType::UO_PreDec:
@@ -639,7 +639,7 @@ namespace lcc
                 LLVMIRGEN_RET_FALSE();
             }
 
-            llvm::Value *subStore = _builder->CreateStore(subVal, bodyStore);
+            llvm::Value *subStore = _builder->CreateStore(subVal, _retVal);
             LLVMIRGEN_RET_TRUE(subStore);
         }
         case AST::UnaryOpType::UO_PostInc:
@@ -653,11 +653,11 @@ namespace lcc
                 addVal = _builder->CreateNSWAdd(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt8Ty(_context), llvm::APInt(8, 1, true)), "postInc");
             else
             {
-                FATAL_ERROR("Unknown type for preInc");
+                FATAL_ERROR("Unknown type for postInc");
                 LLVMIRGEN_RET_FALSE();
             }
 
-            llvm::Value *addStore = _builder->CreateStore(addVal, bodyStore);
+            llvm::Value *addStore = _builder->CreateStore(addVal, _retVal);
             LLVMIRGEN_RET_TRUE(addVal);
         }
         case AST::UnaryOpType::UO_PostDec:
@@ -671,11 +671,11 @@ namespace lcc
                 subVal = _builder->CreateNSWSub(bodyStore, llvm::Constant::getIntegerValue(llvm::Type::getInt8Ty(_context), llvm::APInt(8, 1, true)), "postDec");
             else
             {
-                FATAL_ERROR("Unknown type for preDec");
+                FATAL_ERROR("Unknown type for postDec");
                 LLVMIRGEN_RET_FALSE();
             }
 
-            llvm::Value *subStore = _builder->CreateStore(subVal, bodyStore);
+            llvm::Value *subStore = _builder->CreateStore(subVal, _retVal);
             LLVMIRGEN_RET_TRUE(subVal);
         }
         case AST::UnaryOpType::UO_Not:
