@@ -1,3 +1,11 @@
+/*
+ * @Author: leo4048111
+ * @Date: 2023-02-28 13:23:12
+ * @LastEditTime: 2023-03-03 10:50:15
+ * @LastEditors: ***
+ * @Description: 
+ * @FilePath: \LameCC\src\LR1Parser.cpp
+ */
 #include "lcc.hpp"
 
 namespace lcc

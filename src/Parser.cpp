@@ -164,6 +164,7 @@ namespace lcc
             case TokenType::TOKEN_KWVOID:
             case TokenType::TOKEN_KWFLOAT:
             case TokenType::TOKEN_KWCHAR:
+            case TokenType::TOKEN_KWEXTERN:
                 topLevelDecls.push_back(nextTopLevelDecl());
                 break;
 
@@ -181,7 +182,7 @@ namespace lcc
     // ::= type name '(' params ')' '{' CompoundStmt '}'
     // params
     // ::= ParmVarDecl, params
-    std::unique_ptr<AST::Decl> Parser::nextFunctionDecl(const std::string name, const std::string type)
+    std::unique_ptr<AST::Decl> Parser::nextFunctionDecl(const std::string name, const std::string type, const bool isExtern)
     {
         std::shared_ptr<Token> pLParen = _pCurToken;
         nextToken(); // eat '('
@@ -252,7 +253,7 @@ namespace lcc
             return nullptr;
         }
 
-        return std::make_unique<AST::FunctionDecl>(name, type, params, std::move(body));
+        return std::make_unique<AST::FunctionDecl>(name, type, params, std::move(body), isExtern);
     }
 
     // VarDecl
@@ -281,6 +282,28 @@ namespace lcc
 
     std::unique_ptr<AST::Decl> Parser::nextTopLevelDecl()
     {
+        auto possibleExtern = _pCurToken; // check if is extern decl
+        bool isExternC = false;
+        bool isExtern = false;
+        if (possibleExtern->type == TokenType::TOKEN_KWEXTERN)
+        {
+            nextToken(); // eat kwextern
+            isExtern = true;
+            auto possibleExternCStr = _pCurToken;
+
+            if (possibleExternCStr->type == TokenType::TOKEN_STRING)
+            {
+                nextToken(); // eat string
+                if (possibleExtern->content == "C")
+                    isExternC = true;
+                else
+                {
+                    FATAL_ERROR("Unknown extern function type, expected \"C\"");
+                    return nullptr;
+                }
+            }
+        }
+
         std::string type = _pCurToken->content; // function return value type or var type
         nextToken();                            // eat type
 
@@ -298,7 +321,7 @@ namespace lcc
         switch (_pCurToken->type)
         {
         case TokenType::TOKEN_LPAREN:
-            return nextFunctionDecl(name, type);
+            return nextFunctionDecl(name, type, isExtern);
         case TokenType::TOKEN_EQ:
             return nextVarDecl(name, type);
         case TokenType::TOKEN_SEMI: // uninitialized varDecl
@@ -337,6 +360,28 @@ namespace lcc
 
     std::unique_ptr<AST::Stmt> Parser::nextDeclStmt()
     {
+        auto possibleExtern = _pCurToken; // check if is extern decl
+        bool isExternC = false;
+        bool isExtern = false;
+        if (possibleExtern->type == TokenType::TOKEN_KWEXTERN)
+        {
+            nextToken(); // eat kwextern
+            isExtern = true;
+            auto possibleExternCStr = _pCurToken;
+
+            if (possibleExternCStr->type == TokenType::TOKEN_STRING)
+            {
+                nextToken(); // eat string
+                if (possibleExtern->content == "C")
+                    isExternC = true;
+                else
+                {
+                    FATAL_ERROR("Unknown extern function type, expected \"C\"");
+                    return nullptr;
+                }
+            }
+        }
+
         std::string type = _pCurToken->content; // function return value type or var type
         nextToken();                            // eat type
 
@@ -350,12 +395,15 @@ namespace lcc
         std::string name = _pCurToken->content; // function or var name
         nextToken();                            // eat name
 
+        if (isExtern && !isExternC)
+            name = name; // FIXME convertion to cpp symbol name
+
         // TODO support comma declaration
         switch (_pCurToken->type)
         {
         case TokenType::TOKEN_LPAREN:
         {
-            std::unique_ptr<AST::Decl> funcDecl = nextFunctionDecl(name, type);
+            std::unique_ptr<AST::Decl> funcDecl = nextFunctionDecl(name, type, isExtern);
             decls.push_back(std::move(funcDecl));
             if (_pCurToken->type == TokenType::TOKEN_COMMA)
                 nextToken(); // eat ','
@@ -452,6 +500,8 @@ namespace lcc
         case TokenType::TOKEN_LPAREN:
         case TokenType::TOKEN_IDENTIFIER:
             return nextValueStmt();
+        case TokenType::TOKEN_KWASM: // only GCC asm dialect syntax is supported
+            return nextAsmStmt();
         default:
             FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Unexpected statement");
             return nullptr;
@@ -588,13 +638,22 @@ namespace lcc
         std::string number = _pCurToken->content;
         if (_pCurToken->type == TokenType::TOKEN_INTEGER)
         {
-            nextToken(); // eat number
+            nextToken(); // eat integer
             return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
         }
-        else
+        else if(_pCurToken->type == TokenType::TOKEN_FLOAT)
         {
-            nextToken(); // eat number
+            nextToken(); // eat floating literal
             return std::make_unique<AST::FloatingLiteral>(std::stof(number));
+        }
+        else if(_pCurToken->type == TokenType::TOKEN_CHAR)
+        {
+            nextToken(); // eat char
+            return std::make_unique<AST::CharacterLiteral>(number[0]);
+        }
+        else {
+            FATAL_ERROR("Unsupported token type");
+            return nullptr;
         }
     }
 
@@ -628,6 +687,7 @@ namespace lcc
             return nextVarRefOrFuncCall();
         case TokenType::TOKEN_INTEGER:
         case TokenType::TOKEN_FLOAT:
+        case TokenType::TOKEN_CHAR:
             return nextNumber();
         case TokenType::TOKEN_LPAREN:
             return nextParenExpr();
@@ -735,4 +795,199 @@ namespace lcc
 
         return expr;
     }
+
+    //    asm ( assembler template
+    //        : output operands                  /* optional */
+    //        : input operands                   /* optional */
+    //        : list of clobbered registers      /* optional */
+    //        );
+    std::unique_ptr<AST::Stmt> Parser::nextAsmStmt()
+    {
+        std::string asmStr = "";
+        std::vector<std::pair<std::string, std::unique_ptr<AST::DeclRefExpr>>> outputConstraints;
+        std::vector<std::pair<std::string, std::unique_ptr<AST::Expr>>> inputConstraints;
+        std::vector<std::string> clbRegs;
+
+        auto kwasm = _pCurToken;
+
+        if (kwasm->type != TokenType::TOKEN_KWASM)
+        {
+            FATAL_ERROR(kwasm->pos.line << ", " << kwasm->pos.column << " unsupported statement.");
+            return nullptr;
+        }
+
+        nextToken(); // eat TOKEN_KWASM
+
+        auto lparen = _pCurToken;
+        if (lparen->type != TokenType::TOKEN_LPAREN)
+        {
+            FATAL_ERROR(kwasm->pos.line << ", " << kwasm->pos.column << " expected (");
+            return nullptr;
+        }
+
+        nextToken(); // eat (
+
+        do
+        {
+            auto asmOpStrToken = _pCurToken;
+
+            if (asmOpStrToken->type != TokenType::TOKEN_STRING)
+            {
+                FATAL_ERROR("Expected string literal in \'__asm__\'");
+                return nullptr;
+            }
+
+            asmStr.append(asmOpStrToken->content);
+            nextToken(); // eat asm string literal
+        } while (_pCurToken->type == TokenType::TOKEN_STRING);
+
+        if (_pCurToken->type == TokenType::TOKEN_COLON)
+            nextToken(); // eat :
+        else if (_pCurToken->type == TokenType::TOKEN_RPAREN)
+        {
+            nextToken(); // eat )
+            goto ret;
+        }
+
+        // parse output operand
+        while (_pCurToken->type != TokenType::TOKEN_COLON)
+        {
+            auto asmConstraintStr = _pCurToken;
+            if (asmConstraintStr->type != TokenType::TOKEN_STRING)
+            {
+                FATAL_ERROR("Expected constraint string");
+                return nullptr;
+            }
+
+            nextToken(); // eat constraint string
+
+            auto lparen = _pCurToken;
+
+            if (lparen->type != TokenType::TOKEN_LPAREN)
+            {
+                FATAL_ERROR("Expected (");
+                return nullptr;
+            }
+
+            nextToken(); // eat (
+
+            if (_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
+            {
+                FATAL_ERROR(_pCurToken->pos.line << ", " << _pCurToken->pos.column << "Expected LValue");
+                return nullptr;
+            }
+
+            auto tmpLValue = nextVarRefOrFuncCall();
+            auto referencedLValue = dynamic_pointer_cast<AST::DeclRefExpr>(std::move(tmpLValue));
+
+            auto rparen = _pCurToken;
+
+            if (rparen->type != TokenType::TOKEN_RPAREN)
+            {
+                FATAL_ERROR("No matching rparen found for lparen at " << rparen->pos.line << ", " << rparen->pos.column);
+                return nullptr;
+            }
+
+            nextToken(); // eat )
+
+            if (_pCurToken->type == TokenType::TOKEN_COMMA)
+                nextToken(); // eat ,
+
+            outputConstraints.push_back(std::make_pair(asmConstraintStr->content, std::move(referencedLValue)));
+        }
+
+        if (_pCurToken->type == TokenType::TOKEN_COLON)
+            nextToken(); // eat :
+        else if (_pCurToken->type == TokenType::TOKEN_RPAREN)
+        {
+            nextToken(); // eat )
+            goto ret;
+        }
+
+        // parse input operand
+        while (_pCurToken->type != TokenType::TOKEN_COLON)
+        {
+            auto asmConstraintStr = _pCurToken;
+            if (asmConstraintStr->type != TokenType::TOKEN_STRING)
+            {
+                FATAL_ERROR("Expected constraint string");
+                return nullptr;
+            }
+
+            nextToken(); // eat constraint string
+
+            auto lparen = _pCurToken;
+
+            if (lparen->type != TokenType::TOKEN_LPAREN)
+            {
+                FATAL_ERROR("Expected (");
+                return nullptr;
+            }
+
+            nextToken(); // eat (
+
+            auto inputVal = nextRValue();
+
+            auto rparen = _pCurToken;
+
+            if (rparen->type != TokenType::TOKEN_RPAREN)
+            {
+                FATAL_ERROR("No matching rparen found for lparen at " << rparen->pos.line << ", " << rparen->pos.column);
+                return nullptr;
+            }
+
+            nextToken(); // eat )
+
+            if (_pCurToken->type == TokenType::TOKEN_COMMA)
+                nextToken(); // eat ,
+
+            inputConstraints.push_back(std::make_pair(asmConstraintStr->content, std::move(inputVal)));
+        }
+
+        if (_pCurToken->type == TokenType::TOKEN_COLON)
+            nextToken(); // eat :
+        else if (_pCurToken->type == TokenType::TOKEN_RPAREN)
+        {
+            nextToken(); // eat )
+            goto ret;
+        }
+
+        while (_pCurToken->type != TokenType::TOKEN_RPAREN)
+        {
+            auto clobberedRegStr = _pCurToken;
+
+            if (clobberedRegStr->type != TokenType::TOKEN_STRING)
+            {
+                FATAL_ERROR("Expected string literal to describe clobbered register");
+                return nullptr;
+            }
+
+            nextToken(); // eat string literal
+
+            if (_pCurToken->type == TokenType::TOKEN_COMMA)
+                nextToken(); // eat ,
+
+            clbRegs.push_back(clobberedRegStr->content);
+        }
+
+        if (_pCurToken->type != TokenType::TOKEN_RPAREN)
+        {
+            FATAL_ERROR("No matching rparen found for lparen at " << _pCurToken->pos.line << ", " << _pCurToken->pos.column);
+            return nullptr;
+        }
+        nextToken(); // eat )
+
+    ret:
+        auto semi = _pCurToken;
+        if (semi->type != TokenType::TOKEN_SEMI)
+        {
+            FATAL_ERROR("Missing ; at the end of asm statement");
+            return nullptr;
+        }
+
+        nextToken(); // eat ;
+
+        return std::make_unique<AST::AsmStmt>(asmStr, outputConstraints, inputConstraints, clbRegs);
+    }
+
 }

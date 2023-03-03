@@ -36,7 +36,7 @@ namespace lcc
     private:
         // decl parsers
         std::unique_ptr<AST::Decl> nextTopLevelDecl();
-        std::unique_ptr<AST::Decl> nextFunctionDecl(const std::string name, const std::string type);
+        std::unique_ptr<AST::Decl> nextFunctionDecl(const std::string name, const std::string type, const bool isExtern);
         std::unique_ptr<AST::Decl> nextVarDecl(const std::string name, const std::string type);
         // stmt parsers
         std::unique_ptr<AST::Stmt> nextCompoundStmt();
@@ -47,6 +47,7 @@ namespace lcc
         std::unique_ptr<AST::Stmt> nextReturnStmt();
         std::unique_ptr<AST::Stmt> nextDeclStmt();
         std::unique_ptr<AST::Stmt> nextValueStmt();
+        std::unique_ptr<AST::Stmt> nextAsmStmt();
         // expr parsers
         std::unique_ptr<AST::Expr> nextExpression();
         std::unique_ptr<AST::Expr> nextUnaryOperator();
