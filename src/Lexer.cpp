@@ -1,3 +1,12 @@
+/*
+ * @Author: leo4048111
+ * @Date: 2022-09-23 10:45:10
+ * @LastEditTime: 2023-03-03 10:58:03
+ * @LastEditors: ***
+ * @Description:
+ * @FilePath: \LameCC\src\Lexer.cpp
+ */
+
 #include "lcc.hpp"
 
 namespace lcc
@@ -11,6 +20,77 @@ namespace lcc
 #include "TokenType.inc"
 #undef punctuator
 #undef keyword
+    }
+
+    json Lexer::jsonifyTokens(const std::vector<std::shared_ptr<Token>> &tokens)
+    {
+        json arr = json::array();
+        for (auto &token : tokens)
+        {
+            json j;
+            switch (token->type)
+            {
+            case TokenType::TOKEN_NEWLINE:
+                break;
+            case TokenType::TOKEN_IDENTIFIER:
+                j["id"] = token->count;
+                j["type"] = "TOKEN_IDENTIFIER";
+                j["content"] = token->content;
+                j["position"] = {token->pos.line, token->pos.column};
+                break;
+            case TokenType::TOKEN_EOF:
+                j["id"] = token->count;
+                j["type"] = "TOKEN_EOF";
+                j["content"] = "EOF";
+                j["position"] = {token->pos.line, token->pos.column};
+                break;
+            case TokenType::TOKEN_WHITESPACE:
+                break;
+            case TokenType::TOKEN_INVALID:
+                break;
+            case TokenType::TOKEN_STRING:
+                j["id"] = token->count;
+                j["type"] = "TOKEN_STRING";
+                j["content"] = token->content;
+                j["position"] = {token->pos.line, token->pos.column};
+                break;
+            case TokenType::TOKEN_INTEGER:
+                j["id"] = token->count;
+                j["type"] = "TOKEN_INTEGER";
+                j["content"] = token->content;
+                j["position"] = {token->pos.line, token->pos.column};
+                break;
+            case TokenType::TOKEN_FLOAT:
+                j["id"] = token->count;
+                j["type"] = "TOKEN_FLOAT";
+                j["content"] = token->content;
+                j["position"] = {token->pos.line, token->pos.column};
+                break;
+            case TokenType::TOKEN_CHAR:
+                j["id"] = token->count;
+                j["type"] = "TOKEN_CHAR";
+                j["content"] = token->content;
+                j["position"] = {token->pos.line, token->pos.column};
+                break;
+#define keyword(name, disc)                                   \
+    case TokenType::name:                                     \
+        j["id"] = token->count;                               \
+        j["type"] = #name;                                    \
+        j["content"] = disc;                                  \
+        j["position"] = {token->pos.line, token->pos.column}; \
+        break;
+#define punctuator(name, disc) keyword(name, disc)
+#include "TokenType.inc"
+#undef punctuator
+#undef keyword
+
+            default:
+                break;
+            }
+            if (!j.empty())
+                arr.emplace_back(j);
+        }
+        return arr;
     }
 
     void Lexer::nextLine()
@@ -221,32 +301,7 @@ namespace lcc
             else if (c == '\\')
             {
                 c = nextChar();
-                switch(c)
-                {
-                    case 'a':
-                        c = '\a';
-                        break;
-                    case 'b':
-                        c = '\b';
-                        break;
-                    case 'f':
-                        c = '\f';
-                        break;
-                    case 'n':
-                        c = '\n';
-                        break;
-                    case 'r':
-                        c = '\r';
-                        break;
-                    case 't':
-                        c = '\t';
-                        break;
-                    case 'v':
-                        c = '\v';
-                        break;
-                    default:
-                        break;
-                }
+                c = charToEscapedChar(c);
             }
             buffer += c;
         }
@@ -296,7 +351,10 @@ namespace lcc
             if (c == '\'')
                 break;
             else if (c == '\\')
+            {
                 c = nextChar();
+                c = charToEscapedChar(c);
+            }
             buffer += c;
         }
 

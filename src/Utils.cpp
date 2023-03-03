@@ -18,75 +18,36 @@ namespace lcc
         return std::isdigit(c);
     }
 
-    json jsonifyTokens(const std::vector<std::shared_ptr<Token>> &tokens)
+    char charToEscapedChar(char c)
     {
-        json arr = json::array();
-        for (auto &token : tokens)
+        switch (c)
         {
-            json j;
-            switch (token->type)
-            {
-            case TokenType::TOKEN_NEWLINE:
-                break;
-            case TokenType::TOKEN_IDENTIFIER:
-                j["id"] = token->count;
-                j["type"] = "TOKEN_IDENTIFIER";
-                j["content"] = token->content;
-                j["position"] = {token->pos.line, token->pos.column};
-                break;
-            case TokenType::TOKEN_EOF:
-                j["id"] = token->count;
-                j["type"] = "TOKEN_EOF";
-                j["content"] = "EOF";
-                j["position"] = {token->pos.line, token->pos.column};
-                break;
-            case TokenType::TOKEN_WHITESPACE:
-                break;
-            case TokenType::TOKEN_INVALID:
-                break;
-            case TokenType::TOKEN_STRING:
-                j["id"] = token->count;
-                j["type"] = "TOKEN_STRING";
-                j["content"] = token->content;
-                j["position"] = {token->pos.line, token->pos.column};
-                break;
-            case TokenType::TOKEN_INTEGER:
-                j["id"] = token->count;
-                j["type"] = "TOKEN_INTEGER";
-                j["content"] = token->content;
-                j["position"] = {token->pos.line, token->pos.column};
-                break;
-            case TokenType::TOKEN_FLOAT:
-                j["id"] = token->count;
-                j["type"] = "TOKEN_FLOAT";
-                j["content"] = token->content;
-                j["position"] = {token->pos.line, token->pos.column};
-                break;
-            case TokenType::TOKEN_CHAR:
-                j["id"] = token->count;
-                j["type"] = "TOKEN_CHAR";
-                j["content"] = token->content;
-                j["position"] = {token->pos.line, token->pos.column};
-                break;
-#define keyword(name, disc)                                   \
-    case TokenType::name:                                     \
-        j["id"] = token->count;                               \
-        j["type"] = #name;                                    \
-        j["content"] = disc;                                  \
-        j["position"] = {token->pos.line, token->pos.column}; \
-        break;
-#define punctuator(name, disc) keyword(name, disc)
-#include "TokenType.inc"
-#undef punctuator
-#undef keyword
-
-            default:
-                break;
-            }
-            if (!j.empty())
-                arr.emplace_back(j);
+        case 'a':
+            c = '\a';
+            break;
+        case 'b':
+            c = '\b';
+            break;
+        case 'f':
+            c = '\f';
+            break;
+        case 'n':
+            c = '\n';
+            break;
+        case 'r':
+            c = '\r';
+            break;
+        case 't':
+            c = '\t';
+            break;
+        case 'v':
+            c = '\v';
+            break;
+        default:
+            break;
         }
-        return arr;
+
+        return c;
     }
 
     bool dumpJson(const json &j, const std::string outPath)

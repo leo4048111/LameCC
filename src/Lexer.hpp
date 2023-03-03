@@ -60,6 +60,8 @@ namespace lcc
 
         std::vector<std::shared_ptr<Token>> run(std::shared_ptr<File> file);
 
+        static json jsonifyTokens(const std::vector<std::shared_ptr<Token>> &tokens);
+        
     private:
         static std::unique_ptr<Lexer> _inst;
 

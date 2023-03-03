@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 
     if (g_shouldDumpTokens)
     {
-        lcc::dumpJson(lcc::jsonifyTokens(tokens), g_dump_token_out_path);
+        lcc::dumpJson(lcc::Lexer::jsonifyTokens(tokens), g_dump_token_out_path);
         INFO("Tokens have been dumped to " << g_dump_token_out_path);
     }
 

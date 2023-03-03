@@ -1,3 +1,11 @@
+/*
+ * @Author: leo4048111
+ * @Date: 2023-01-13 18:24:14
+ * @LastEditTime: 2023-03-03 11:01:29
+ * @LastEditors: ***
+ * @Description: 
+ * @FilePath: \LameCC\src\Utils.hpp
+ */
 #pragma once
 
 #include <vector>
@@ -7,15 +15,13 @@
 
 using json = nlohmann::ordered_json;
 
-#include "Lexer.hpp"
-
 namespace lcc
 {
     // some util funcs(Utils.cpp)
     bool isSpace(const char c);
     bool isLetter(const char c);
     bool isDigit(const char c);
-    json jsonifyTokens(const std::vector<std::shared_ptr<Token>> &tokens);
+    char charToEscapedChar(char c);
     bool dumpJson(const json &j, const std::string outPath);
 
     // cast helpers
