@@ -279,7 +279,10 @@ namespace lcc
         static std::shared_ptr<NonTerminal> nextNullStmtR34(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 34
         static std::shared_ptr<NonTerminal> nextDeclStmtR35(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);           // production 35
         static std::shared_ptr<NonTerminal> nextValueStmtR36(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 36
-        static std::shared_ptr<NonTerminal> nextFunctionDeclR38(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 38
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR38(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 38, 39
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR40(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 40, 41
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR42(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 42, 43
+        static std::shared_ptr<NonTerminal> nextFunctionDeclR44(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack);          // production 44, 45
 
         // grammar initialization
     private:

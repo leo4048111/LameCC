@@ -222,6 +222,12 @@ namespace lcc
         _productionFuncMap.insert(std::make_pair(37, &nextStmt));
         _productionFuncMap.insert(std::make_pair(38, &nextFunctionDeclR38));
         _productionFuncMap.insert(std::make_pair(39, &nextFunctionDeclR38));
+        _productionFuncMap.insert(std::make_pair(40, &nextFunctionDeclR40));
+        _productionFuncMap.insert(std::make_pair(41, &nextFunctionDeclR40));
+        _productionFuncMap.insert(std::make_pair(42, &nextFunctionDeclR42));
+        _productionFuncMap.insert(std::make_pair(43, &nextFunctionDeclR42));
+        _productionFuncMap.insert(std::make_pair(44, &nextFunctionDeclR44));
+        _productionFuncMap.insert(std::make_pair(45, &nextFunctionDeclR44));
     }
 
     std::unique_ptr<AST::Decl> LR1Parser::run(const std::vector<std::shared_ptr<Token>> &tokens, const std::string &productionFilePath, bool shouldPrintProcess)
@@ -1143,13 +1149,155 @@ namespace lcc
 
         if (literalCStr->_token->content != "C")
         {
-            FATAL_ERROR("Unknown extern function type, expected C");
+            FATAL_ERROR("Unknown extern function type, expected \"C\"");
             return nullptr;
         }
 
         std::string type = varTypeOrVoid->_token->content;
         std::string name = identifier->_token->content;
         std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr, true);
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // FunctionDecl -> TOKEN_KWEXTERN TOKEN_STRING TOKEN_VARTYPE TOKEN_IDENTIFIER ( ParmVarDecl ) ;
+    // FunctionDecl -> TOKEN_KWEXTERN TOKEN_STRING TOKEN_KWVOID TOKEN_IDENTIFIER ( ParmVarDecl ) ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR40(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
+    {
+        for (int i = 0; i < 8; i++)
+            stateStack.pop(); // pop 8 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto parmVarDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce ParmVarDecl
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto varTypeOrVoid = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE or TOKEN_KWVOID
+        symbolStack.pop();
+        auto literalCStr = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_STRING
+        symbolStack.pop();
+        auto kwextern = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWEXTERN
+        symbolStack.pop();
+
+        if (semi->name() != ";" ||
+            rparen->name() != ")" ||
+            parmVarDecl->name() != "ParmVarDecl" ||
+            lparen->name() != "(" ||
+            identifier->name() != "TOKEN_IDENTIFIER" ||
+            (varTypeOrVoid->name() != "TOKEN_VARTYPE" && varTypeOrVoid->name() != "TOKEN_KWVOID") ||
+            literalCStr->name() != "TOKEN_STRING" ||
+            kwextern->name() != "TOKEN_KWEXTERN")
+            return nullptr;
+
+        if (literalCStr->_token->content != "C")
+        {
+            FATAL_ERROR("Unknown extern function type, expected \"C\"");
+            return nullptr;
+        }
+
+        std::string type = varTypeOrVoid->_token->content;
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto curParmVarDeclNode = dynamic_pointer_cast<AST::ParmVarDecl>(std::move(parmVarDecl->_node));
+
+        while (curParmVarDeclNode != nullptr)
+        {
+            params.push_back(std::move(curParmVarDeclNode));
+            curParmVarDeclNode = std::move(params.back()->_nextParmVarDecl);
+        }
+
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr, true);
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // FunctionDecl -> TOKEN_KWEXTERN TOKEN_VARTYPE TOKEN_IDENTIFIER ( ) ;
+    // FunctionDecl -> TOKEN_KWEXTERN TOKEN_KWVOID TOKEN_IDENTIFIER ( ) ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR42(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
+    {
+        for (int i = 0; i < 6; i++)
+            stateStack.pop(); // pop 6 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto varTypeOrVoid = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE or TOKEN_KWVOID
+        symbolStack.pop();
+        auto kwextern = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWEXTERN
+        symbolStack.pop();
+
+        if (semi->name() != ";" ||
+            rparen->name() != ")" ||
+            lparen->name() != "(" ||
+            identifier->name() != "TOKEN_IDENTIFIER" ||
+            (varTypeOrVoid->name() != "TOKEN_VARTYPE" && varTypeOrVoid->name() != "TOKEN_KWVOID") ||
+            kwextern->name() != "TOKEN_KWEXTERN")
+            return nullptr;
+
+        std::string type = varTypeOrVoid->_token->content;
+
+        // FIXME: Need convertion from C symbol name to CPP symbol name
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr, true);
+        return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
+    }
+
+    // FunctionDecl -> TOKEN_KWEXTERN TOKEN_VARTYPE TOKEN_IDENTIFIER ( ParmVarDecl ) ;
+    // FunctionDecl -> TOKEN_KWEXTERN TOKEN_KWVOID TOKEN_IDENTIFIER ( ParmVarDecl ) ;
+    std::shared_ptr<LR1Parser::NonTerminal> LR1Parser::nextFunctionDeclR44(std::stack<int> &stateStack, std::stack<std::shared_ptr<Symbol>> &symbolStack)
+    {
+        for (int i = 0; i < 7; i++)
+            stateStack.pop(); // pop 7 states
+
+        auto semi = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce ;
+        symbolStack.pop();
+        auto rparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce )
+        symbolStack.pop();
+        auto parmVarDecl = std::dynamic_pointer_cast<NonTerminal>(symbolStack.top()); // reduce ParmVarDecl
+        symbolStack.pop();
+        auto lparen = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce (
+        symbolStack.pop();
+        auto identifier = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_IDENTIFIER
+        symbolStack.pop();
+        auto varTypeOrVoid = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_VARTYPE or TOKEN_KWVOID
+        symbolStack.pop();
+        auto kwextern = std::dynamic_pointer_cast<Terminal>(symbolStack.top()); // reduce TOKEN_KWEXTERN
+        symbolStack.pop();
+
+        if (semi->name() != ";" ||
+            rparen->name() != ")" ||
+            parmVarDecl->name() != "ParmVarDecl" ||
+            lparen->name() != "(" ||
+            identifier->name() != "TOKEN_IDENTIFIER" ||
+            (varTypeOrVoid->name() != "TOKEN_VARTYPE" && varTypeOrVoid->name() != "TOKEN_KWVOID") ||
+            kwextern->name() != "TOKEN_KWEXTERN")
+            return nullptr;
+
+        std::string type = varTypeOrVoid->_token->content;
+        // FIXME: Need convertion from C symbol name to CPP symbol name
+        std::string name = identifier->_token->content;
+        std::vector<std::unique_ptr<AST::ParmVarDecl>> params;
+
+        auto curParmVarDeclNode = dynamic_pointer_cast<AST::ParmVarDecl>(std::move(parmVarDecl->_node));
+
+        while (curParmVarDeclNode != nullptr)
+        {
+            params.push_back(std::move(curParmVarDeclNode));
+            curParmVarDeclNode = std::move(params.back()->_nextParmVarDecl);
+        }
 
         auto functionDecl = std::make_unique<AST::FunctionDecl>(name, type, params, nullptr, true);
         return std::make_shared<NonTerminal>("FunctionDecl", std::move(functionDecl));
@@ -1330,7 +1478,7 @@ namespace lcc
             nextToken(); // eat number
             return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
         }
-        else if(_pCurToken->type == TokenType::TOKEN_FLOAT)
+        else if (_pCurToken->type == TokenType::TOKEN_FLOAT)
         {
             nextToken(); // eat number
             return std::make_unique<AST::FloatingLiteral>(std::stof(number));
