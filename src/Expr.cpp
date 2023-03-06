@@ -178,7 +178,7 @@ namespace lcc
         json StringLiteral::asJson() const
         {
             json j;
-            j["type"] = "CharacterLiteral";
+            j["type"] = "StringLiteral";
             j["value"] = _value;
             return j;
         }
