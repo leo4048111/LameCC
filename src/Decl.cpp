@@ -26,6 +26,7 @@ namespace lcc
         {
             json j;
             j["type"] = "VarDecl";
+            j["valueType"] = _type;
             j["name"] = _name;
             if (_isInitialized)
                 j["init"] = json::array({_value->asJson()});
