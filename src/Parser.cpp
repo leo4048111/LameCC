@@ -306,6 +306,12 @@ namespace lcc
 
         std::string type = _pCurToken->content; // function return value type or var type
         nextToken();                            // eat type
+        
+        if(_pCurToken->type == TokenType::TOKEN_STAR) // pointer type
+        {
+            type += '*';
+            nextToken(); // eat *
+        }
 
         if (_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
         {
@@ -384,6 +390,12 @@ namespace lcc
 
         std::string type = _pCurToken->content; // function return value type or var type
         nextToken();                            // eat type
+
+        if(_pCurToken->type == TokenType::TOKEN_STAR) // pointer type
+        {
+            type += '*';
+            nextToken(); // eat *
+        }
 
         if (_pCurToken->type != TokenType::TOKEN_IDENTIFIER)
         {
@@ -635,24 +647,30 @@ namespace lcc
 
     std::unique_ptr<AST::Expr> Parser::nextNumber()
     {
-        std::string number = _pCurToken->content;
+        std::string content = _pCurToken->content;
         if (_pCurToken->type == TokenType::TOKEN_INTEGER)
         {
             nextToken(); // eat integer
-            return std::make_unique<AST::IntegerLiteral>(std::stoi(number));
+            return std::make_unique<AST::IntegerLiteral>(std::stoi(content));
         }
         else if(_pCurToken->type == TokenType::TOKEN_FLOAT)
         {
             nextToken(); // eat floating literal
-            return std::make_unique<AST::FloatingLiteral>(std::stof(number));
+            return std::make_unique<AST::FloatingLiteral>(std::stof(content));
         }
         else if(_pCurToken->type == TokenType::TOKEN_CHAR)
         {
             nextToken(); // eat char
-            return std::make_unique<AST::CharacterLiteral>(number[0]);
+            return std::make_unique<AST::CharacterLiteral>(content[0]);
         }
-        else {
-            FATAL_ERROR("Unsupported token type");
+        else if(_pCurToken->type == TokenType::TOKEN_STRING)
+        {
+            nextToken(); // eat string
+            return std::make_unique<AST::StringLiteral>(content);
+        }
+        else
+        {
+            FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Unexpected token");
             return nullptr;
         }
     }
@@ -688,6 +706,7 @@ namespace lcc
         case TokenType::TOKEN_INTEGER:
         case TokenType::TOKEN_FLOAT:
         case TokenType::TOKEN_CHAR:
+        case TokenType::TOKEN_STRING:
             return nextNumber();
         case TokenType::TOKEN_LPAREN:
             return nextParenExpr();
