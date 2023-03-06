@@ -267,7 +267,7 @@ namespace lcc
             StringKind _kind;
 
         public:
-            StringLiteral(const std::string &value) : _value(value) { _isLValue = false; }; // String literal should be LValue instead of RValue
+            StringLiteral(const std::string &value, StringKind kind = StringKind::Ordinary) : _value(value), _kind(kind) { _isLValue = false; }; // String literal should be LValue instead of RValue
 
             virtual json asJson() const override;
 
