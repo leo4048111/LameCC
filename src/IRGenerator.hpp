@@ -17,6 +17,8 @@
 
 #include "AST.hpp"
 
+#define GEN_METHOD_NO_IMPLEMENT return true;
+
 namespace lcc
 {
     // Base class for IRGenerators
@@ -30,6 +32,7 @@ namespace lcc
         virtual bool gen(AST::IntegerLiteral *integerLiteral) = 0;
         virtual bool gen(AST::FloatingLiteral *floatingLiteral) = 0;
         virtual bool gen(AST::CharacterLiteral *charLiteral) = 0;
+        virtual bool gen(AST::StringLiteral *strLiteral) = 0;
         virtual bool gen(AST::DeclRefExpr *declRefExpr) = 0;
         virtual bool gen(AST::CastExpr *castExpr) = 0;
         virtual bool gen(AST::ImplicitCastExpr *implicitCastExpr) = 0;
@@ -182,6 +185,7 @@ namespace lcc
         virtual bool gen(AST::IntegerLiteral *integerLiteral) override;
         virtual bool gen(AST::FloatingLiteral *floatingLiteral) override;
         virtual bool gen(AST::CharacterLiteral *charLiteral) override;
+        virtual bool gen(AST::StringLiteral *strLiteral) override;
         virtual bool gen(AST::DeclRefExpr *declRefExpr) override;
         virtual bool gen(AST::CastExpr *castExpr) override;
         virtual bool gen(AST::ImplicitCastExpr *implicitCastExpr) override;
@@ -261,6 +265,7 @@ namespace lcc
         virtual bool gen(AST::IntegerLiteral *integerLiteral) override;
         virtual bool gen(AST::FloatingLiteral *floatingLiteral) override;
         virtual bool gen(AST::CharacterLiteral *charLiteral) override;
+        virtual bool gen(AST::StringLiteral *strLiteral) override;
         virtual bool gen(AST::DeclRefExpr *declRefExpr) override;
         virtual bool gen(AST::CastExpr *castExpr) override;
         virtual bool gen(AST::ImplicitCastExpr *implicitCastExpr) override;

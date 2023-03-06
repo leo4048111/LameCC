@@ -97,6 +97,12 @@ namespace lcc
             return builder.CreateAlloca(llvm::Type::getFloatTy(_context), 0, name.c_str());
         else if (type == "char")
             return builder.CreateAlloca(llvm::Type::getInt8Ty(_context), 0, name.c_str());
+        else if (type == "int*")
+            return builder.CreateAlloca(llvm::Type::getInt32PtrTy(_context), 0, name.c_str());
+        else if (type == "float*")
+            return builder.CreateAlloca(llvm::Type::getFloatPtrTy(_context), 0, name.c_str());
+        else if (type == "char*")
+            return builder.CreateAlloca(llvm::Type::getInt8PtrTy(_context), 0, name.c_str());
         else
             return nullptr;
     }
@@ -128,6 +134,14 @@ namespace lcc
                 params.push_back(llvm::Type::getInt8Ty(_context));
             else if (param->type() == "float")
                 params.push_back(llvm::Type::getFloatTy(_context));
+            else if (param->type() == "void*") // FIXME: support void*
+                params.push_back(llvm::PointerType::getInt32PtrTy(_context));
+            else if (param->type() == "int*")
+                params.push_back(llvm::PointerType::getInt32PtrTy(_context));
+            else if (param->type() == "char*")
+                params.push_back(llvm::PointerType::getInt8PtrTy(_context));
+            else if (param->type() == "float*")
+                params.push_back(llvm::PointerType::getFloatPtrTy(_context));
             else
                 LLVMIRGEN_RET_FALSE();
         }
@@ -143,6 +157,12 @@ namespace lcc
             funcRetType = llvm::Type::getFloatTy(_context);
         else if (functionDecl->_type == "char")
             funcRetType = llvm::Type::getInt8Ty(_context);
+        else if (functionDecl->_type == "int*")
+            funcRetType = llvm::PointerType::getInt32PtrTy(_context);
+        else if (functionDecl->_type == "float*")
+            funcRetType = llvm::PointerType::getFloatPtrTy(_context);
+        else if (functionDecl->_type == "char*")
+            funcRetType = llvm::PointerType::getInt8PtrTy(_context);
         else
         {
             FATAL_ERROR("Unsupported return type for function " << functionDecl->name());
@@ -297,16 +317,26 @@ namespace lcc
 
                 LLVMIRGEN_RET_TRUE(gVar);
             }
-            // else if(varDecl->type() == "float")
-            // {
-            //     llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
-            //         *_module, llvm::Type::getFloatTy(_context), false,
-            //         llvm::GlobalValue::ExternalLinkage,
-            //         llvm::Constant::ConstantFPVal(0.f),
-            //         varDecl->name());
+            else if (varDecl->type() == "float")
+            {
+                llvm::GlobalVariable *gVar = new llvm::GlobalVariable(
+                    *_module, llvm::Type::getFloatTy(_context), false,
+                    llvm::GlobalValue::ExternalLinkage,
+                    llvm::ConstantFP::get(_context, llvm::APFloat(0.0)),
+                    varDecl->name());
 
-            //     LLVMIRGEN_RET_TRUE(gVar);
-            // }
+                LLVMIRGEN_RET_TRUE(gVar);
+            }
+            else if (varDecl->type() == "char")
+            {
+                llvm::GlobalVariable *gVar = new llvm::GlobalVariable(
+                    *_module, llvm::Type::getInt8Ty(_context), false,
+                    llvm::GlobalValue::ExternalLinkage,
+                    _builder->getInt8(0),
+                    varDecl->name());
+
+                LLVMIRGEN_RET_TRUE(gVar);
+            }
             else
             {
                 LLVMIRGEN_RET_FALSE();
@@ -332,6 +362,12 @@ namespace lcc
     {
         auto val = llvm::ConstantInt::get(_context, llvm::APInt(8, charLiteral->value(), true));
         LLVMIRGEN_RET_TRUE(val);
+    }
+
+    bool LLVMIRGenerator::gen(AST::StringLiteral *strLiteral)
+    {
+        // FIXME: TO IMPLEMENT
+        LLVMIRGEN_RET_TRUE(_retVal);
     }
 
     bool LLVMIRGenerator::gen(AST::DeclRefExpr *declRefExpr)

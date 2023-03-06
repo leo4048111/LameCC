@@ -15,8 +15,6 @@
 #define MAKE_ENTRY_ARG(entry) std::make_shared<SymbTblEntry>(entry)
 #define MAKE_ADDR_ARG(codeAddr) std::make_shared<CodeAddr>(codeAddr)
 
-#define DEBUG_
-
 namespace lcc
 {
     std::unique_ptr<QuaternionIRGenerator> QuaternionIRGenerator::_inst;
@@ -169,10 +167,10 @@ namespace lcc
         return true;
     }
 
-    bool QuaternionIRGenerator::gen(AST::ImplicitCastExpr* implicitCastExpr)
+    bool QuaternionIRGenerator::gen(AST::ImplicitCastExpr *implicitCastExpr)
     {
         // Simply does nothing
-        AST::CastExpr* tmp = implicitCastExpr;
+        AST::CastExpr *tmp = implicitCastExpr;
         return this->gen(tmp);
     }
 
@@ -362,18 +360,20 @@ namespace lcc
         return true;
     }
 
-    bool QuaternionIRGenerator::gen(AST::AsmStmt* asmStmt)
+    bool QuaternionIRGenerator::gen(AST::AsmStmt *asmStmt)
     {
-        // This is implemented in LLVM IR generator
-        return true;
+        GEN_METHOD_NO_IMPLEMENT
     }
 
-    bool QuaternionIRGenerator::gen(AST::CharacterLiteral* charLiteral)
+    bool QuaternionIRGenerator::gen(AST::CharacterLiteral *charLiteral)
     {
-        // This is implemented in LLVM IR generator
-        return true;
+        GEN_METHOD_NO_IMPLEMENT
     }
 
+    bool QuaternionIRGenerator::gen(AST::StringLiteral *strLiteral)
+    {
+        GEN_METHOD_NO_IMPLEMENT
+    }
 
     std::shared_ptr<QuaternionIRGenerator::SymbolTable> QuaternionIRGenerator::mkTable(std::shared_ptr<SymbolTable> previous)
     {
