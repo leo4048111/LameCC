@@ -175,6 +175,14 @@ namespace lcc
             return j;
         }
 
+        json StringLiteral::asJson() const
+        {
+            json j;
+            j["type"] = "CharacterLiteral";
+            j["value"] = _value;
+            return j;
+        }
+
         bool DeclRefExpr::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
@@ -191,6 +199,11 @@ namespace lcc
         }
 
         bool FloatingLiteral::gen(lcc::IRGeneratorBase *generator)
+        {
+            return generator->gen(this);
+        }
+
+        bool StringLiteral::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }

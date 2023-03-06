@@ -247,6 +247,37 @@ namespace lcc
             char value() const { return _value; };
         };
 
+        // String literal value
+        class StringLiteral : public Expr
+        {
+            friend class lcc::QuaternionIRGenerator;
+
+        public:
+            enum class StringKind
+            {
+                Ordinary,
+                Wide,
+                UTF8,
+                UTF16,
+                UTF32
+            };
+
+        protected:
+            std::string _value;
+            StringKind _kind;
+
+        public:
+            StringLiteral(const std::string &value) : _value(value) { _isLValue = false; }; // String literal should be LValue instead of RValue
+
+            virtual json asJson() const override;
+
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
+
+            const std::string value() const { return _value; };
+
+            const StringKind kind() const { return _kind; };
+        };
+
         // A reference to a declared variable, function, enum, etc.
         class DeclRefExpr : public Expr
         {
