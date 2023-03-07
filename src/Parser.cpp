@@ -206,6 +206,14 @@ namespace lcc
             std::string paramType = _pCurToken->content;
             std::string paramName;
             nextToken(); // eat type
+            
+            // pointer type
+            if(_pCurToken->type == TokenType::TOKEN_STAR)
+            {
+                paramType += '*'; 
+                nextToken(); // eat *
+            }
+
             // next token should be identifier
             if (_pCurToken->type == TokenType::TOKEN_IDENTIFIER)
             {
@@ -294,7 +302,7 @@ namespace lcc
             if (possibleExternCStr->type == TokenType::TOKEN_STRING)
             {
                 nextToken(); // eat string
-                if (possibleExtern->content == "C")
+                if (possibleExternCStr->content == "C")
                     isExternC = true;
                 else
                 {
@@ -378,7 +386,7 @@ namespace lcc
             if (possibleExternCStr->type == TokenType::TOKEN_STRING)
             {
                 nextToken(); // eat string
-                if (possibleExtern->content == "C")
+                if (possibleExternCStr->content == "C")
                     isExternC = true;
                 else
                 {
