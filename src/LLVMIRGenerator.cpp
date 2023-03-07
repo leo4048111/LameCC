@@ -368,7 +368,8 @@ namespace lcc
     {
         // a string literal should be initialized as a global variable
         size_t strSize = strLiteral->value().size() + 1; // +1 for null terminator
-        const char* sourceStr = strLiteral->value().c_str();
+        auto s = strLiteral->value();
+        const char* sourceStr = s.c_str();
         auto data = llvm::ConstantDataArray::getString(_context, sourceStr, true);
         llvm::GlobalVariable *gVar = new llvm::GlobalVariable(
                     *_module, llvm::ArrayType::get(llvm::Type::getInt8Ty(_context), strSize), true,
