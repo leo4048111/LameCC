@@ -366,8 +366,19 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::StringLiteral *strLiteral)
     {
-        // FIXME: TO IMPLEMENT
-        LLVMIRGEN_RET_TRUE(_retVal);
+        // a string literal should be initialized as a global variable
+        size_t strSize = strLiteral->value().size() + 1; // +1 for null terminator
+        const char* sourceStr = strLiteral->value().c_str();
+        auto data = llvm::ConstantDataArray::getString(_context, sourceStr, true);
+        llvm::GlobalVariable *gVar = new llvm::GlobalVariable(
+                    *_module, llvm::ArrayType::get(llvm::Type::getInt8Ty(_context), strSize), true,
+                    llvm::GlobalValue::PrivateLinkage,
+                    data,
+                    ".str");
+        // FIXME: Exception thrown when setting alignment and unnamed address
+        // gVar->setAlignment(llvm::MaybeAlign(1));
+        // gVar->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
+        LLVMIRGEN_RET_TRUE(gVar);
     }
 
     bool LLVMIRGenerator::gen(AST::DeclRefExpr *declRefExpr)
