@@ -718,6 +718,14 @@ namespace lcc
             return nextNumber();
         case TokenType::TOKEN_LPAREN:
             return nextParenExpr();
+        case TokenType::TOKEN_MINUS:
+        case TokenType::TOKEN_PLUS:
+        case TokenType::TOKEN_EXCLAIM:
+        case TokenType::TOKEN_TILDE:
+        case TokenType::TOKEN_PLUSPLUS:
+        case TokenType::TOKEN_MINUSMINUS:
+            return nextUnaryOperator();
+
         default:
             FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Unsupported expression");
             return nullptr;
