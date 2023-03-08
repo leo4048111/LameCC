@@ -557,7 +557,7 @@ namespace lcc
                     rhsVal = _builder->CreateFPCast(rhsVal, llvm::Type::getFloatTy(_context), "integralToFloating");
                 else if (rhsVal->getType() == llvm::Type::getFloatTy(_context))
                     lhsVal = _builder->CreateFPCast(lhsVal, llvm::Type::getFloatTy(_context), "integralToFloating");
-                else
+                else // Lame implement for type converts while adding int of different sizes(Simply convert them all to int32)
                 {
                     if (lhsVal->getType() != llvm::Type::getInt32Ty(_context))
                         lhsVal = _builder->CreateIntCast(lhsVal, llvm::Type::getInt32Ty(_context), true);
@@ -930,8 +930,17 @@ namespace lcc
                 LLVMIRGEN_RET_FALSE();
             argVals.push_back(_retVal);
         }
+        llvm::Value *funcCall = nullptr;
 
-        llvm::Value *funcCall = _builder->CreateCall(func, argVals, "calltmp");
+        for(int i = 0; i < argVals.size(); i++) {
+            if(argVals[i]->getType() != func->getArg(i)->getType())
+                argVals[i] = _builder->CreateIntCast(argVals[i], func->getArg(i)->getType(), true, "functionparamcast");
+        }
+
+        if(func->getReturnType() == llvm::FunctionType::getVoidTy(_context))
+            funcCall = _builder->CreateCall(func, argVals);
+        else
+            funcCall = _builder->CreateCall(func, argVals, "calltmp");
 
         LLVMIRGEN_RET_TRUE(funcCall);
     }
