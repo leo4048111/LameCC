@@ -16,8 +16,14 @@ void putInt(int i)
 
 void integerLiteralTest()
 {
-    int a = 98765;
-    putInt(a);
+    puts("Integer literal test:");
+    int a = 0;
+    while(a < 100) {
+        putInt(a);
+        putchar(' ');
+        a++;
+    }
+    putchar('\n');
 }
 
 int main()
