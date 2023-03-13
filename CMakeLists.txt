@@ -29,10 +29,27 @@ if (LLVM_LINK_LLVM_DYLIB)
     set(LLVM_LIBS LLVM)
 else()
     llvm_map_components_to_libnames(LLVM_LIBS
-    core)
+    AllTargetsAsmParsers
+    AllTargetsCodeGens
+    AllTargetsDescs
+    AllTargetsInfos
+    Analysis
+    AsmParser
+    AsmPrinter
+    CodeGen
+    Core
+    IRReader
+    MC
+    MIRParser
+    Remarks
+    ScalarOpts
+    SelectionDAG
+    Support
+    Target
+    TargetParser
+    TransformUtils
+    Vectorize)
 endif()
-
-message(${LLVM_LIBS})
 
 target_link_libraries(LameCC
     PRIVATE
