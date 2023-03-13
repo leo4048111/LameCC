@@ -42,6 +42,15 @@ int main(int argc, char **argv)
             // lcc::LLVMIRGenerator::getInstance()->printCode();
             lcc::LLVMIRGenerator::getInstance()->dumpCode(lcc::Options::IRDumpPath);
             INFO("IR has been dumped to " << lcc::Options::IRDumpPath);
+
+            if(!lcc::Codegen::getInstance()->run())
+            {
+                FATAL_ERROR("Failed to generate target assembly.");
+            }
+            else
+            {
+                INFO("Target assembly has been generated and dumped to " << lcc::Options::OutputFilename);
+            }
         }
     }
 }
