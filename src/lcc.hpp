@@ -28,4 +28,4 @@
 #include "LR1Parser.hpp"
 #include "Parser.hpp"
 #include "Utils.hpp"
-// #include "Codegen.hpp"
+#include "Codegen.hpp"
