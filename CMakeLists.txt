@@ -25,7 +25,28 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
-llvm_map_components_to_libnames(llvm_libs core)
+llvm_map_components_to_libnames(
+    llvm_libs 
+    AllTargetsAsmParsers
+    AllTargetsCodeGens
+    AllTargetsDescs
+    AllTargetsInfos
+    Analysis
+    AsmParser
+    AsmPrinter
+    CodeGen
+    Core
+    IRReader
+    MC
+    MIRParser
+    Remarks
+    ScalarOpts
+    SelectionDAG
+    Support
+    Target
+    TargetParser
+    TransformUtils
+    Vectorize)
 
 target_link_libraries(LameCC
     PRIVATE
