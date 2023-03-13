@@ -1,5 +1,7 @@
 #pragma once
 
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Remarks/HotnessThresholdParser.h"
 
@@ -21,6 +23,9 @@ namespace lcc
         ~Options() = delete;
 
     public:
+        static int args;
+        static char** argv;
+
         static bool ParseOpts(int args, char **argv);
 
         static llvm::cl::opt<std::string> InputFilename;

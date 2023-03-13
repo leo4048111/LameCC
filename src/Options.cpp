@@ -150,8 +150,13 @@ namespace lcc
             llvm::cl::desc("The format used for serializing remarks (default: YAML)"),
             llvm::cl::value_desc("format"), llvm::cl::init("yaml"));
 
+    int Options::args = 0;
+    char** Options::argv = nullptr;
+
     bool Options::ParseOpts(int args, char **argv)
     {
+        Options::args = args;
+        Options::argv = argv;
         llvm::cl::ParseCommandLineOptions(args, argv, "LCC");
 
         if (InputFilename == "-")
