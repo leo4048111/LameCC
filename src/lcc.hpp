@@ -19,7 +19,7 @@
     {                                                                                                                \
         std::cout << rang::style::bold << rang::fg::yellow << "Warning: " << rang::style::reset << msg << std::endl; \
     } while (0)
-    
+
 #include "Options.hpp"
 #include "AST.hpp"
 #include "File.hpp"
@@ -28,4 +28,4 @@
 #include "LR1Parser.hpp"
 #include "Parser.hpp"
 #include "Utils.hpp"
-// #include "Codegen.hpp"
+#include "Codegen.hpp"
