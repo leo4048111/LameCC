@@ -126,18 +126,33 @@ namespace lcc
         std::unique_ptr<llvm::Module> M;
         std::unique_ptr<llvm::MIRParser> MIR;
         llvm::Triple TheTriple;
-        std::string CPUStr = llvm::codegen::getCPUStr(),
-                    FeaturesStr = llvm::codegen::getFeaturesStr();
+        std::string CPUStr = llvm::sys::getHostCPUName().str();
 
-        // Set attributes on functions as loaded from MIR from command line arguments.
-        auto setMIRFunctionAttributes = [&CPUStr, &FeaturesStr](llvm::Function &F)
-        {
-            llvm::codegen::setFunctionAttributes(CPUStr, FeaturesStr, F);
-        };
+        llvm::SubtargetFeatures Features;
+
+        // If user asked for the 'native' CPU, we need to autodetect features.
+        // This is necessary for x86 where the CPU might not support all the
+        // features the autodetected CPU name lists in the target. For example,
+        // not all Sandybridge processors support AVX.
+        llvm::StringMap<bool> HostFeatures;
+        if (llvm::sys::getHostCPUFeatures(HostFeatures))
+            for (const auto &[Feature, IsEnabled] : HostFeatures)
+                Features.AddFeature(Feature, IsEnabled);
+
+        for (auto const &MAttr : llvm::codegen::getMAttrs())
+            Features.AddFeature(MAttr);
+
+        std::string FeaturesStr = Features.getString();
+
+        // // Set attributes on functions as loaded from MIR from command line arguments.
+        // auto setMIRFunctionAttributes = [&CPUStr, &FeaturesStr](llvm::Function &F)
+        // {
+        //     llvm::codegen::setFunctionAttributes(CPUStr, FeaturesStr, F);
+        // };
 
         auto MAttrs = llvm::codegen::getMAttrs();
-        bool SkipModule =
-            CPUStr == "help" || (!MAttrs.empty() && MAttrs.front() == "help");
+        bool SkipModule = false;
+        // CPUStr == "help" || (!MAttrs.empty() && MAttrs.front() == "help");
 
         llvm::CodeGenOpt::Level OLvl = llvm::CodeGenOpt::Default;
         switch (Options::OptLevel)
@@ -245,18 +260,8 @@ namespace lcc
 
                 return Target->createDataLayout().getStringRepresentation();
             };
-            if (Options::InputLanguage == "mir" ||
-                (Options::InputLanguage == "" && llvm::StringRef(Options::IRDumpPath).endswith(".mir")))
-            {
-                MIR = llvm::createMIRParserFromFile(Options::IRDumpPath, Err, Context,
-                                                    setMIRFunctionAttributes);
-                if (MIR)
-                    M = MIR->parseIRModule(SetDataLayout);
-            }
-            else
-            {
-                M = llvm::parseIRFile(Options::IRDumpPath, Err, Context, SetDataLayout);
-            }
+
+            M = llvm::parseIRFile(Options::IRDumpPath, Err, Context, SetDataLayout);
             if (!M)
             {
                 return 1;
@@ -474,17 +479,17 @@ namespace lcc
 
         // // Initialize codegen and IR passes used by llc so that the -print-after,
         // // -print-before, and -stop-after options work.
-        // llvm::PassRegistry *Registry = llvm::PassRegistry::getPassRegistry();
-        // llvm::initializeCore(*Registry);
-        // llvm::initializeCodeGen(*Registry);
-        // llvm::initializeLoopStrengthReducePass(*Registry);
-        // llvm::initializeLowerIntrinsicsPass(*Registry);
-        // llvm::initializeUnreachableBlockElimLegacyPassPass(*Registry);
-        // llvm::initializeConstantHoistingLegacyPassPass(*Registry);
-        // llvm::initializeScalarOpts(*Registry);
-        // llvm::initializeVectorization(*Registry);
-        // llvm::initializeScalarizeMaskedMemIntrinLegacyPassPass(*Registry);
-        // llvm::initializeExpandReductionsPass(*Registry);
+        llvm::PassRegistry *Registry = llvm::PassRegistry::getPassRegistry();
+        llvm::initializeCore(*Registry);
+        llvm::initializeCodeGen(*Registry);
+        llvm::initializeLoopStrengthReducePass(*Registry);
+        llvm::initializeLowerIntrinsicsPass(*Registry);
+        llvm::initializeUnreachableBlockElimLegacyPassPass(*Registry);
+        llvm::initializeConstantHoistingLegacyPassPass(*Registry);
+        llvm::initializeScalarOpts(*Registry);
+        llvm::initializeVectorization(*Registry);
+        llvm::initializeScalarizeMaskedMemIntrinLegacyPassPass(*Registry);
+        llvm::initializeExpandReductionsPass(*Registry);
         // llvm::initializeExpandVectorPredicationPass(*Registry);
         // llvm::initializeHardwareLoopsPass(*Registry);
         // llvm::initializeTransformUtils(*Registry);
@@ -494,10 +499,10 @@ namespace lcc
         // // Initialize debugging passes.
         // llvm::initializeScavengerTestPass(*Registry);
 
-        // // Register the Target and CPU printer for --version.
-        // llvm::cl::AddExtraVersionPrinter(llvm::sys::printDefaultTargetAndDetectedCPU);
-        // // Register the target printer for --version.
-        // llvm::cl::AddExtraVersionPrinter(llvm::TargetRegistry::printRegisteredTargetsForVersion);
+        // Register the Target and CPU printer for --version.
+        llvm::cl::AddExtraVersionPrinter(llvm::sys::printDefaultTargetAndDetectedCPU);
+        // Register the target printer for --version.
+        llvm::cl::AddExtraVersionPrinter(llvm::TargetRegistry::printRegisteredTargetsForVersion);
 
         llvm::LLVMContext Context;
         Context.setDiscardValueNames(Options::DiscardValueNames);

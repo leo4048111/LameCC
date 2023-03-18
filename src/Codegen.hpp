@@ -16,6 +16,8 @@
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IRReader/IRReader.h"
+#include "llvm/InitializePasses.h"
+#include "llvm/TargetParser/Host.h"
 
 #include <memory>
 #include <optional>
