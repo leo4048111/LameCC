@@ -490,14 +490,14 @@ namespace lcc
         llvm::initializeVectorization(*Registry);
         llvm::initializeScalarizeMaskedMemIntrinLegacyPassPass(*Registry);
         llvm::initializeExpandReductionsPass(*Registry);
-        // llvm::initializeExpandVectorPredicationPass(*Registry);
-        // llvm::initializeHardwareLoopsPass(*Registry);
-        // llvm::initializeTransformUtils(*Registry);
-        // llvm::initializeReplaceWithVeclibLegacyPass(*Registry);
-        // llvm::initializeTLSVariableHoistLegacyPassPass(*Registry);
+        llvm::initializeExpandVectorPredicationPass(*Registry);
+        llvm::initializeHardwareLoopsPass(*Registry);
+        llvm::initializeTransformUtils(*Registry);
+        llvm::initializeReplaceWithVeclibLegacyPass(*Registry);
+        llvm::initializeTLSVariableHoistLegacyPassPass(*Registry);
 
-        // // Initialize debugging passes.
-        // llvm::initializeScavengerTestPass(*Registry);
+        // Initialize debugging passes.
+        llvm::initializeScavengerTestPass(*Registry);
 
         // Register the Target and CPU printer for --version.
         llvm::cl::AddExtraVersionPrinter(llvm::sys::printDefaultTargetAndDetectedCPU);
@@ -512,16 +512,16 @@ namespace lcc
         Context.setDiagnosticHandler(
             std::make_unique<llvm::DiagnosticHandler>(&HasError)); // TODO: Implement my own diagnostic handler
 
-        // llvm::Expected<std::unique_ptr<llvm::ToolOutputFile>> RemarksFileOrErr =
-        //     llvm::setupLLVMOptimizationRemarks(Context, Options::RemarksFilename, Options::RemarksPasses,
-        //                                  Options::RemarksFormat, Options::RemarksWithHotness,
-        //                                  Options::RemarksHotnessThreshold);
-        // if (llvm::Error E = RemarksFileOrErr.takeError())
-        //     llvm::handleAllErrors(std::move(E),
-        //                           [&](const llvm::ErrorInfoBase &EI)
-        //                           { FATAL_ERROR(EI.message()); });
+        llvm::Expected<std::unique_ptr<llvm::ToolOutputFile>> RemarksFileOrErr =
+            llvm::setupLLVMOptimizationRemarks(Context, Options::RemarksFilename, Options::RemarksPasses,
+                                         Options::RemarksFormat, Options::RemarksWithHotness,
+                                         Options::RemarksHotnessThreshold);
+        if (llvm::Error E = RemarksFileOrErr.takeError())
+            llvm::handleAllErrors(std::move(E),
+                                  [&](const llvm::ErrorInfoBase &EI)
+                                  { FATAL_ERROR(EI.message()); });
 
-        // std::unique_ptr<llvm::ToolOutputFile> RemarksFile = std::move(*RemarksFileOrErr);
+        std::unique_ptr<llvm::ToolOutputFile> RemarksFile = std::move(*RemarksFileOrErr);
 
         if (Options::InputLanguage != "" && Options::InputLanguage != "ir" && Options::InputLanguage != "mir")
             FATAL_ERROR("input language must be '', 'IR' or 'MIR'");
