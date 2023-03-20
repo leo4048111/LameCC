@@ -4,6 +4,7 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Remarks/HotnessThresholdParser.h"
+#include "llvm/CodeGen/CommandFlags.h"
 
 #define DEFAULT_TOKEN_DUMP_PATH "tokens.json"
 #define DEFAULT_AST_DUMP_PATH "ast.json"
@@ -24,9 +25,13 @@ namespace lcc
 
     public:
         static int args;
-        static char** argv;
+        static char **argv;
 
         static bool ParseOpts(int args, char **argv);
+
+        // Create this object with static storage to register codegen-related command
+        // line options.
+        static llvm::codegen::RegisterCodeGenFlags CGF;
 
         static llvm::cl::opt<std::string> InputFilename;
 

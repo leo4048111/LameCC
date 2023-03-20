@@ -2,6 +2,8 @@
 
 namespace lcc
 {
+    llvm::codegen::RegisterCodeGenFlags Options::CGF{};
+
     llvm::cl::opt<std::string>
         Options::TokenDumpPath("token", llvm::cl::desc("Token dump file"), llvm::cl::init("-"));
 

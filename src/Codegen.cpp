@@ -126,33 +126,18 @@ namespace lcc
         std::unique_ptr<llvm::Module> M;
         std::unique_ptr<llvm::MIRParser> MIR;
         llvm::Triple TheTriple;
-        std::string CPUStr = llvm::sys::getHostCPUName().str();
 
-        llvm::SubtargetFeatures Features;
+        std::string CPUStr = llvm::sys::getHostCPUName().str(),
+                    FeaturesStr = llvm::codegen::getFeaturesStr();
 
-        // If user asked for the 'native' CPU, we need to autodetect features.
-        // This is necessary for x86 where the CPU might not support all the
-        // features the autodetected CPU name lists in the target. For example,
-        // not all Sandybridge processors support AVX.
-        llvm::StringMap<bool> HostFeatures;
-        if (llvm::sys::getHostCPUFeatures(HostFeatures))
-            for (const auto &[Feature, IsEnabled] : HostFeatures)
-                Features.AddFeature(Feature, IsEnabled);
+        // Set attributes on functions as loaded from MIR from command line arguments.
+        auto setMIRFunctionAttributes = [&CPUStr, &FeaturesStr](llvm::Function &F)
+        {
+            llvm::codegen::setFunctionAttributes(CPUStr, FeaturesStr, F);
+        };
 
-        for (auto const &MAttr : llvm::codegen::getMAttrs())
-            Features.AddFeature(MAttr);
-
-        std::string FeaturesStr = Features.getString();
-
-        // // Set attributes on functions as loaded from MIR from command line arguments.
-        // auto setMIRFunctionAttributes = [&CPUStr, &FeaturesStr](llvm::Function &F)
-        // {
-        //     llvm::codegen::setFunctionAttributes(CPUStr, FeaturesStr, F);
-        // };
-
-        auto MAttrs = llvm::codegen::getMAttrs();
+        // auto MAttrs = llvm::codegen::getMAttrs();
         bool SkipModule = false;
-        // CPUStr == "help" || (!MAttrs.empty() && MAttrs.front() == "help");
 
         llvm::CodeGenOpt::Level OLvl = llvm::CodeGenOpt::Default;
         switch (Options::OptLevel)
@@ -219,8 +204,8 @@ namespace lcc
             }
         };
 
-        std::optional<llvm::Reloc::Model> RM = llvm::codegen::getExplicitRelocModel();
-        std::optional<llvm::CodeModel::Model> CM = llvm::codegen::getExplicitCodeModel();
+        std::optional<llvm::Reloc::Model> RM = llvm::codegen::getRelocModel();
+        std::optional<llvm::CodeModel::Model> CM = llvm::codegen::getCodeModel();
 
         const llvm::Target *TheTarget = nullptr;
         std::unique_ptr<llvm::TargetMachine> Target;
@@ -260,6 +245,8 @@ namespace lcc
 
                 return Target->createDataLayout().getStringRepresentation();
             };
+
+            std::string s = Options::IRDumpPath.getValue();
 
             M = llvm::parseIRFile(Options::IRDumpPath, Err, Context, SetDataLayout);
             if (!M)
@@ -308,160 +295,160 @@ namespace lcc
             return 0;
         }
 
-        // assert(M && "Should have exited if we didn't have a module!");
-        // if (llvm::codegen::getFloatABIForCalls() != llvm::FloatABI::Default)
-        //     Opts.FloatABIType = llvm::codegen::getFloatABIForCalls();
+        assert(M && "Should have exited if we didn't have a module!");
+        if (llvm::codegen::getFloatABIForCalls() != llvm::FloatABI::Default)
+            Opts.FloatABIType = llvm::codegen::getFloatABIForCalls();
 
-        // // Build up all of the passes that we want to do to the module.
-        // llvm::legacy::PassManager PM;
+        // Build up all of the passes that we want to do to the module.
+        llvm::legacy::PassManager PM;
 
-        // // Figure out where we are going to send the output.
-        // std::unique_ptr<llvm::ToolOutputFile> Out =
-        //     getOutputStream(TheTarget->getName(), TheTriple.getOS(), argv[0]);
-        // if (!Out)
-        //     return 1;
+        // Figure out where we are going to send the output.
+        std::unique_ptr<llvm::ToolOutputFile> Out =
+            getOutputStream(TheTarget->getName(), TheTriple.getOS(), argv[0]);
+        if (!Out)
+            return 1;
 
-        // // Ensure the filename is passed down to CodeViewDebug.
-        // Target->Options.ObjectFilenameForDebug = Out->outputFilename();
+        // Ensure the filename is passed down to CodeViewDebug.
+        Target->Options.ObjectFilenameForDebug = Out->outputFilename();
 
-        // std::unique_ptr<llvm::ToolOutputFile> DwoOut;
-        // if (!Options::SplitDwarfOutputFile.empty())
-        // {
-        //     std::error_code EC;
-        //     DwoOut = std::make_unique<llvm::ToolOutputFile>(Options::SplitDwarfOutputFile, EC, llvm::sys::fs::OF_None);
-        //     if (EC)
-        //         FATAL_ERROR(EC.message());
-        // }
+        std::unique_ptr<llvm::ToolOutputFile> DwoOut;
+        if (!Options::SplitDwarfOutputFile.empty())
+        {
+            std::error_code EC;
+            DwoOut = std::make_unique<llvm::ToolOutputFile>(Options::SplitDwarfOutputFile, EC, llvm::sys::fs::OF_None);
+            if (EC)
+                FATAL_ERROR(EC.message());
+        }
 
-        // // Add an appropriate TargetLibraryInfo pass for the module's triple.
-        // llvm::TargetLibraryInfoImpl TLII(llvm::Triple(M->getTargetTriple()));
+        // Add an appropriate TargetLibraryInfo pass for the module's triple.
+        llvm::TargetLibraryInfoImpl TLII(llvm::Triple(M->getTargetTriple()));
 
-        // // The -disable-simplify-libcalls flag actually disables all builtin optzns.
-        // if (Options::DisableSimplifyLibCalls)
-        //     TLII.disableAllFunctions();
-        // PM.add(new llvm::TargetLibraryInfoWrapperPass(TLII));
+        // The -disable-simplify-libcalls flag actually disables all builtin optzns.
+        if (Options::DisableSimplifyLibCalls)
+            TLII.disableAllFunctions();
+        PM.add(new llvm::TargetLibraryInfoWrapperPass(TLII));
 
-        // // Verify module immediately to catch problems before doInitialization() is
-        // // called on any passes.
-        // if (!Options::NoVerify && verifyModule(*M, &llvm::errs()))
-        //     FATAL_ERROR("input module cannot be verified: " << Options::IRDumpPath);
+        // Verify module immediately to catch problems before doInitialization() is
+        // called on any passes.
+        if (!Options::NoVerify && verifyModule(*M, &llvm::errs()))
+            FATAL_ERROR("input module cannot be verified: " << Options::IRDumpPath);
 
-        // // Override function attributes based on CPUStr, FeaturesStr, and command line
-        // // flags.
-        // llvm::codegen::setFunctionAttributes(CPUStr, FeaturesStr, *M);
+        // Override function attributes based on CPUStr, FeaturesStr, and command line
+        // flags.
+        llvm::codegen::setFunctionAttributes(CPUStr, FeaturesStr, *M);
 
-        // if (llvm::mc::getExplicitRelaxAll() && llvm::codegen::getFileType() != llvm::CGFT_ObjectFile)
-        //     WARNING("ignoring -mc-relax-all because filetype != obj");
+        if (llvm::mc::getExplicitRelaxAll() && llvm::codegen::getFileType() != llvm::CGFT_ObjectFile)
+            WARNING("ignoring -mc-relax-all because filetype != obj");
 
-        // {
-        //     llvm::raw_pwrite_stream *OS = &Out->os();
+        {
+            llvm::raw_pwrite_stream *OS = &Out->os();
 
-        //     // Manually do the buffering rather than using buffer_ostream,
-        //     // so we can memcmp the contents in CompileTwice mode
-        //     llvm::SmallVector<char, 0> Buffer;
-        //     std::unique_ptr<llvm::raw_svector_ostream> BOS;
-        //     if ((llvm::codegen::getFileType() != llvm::CGFT_AssemblyFile && !Out->os().supportsSeeking()) || Options::CompileTwice)
-        //     {
-        //         BOS = std::make_unique<llvm::raw_svector_ostream>(Buffer);
-        //         OS = BOS.get();
-        //     }
+            // Manually do the buffering rather than using buffer_ostream,
+            // so we can memcmp the contents in CompileTwice mode
+            llvm::SmallVector<char, 0> Buffer;
+            std::unique_ptr<llvm::raw_svector_ostream> BOS;
+            if ((llvm::codegen::getFileType() != llvm::CGFT_AssemblyFile && !Out->os().supportsSeeking()) || Options::CompileTwice)
+            {
+                BOS = std::make_unique<llvm::raw_svector_ostream>(Buffer);
+                OS = BOS.get();
+            }
 
-        //     const char *argv0 = argv[0];
-        //     llvm::LLVMTargetMachine &LLVMTM = static_cast<llvm::LLVMTargetMachine &>(*Target);
-        //     llvm::MachineModuleInfoWrapperPass *MMIWP =
-        //         new llvm::MachineModuleInfoWrapperPass(&LLVMTM);
+            const char *argv0 = argv[0];
+            llvm::LLVMTargetMachine &LLVMTM = static_cast<llvm::LLVMTargetMachine &>(*Target);
+            llvm::MachineModuleInfoWrapperPass *MMIWP =
+                new llvm::MachineModuleInfoWrapperPass(&LLVMTM);
 
-        //     // Construct a custom pass pipeline that starts after instruction
-        //     // selection.
-        //     if (!getRunPassNames().empty())
-        //     {
-        //         if (!MIR)
-        //         {
-        //             WARNING("run-pass is for .mir file only");
-        //             return 1;
-        //         }
-        //         llvm::TargetPassConfig &TPC = *LLVMTM.createPassConfig(PM);
-        //         if (TPC.hasLimitedCodeGenPipeline())
-        //         {
-        //             WARNING("run-pass cannot be used with " << TPC.getLimitedCodeGenPipelineReason(" and "));
-        //             return 1;
-        //         }
+            // Construct a custom pass pipeline that starts after instruction
+            // selection.
+            if (!getRunPassNames().empty())
+            {
+                if (!MIR)
+                {
+                    WARNING("run-pass is for .mir file only");
+                    return 1;
+                }
+                llvm::TargetPassConfig &TPC = *LLVMTM.createPassConfig(PM);
+                if (TPC.hasLimitedCodeGenPipeline())
+                {
+                    WARNING("run-pass cannot be used with " << TPC.getLimitedCodeGenPipelineReason(" and "));
+                    return 1;
+                }
 
-        //         TPC.setDisableVerify(Options::NoVerify);
-        //         PM.add(&TPC);
-        //         PM.add(MMIWP);
-        //         TPC.printAndVerify("");
-        //         for (const std::string &RunPassName : getRunPassNames())
-        //         {
-        //             if (addPass(PM, argv0, RunPassName, TPC))
-        //                 return 1;
-        //         }
-        //         TPC.setInitialized();
-        //         PM.add(llvm::createPrintMIRPass(*OS));
-        //         PM.add(llvm::createFreeMachineFunctionPass());
-        //     }
-        //     else if (Target->addPassesToEmitFile(
-        //                  PM, *OS, DwoOut ? &DwoOut->os() : nullptr,
-        //                  llvm::codegen::getFileType(), Options::NoVerify, MMIWP))
-        //     {
-        //         FATAL_ERROR("target does not support generation of this file type");
-        //     }
+                TPC.setDisableVerify(Options::NoVerify);
+                PM.add(&TPC);
+                PM.add(MMIWP);
+                TPC.printAndVerify("");
+                for (const std::string &RunPassName : getRunPassNames())
+                {
+                    if (addPass(PM, argv0, RunPassName, TPC))
+                        return 1;
+                }
+                TPC.setInitialized();
+                PM.add(llvm::createPrintMIRPass(*OS));
+                PM.add(llvm::createFreeMachineFunctionPass());
+            }
+            else if (Target->addPassesToEmitFile(
+                         PM, *OS, DwoOut ? &DwoOut->os() : nullptr,
+                         llvm::codegen::getFileType(), Options::NoVerify, MMIWP))
+            {
+                FATAL_ERROR("target does not support generation of this file type");
+            }
 
-        //     const_cast<llvm::TargetLoweringObjectFile *>(LLVMTM.getObjFileLowering())
-        //         ->Initialize(MMIWP->getMMI().getContext(), *Target);
-        //     if (MIR)
-        //     {
-        //         assert(MMIWP && "Forgot to create MMIWP?");
-        //         if (MIR->parseMachineFunctions(*M, MMIWP->getMMI()))
-        //             return 1;
-        //     }
+            const_cast<llvm::TargetLoweringObjectFile *>(LLVMTM.getObjFileLowering())
+                ->Initialize(MMIWP->getMMI().getContext(), *Target);
+            if (MIR)
+            {
+                assert(MMIWP && "Forgot to create MMIWP?");
+                if (MIR->parseMachineFunctions(*M, MMIWP->getMMI()))
+                    return 1;
+            }
 
-        //     // Before executing passes, print the final values of the LLVM options.
-        //     llvm::cl::PrintOptionValues();
+            // Before executing passes, print the final values of the LLVM options.
+            llvm::cl::PrintOptionValues();
 
-        //     // If requested, run the pass manager over the same module again,
-        //     // to catch any bugs due to persistent state in the passes. Note that
-        //     // opt has the same functionality, so it may be worth abstracting this out
-        //     // in the future.
-        //     llvm::SmallVector<char, 0> CompileTwiceBuffer;
-        //     if (Options::CompileTwice)
-        //     {
-        //         std::unique_ptr<llvm::Module> M2(llvm::CloneModule(*M));
-        //         PM.run(*M2);
-        //         CompileTwiceBuffer = Buffer;
-        //         Buffer.clear();
-        //     }
+            // If requested, run the pass manager over the same module again,
+            // to catch any bugs due to persistent state in the passes. Note that
+            // opt has the same functionality, so it may be worth abstracting this out
+            // in the future.
+            llvm::SmallVector<char, 0> CompileTwiceBuffer;
+            if (Options::CompileTwice)
+            {
+                std::unique_ptr<llvm::Module> M2(llvm::CloneModule(*M));
+                PM.run(*M2);
+                CompileTwiceBuffer = Buffer;
+                Buffer.clear();
+            }
 
-        //     PM.run(*M);
+            PM.run(*M);
 
-        //     // Compare the two outputs and make sure they're the same
-        //     if (Options::CompileTwice)
-        //     {
-        //         if (Buffer.size() != CompileTwiceBuffer.size() ||
-        //             (memcmp(Buffer.data(), CompileTwiceBuffer.data(), Buffer.size()) !=
-        //              0))
-        //         {
-        //             llvm::errs()
-        //                 << "Running the pass manager twice changed the output.\n"
-        //                    "Writing the result of the second run to the specified output\n"
-        //                    "To generate the one-run comparison binary, just run without\n"
-        //                    "the compile-twice option\n";
-        //             Out->os() << Buffer;
-        //             Out->keep();
-        //             return 1;
-        //         }
-        //     }
+            // Compare the two outputs and make sure they're the same
+            if (Options::CompileTwice)
+            {
+                if (Buffer.size() != CompileTwiceBuffer.size() ||
+                    (memcmp(Buffer.data(), CompileTwiceBuffer.data(), Buffer.size()) !=
+                     0))
+                {
+                    llvm::errs()
+                        << "Running the pass manager twice changed the output.\n"
+                           "Writing the result of the second run to the specified output\n"
+                           "To generate the one-run comparison binary, just run without\n"
+                           "the compile-twice option\n";
+                    Out->os() << Buffer;
+                    Out->keep();
+                    return 1;
+                }
+            }
 
-        //     if (BOS)
-        //     {
-        //         Out->os() << Buffer;
-        //     }
-        // }
+            if (BOS)
+            {
+                Out->os() << Buffer;
+            }
+        }
 
-        // // Declare success.
-        // Out->keep();
-        // if (DwoOut)
-        //     DwoOut->keep();
+        // Declare success.
+        Out->keep();
+        if (DwoOut)
+            DwoOut->keep();
 
         return 0;
     }
@@ -514,8 +501,8 @@ namespace lcc
 
         llvm::Expected<std::unique_ptr<llvm::ToolOutputFile>> RemarksFileOrErr =
             llvm::setupLLVMOptimizationRemarks(Context, Options::RemarksFilename, Options::RemarksPasses,
-                                         Options::RemarksFormat, Options::RemarksWithHotness,
-                                         Options::RemarksHotnessThreshold);
+                                               Options::RemarksFormat, Options::RemarksWithHotness,
+                                               Options::RemarksHotnessThreshold);
         if (llvm::Error E = RemarksFileOrErr.takeError())
             llvm::handleAllErrors(std::move(E),
                                   [&](const llvm::ErrorInfoBase &EI)
