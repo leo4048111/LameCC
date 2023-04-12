@@ -9,7 +9,7 @@
 #define DEFAULT_TOKEN_DUMP_PATH "tokens.json"
 #define DEFAULT_AST_DUMP_PATH "ast.json"
 #define DEFAULT_IR_DUMP_PATH "ir.ll"
-#define DEFAULT_OUT_FILENAME "a.out"
+#define DEFAULT_ASM_FILENAME "ir.s"
 
 namespace lcc
 {

@@ -161,8 +161,6 @@
          }
 
          return FDOut;
-
-         return nullptr;
      }
 
      int Codegen::compileModule(char **argv, llvm::LLVMContext &Context)
@@ -356,9 +354,6 @@
          if (llvm::codegen::getFloatABIForCalls() != llvm::FloatABI::Default)
              Opts.FloatABIType = llvm::codegen::getFloatABIForCalls();
 
-         // Build up all of the passes that we want to do to the module.
-         llvm::legacy::PassManager PM;
-
          // Figure out where we are going to send the output.
          std::unique_ptr<llvm::ToolOutputFile> Out =
              getOutputStream(TheTarget->getName(), TheTriple.getOS(), argv[0]);
@@ -376,6 +371,9 @@
              if (EC)
                  FATAL_ERROR(EC.message());
          }
+
+         // Build up all of the passes that we want to do to the module.
+         llvm::legacy::PassManager PM;
 
          // Add an appropriate TargetLibraryInfo pass for the module's triple.
          llvm::TargetLibraryInfoImpl TLII(llvm::Triple(M->getTargetTriple()));
@@ -574,7 +572,7 @@
          // metrics.
          for (unsigned I = Options::TimeCompilations; I; --I)
              if (int RetVal = compileModule(Options::argv, Context))
-                 return false;
+                 return RetVal;
 
          // if (RemarksFile)
          //     RemarksFile->keep();

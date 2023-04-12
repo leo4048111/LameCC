@@ -29,7 +29,7 @@ namespace lcc
 
     llvm::cl::opt<std::string>
         Options::OutputFilename("o", llvm::cl::desc("Output filename"), llvm::cl::value_desc("filename"),
-                                llvm::cl::init("-"));
+                                llvm::cl::init(""));
 
     llvm::cl::opt<std::string>
         Options::SplitDwarfOutputFile("split-dwarf-output",
@@ -184,11 +184,11 @@ namespace lcc
             WARNING("AST dump path not set, assuming " << DEFAULT_AST_DUMP_PATH);
         }
 
-        if (OutputFilename == "-")
-        {
-            OutputFilename = DEFAULT_OUT_FILENAME;
-            WARNING("Output filename not set, assuming " << DEFAULT_OUT_FILENAME);
-        }
+        //if (OutputFilename == "-")
+        //{
+        //    OutputFilename = DEFAULT_ASM_FILENAME;
+        //    WARNING("ASM filename not set, assuming " << DEFAULT_ASM_FILENAME);
+        //}
 
         if (IRDumpPath == "-")
         {

@@ -29,6 +29,7 @@ namespace lcc
         std::error_code err;
         auto os = std::make_unique<llvm::raw_fd_ostream>(outPath, err);
         _module->print(*os, nullptr, false, false);
+        os->close();
         return;
     }
 
