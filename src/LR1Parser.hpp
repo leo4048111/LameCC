@@ -71,7 +71,7 @@ namespace lcc
             NonTerminal(NonTerminal &&nonTerminal) : _name(nonTerminal.name()), _node(std::move(nonTerminal._node)){};
         };
 
-        typedef struct
+        typedef struct _SharedPtrComp
         {
             template <typename T>
             bool operator()(const std::shared_ptr<T> &lhs, const std::shared_ptr<T> &rhs) const
