@@ -9,7 +9,7 @@ include_directories("third-party/rang/include")
 aux_source_directory(./src DIR_SRCS)
 add_executable(LameCC ${DIR_SRCS})
 
-find_package(LLVM REQUIRED CONFIG)
+find_package(LLVM_DEBUG REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")

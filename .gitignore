@@ -2,3 +2,4 @@
 /build
 *.json
 /tool
+/build-msvc
