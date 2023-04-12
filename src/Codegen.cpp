@@ -250,8 +250,8 @@
              }
          };
 
-         std::optional<llvm::Reloc::Model> RM = llvm::codegen::getRelocModel();
-         std::optional<llvm::CodeModel::Model> CM = llvm::codegen::getCodeModel();
+         std::optional<llvm::Reloc::Model> RM = llvm::codegen::getExplicitRelocModel();
+         std::optional<llvm::CodeModel::Model> CM = llvm::codegen::getExplicitCodeModel();
 
          const llvm::Target *TheTarget = nullptr;
          std::unique_ptr<llvm::TargetMachine> Target;
