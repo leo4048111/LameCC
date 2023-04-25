@@ -283,13 +283,16 @@ namespace lcc
         class DeclRefExpr : public Expr
         {
             friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
 
         protected:
             std::string _name;
             bool _isCall;
+            bool _isArray;
 
         public:
-            DeclRefExpr(const std::string &name, bool isCall = false) : _name(name), _isCall(isCall) { _isLValue = !isCall; };
+            DeclRefExpr(const std::string &name, bool isCall = false, bool isArray = false) : 
+                _name(name), _isCall(isCall), _isArray(isArray) { _isLValue = !isCall; };
 
             virtual json asJson() const override;
 
@@ -433,7 +436,7 @@ namespace lcc
             virtual bool gen(lcc::IRGeneratorBase *generator) override;
         };
 
-        class ArraySubscriptExpr : public Expr
+        class ArraySubscriptExpr : public DeclRefExpr
         {
             friend class lcc::QuaternionIRGenerator;
             friend class lcc::LLVMIRGenerator;
@@ -442,7 +445,7 @@ namespace lcc
             std::unique_ptr<Expr> _lhs, _rhs;
 
         public:
-            ArraySubscriptExpr(std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs);
+            ArraySubscriptExpr(const std::string& name, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs);
 
             virtual json asJson() const override;
 

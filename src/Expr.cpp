@@ -47,6 +47,15 @@ namespace lcc
             _rhs = std::move(rhs);
         }
 
+        ArraySubscriptExpr::ArraySubscriptExpr(const std::string& name, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs) :
+            DeclRefExpr(name, false, true)
+        {
+            if (rhs->isLValue())
+                rhs = std::make_unique<ImplicitCastExpr>(std::move(rhs), AST::CastExpr::CastType::LValueToRValue);
+            _lhs = std::move(lhs);
+            _rhs = std::move(rhs);
+        }
+
         bool BinaryOperator::isAssignment() const
         {
             switch (_type)

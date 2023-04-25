@@ -679,7 +679,7 @@ namespace lcc
             {
             case TokenType::TOKEN_RSQUARE:
                 nextToken(); // eat ']'
-                return std::make_unique<AST::ArraySubscriptExpr>(std::make_unique<AST::DeclRefExpr>(name), std::move(index));
+                return std::make_unique<AST::ArraySubscriptExpr>(name, std::make_unique<AST::DeclRefExpr>(name), std::move(index));
             default:
                 FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ] to match [ at " << _pCurToken->pos.line << ", " << _pCurToken->pos.column);
                 return nullptr;

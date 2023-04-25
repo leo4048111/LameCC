@@ -1,15 +1,16 @@
 #include "lcc.hpp"
 
-#define LLVMIRGEN_RET_TRUE(val) \
+#define LLVMIRGEN_RET_TRUE(val) do\
     {                           \
         _retVal = (val);        \
         return true;            \
-    }
-#define LLVMIRGEN_RET_FALSE() \
+    }while(0)
+
+#define LLVMIRGEN_RET_FALSE() do\
     {                         \
         _retVal = nullptr;    \
         return false;         \
-    }
+    }while(0)
 
 namespace lcc
 {
@@ -91,21 +92,45 @@ namespace lcc
     llvm::AllocaInst *LLVMIRGenerator::createEntryBlockAlloca(llvm::Function *function, const std::string &name, const std::string type)
     {
         llvm::IRBuilder<> builder(&function->getEntryBlock(), function->getEntryBlock().begin());
+        std::string elemType = type;
+        size_t numElems = 0;
+        bool isArray = false;
 
-        if (type == "int")
-            return builder.CreateAlloca(llvm::Type::getInt32Ty(_context), 0, name.c_str());
-        else if (type == "float")
-            return builder.CreateAlloca(llvm::Type::getFloatTy(_context), 0, name.c_str());
-        else if (type == "char")
-            return builder.CreateAlloca(llvm::Type::getInt8Ty(_context), 0, name.c_str());
-        else if (type == "int*")
-            return builder.CreateAlloca(llvm::Type::getInt32PtrTy(_context), 0, name.c_str());
-        else if (type == "float*")
-            return builder.CreateAlloca(llvm::Type::getFloatPtrTy(_context), 0, name.c_str());
-        else if (type == "char*")
-            return builder.CreateAlloca(llvm::Type::getInt8PtrTy(_context), 0, name.c_str());
+        if (type[type.size() - 1] == ']') // is array type
+        {
+            isArray = true;
+            auto x = type.find('[');
+            elemType = type.substr(0, x);
+            numElems = std::stoi(type.substr(x + 1, type.size() - x - 2));
+        }
+
+        llvm::Type* varType = nullptr;
+
+        if (elemType == "int")
+            varType = llvm::Type::getInt32Ty(_context);
+            // return builder.CreateAlloca(llvm::Type::getInt32Ty(_context), 0, name.c_str());
+        else if (elemType == "float")
+            varType = llvm::Type::getFloatTy(_context);
+            // return builder.CreateAlloca(llvm::Type::getFloatTy(_context), 0, name.c_str());
+        else if (elemType == "char")
+            varType = llvm::Type::getInt8Ty(_context);
+            // return builder.CreateAlloca(llvm::Type::getInt8Ty(_context), 0, name.c_str());
+        else if (elemType == "int*")
+            varType = llvm::Type::getInt32PtrTy(_context);
+            // return builder.CreateAlloca(llvm::Type::getInt32PtrTy(_context), 0, name.c_str());
+        else if (elemType == "float*")
+            varType = llvm::Type::getFloatPtrTy(_context);
+            // return builder.CreateAlloca(llvm::Type::getFloatPtrTy(_context), 0, name.c_str());
+        else if (elemType == "char*")
+            varType = llvm::Type::getInt8PtrTy(_context);
+            // return builder.CreateAlloca(llvm::Type::getInt8PtrTy(_context), 0, name.c_str());
         else
             return nullptr;
+
+        if(isArray)
+            varType = llvm::ArrayType::get(varType, numElems);
+
+        return builder.CreateAlloca(varType, 0, name.c_str());
     }
 
     void LLVMIRGenerator::updateFuncContext(llvm::BasicBlock *entryBB, llvm::BasicBlock *retBB, llvm::AllocaInst *retValAlloca)
@@ -370,13 +395,13 @@ namespace lcc
         // a string literal should be initialized as a global variable
         size_t strSize = strLiteral->value().size() + 1; // +1 for null terminator
         auto s = strLiteral->value();
-        const char* sourceStr = s.c_str();
+        const char *sourceStr = s.c_str();
         auto data = llvm::ConstantDataArray::getString(_context, sourceStr, true);
         llvm::GlobalVariable *gVar = new llvm::GlobalVariable(
-                    *_module, llvm::ArrayType::get(llvm::Type::getInt8Ty(_context), strSize), true,
-                    llvm::GlobalValue::PrivateLinkage,
-                    data,
-                    ".str");
+            *_module, llvm::ArrayType::get(llvm::Type::getInt8Ty(_context), strSize), true,
+            llvm::GlobalValue::PrivateLinkage,
+            data,
+            ".str");
         // FIXME: Exception thrown when setting alignment and unnamed address
         // gVar->setAlignment(llvm::MaybeAlign(1));
         // gVar->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
@@ -427,9 +452,14 @@ namespace lcc
                 auto ld = _builder->CreateLoad(glbVar->getValueType(), glbVar);
                 LLVMIRGEN_RET_TRUE(ld);
             }
+            else if (auto gepInst = llvm::dyn_cast<llvm::GetElementPtrInst>(_retVal))
+            {
+                auto ld = _builder->CreateLoad(llvm::Type::getInt32Ty(_context), gepInst);
+                LLVMIRGEN_RET_TRUE(ld);
+            }
             else
             {
-                LLVMIRGEN_RET_TRUE(_retVal);
+                LLVMIRGEN_RET_FALSE();
             }
         }
 
@@ -449,11 +479,15 @@ namespace lcc
                 LLVMIRGEN_RET_FALSE();
             }
 
+            if (!lhs->gen(this))
+                LLVMIRGEN_RET_FALSE();
+
+            llvm::Value* lhsVar = _retVal;
+
             if (!binaryOperator->_rhs->gen(this))
                 LLVMIRGEN_RET_FALSE();
 
             llvm::Value *rhsVal = _retVal;
-            llvm::Value *lhsVar = lookup(lhs->name());
 
             if (!lhsVar)
             {
@@ -462,13 +496,17 @@ namespace lcc
             }
 
             llvm::Value *lhsVal = nullptr;
-
-            if (llvm::AllocaInst *alloca = llvm::dyn_cast<llvm::AllocaInst>(lhsVar))
-                lhsVal = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
-            else if (llvm::GlobalVariable *glbVar = llvm::dyn_cast<llvm::GlobalVariable>(lhsVar))
-                lhsVal = _builder->CreateLoad(glbVar->getValueType(), glbVar);
-            else
-                LLVMIRGEN_RET_FALSE();
+            if (binaryOperator->type() != AST::BinaryOpType::BO_Assign)
+            {
+                if (llvm::AllocaInst* alloca = llvm::dyn_cast<llvm::AllocaInst>(lhsVar))
+                    lhsVal = _builder->CreateLoad(alloca->getAllocatedType(), alloca);
+                else if (llvm::GlobalVariable* glbVar = llvm::dyn_cast<llvm::GlobalVariable>(lhsVar))
+                    lhsVal = _builder->CreateLoad(glbVar->getValueType(), glbVar);
+                else if (llvm::GetElementPtrInst* gepInst = llvm::dyn_cast<llvm::GetElementPtrInst>(lhsVar))
+                    lhsVal = _builder->CreateLoad(llvm::Type::getInt32Ty(_context), gepInst);
+                else
+                    LLVMIRGEN_RET_FALSE();
+            }
 
             llvm::Value *exprVal = nullptr;
 
@@ -933,12 +971,13 @@ namespace lcc
         }
         llvm::Value *funcCall = nullptr;
 
-        for(int i = 0; i < argVals.size(); i++) {
-            if(argVals[i]->getType() != func->getArg(i)->getType())
+        for (int i = 0; i < argVals.size(); i++)
+        {
+            if (argVals[i]->getType() != func->getArg(i)->getType())
                 argVals[i] = _builder->CreateIntCast(argVals[i], func->getArg(i)->getType(), true, "functionparamcast");
         }
 
-        if(func->getReturnType() == llvm::FunctionType::getVoidTy(_context))
+        if (func->getReturnType() == llvm::FunctionType::getVoidTy(_context))
             funcCall = _builder->CreateCall(func, argVals);
         else
             funcCall = _builder->CreateCall(func, argVals, "calltmp");
@@ -1283,6 +1322,42 @@ namespace lcc
 
     bool LLVMIRGenerator::gen(AST::ArraySubscriptExpr *arraySubscriptExpr)
     {
-        return true;
+        auto lhs = dynamic_pointer_cast<AST::DeclRefExpr>(std::move(arraySubscriptExpr->_lhs));
+
+        if (lhs == nullptr)
+        {
+            FATAL_ERROR("Invalid lhs expression for an array subscript expression");
+            LLVMIRGEN_RET_FALSE();
+        }
+
+        if (!arraySubscriptExpr->_rhs->gen(this))
+            LLVMIRGEN_RET_FALSE();
+
+        llvm::Value *rhsVal = _retVal;
+        llvm::Value *lhsVar = lookup(lhs->name());
+
+        if (!lhsVar)
+        {
+            FATAL_ERROR("Referencing undefined symbol " << lhs->name());
+            LLVMIRGEN_RET_FALSE();
+        }
+
+        if (!rhsVal->getType()->isIntegerTy())
+        {
+            FATAL_ERROR("Expecting integer type for array index " << lhs->name());
+            LLVMIRGEN_RET_FALSE();
+        }
+
+
+        if (llvm::AllocaInst* alloca = llvm::dyn_cast<llvm::AllocaInst>(lhsVar))
+        {
+            auto ptr = _builder->CreateGEP(alloca->getAllocatedType(), alloca, { llvm::ConstantInt::get(llvm::Type::getInt64Ty(_context), 0),  rhsVal });
+            // auto ptr = llvm::GetElementPtrInst::Create(alloca->getAllocatedType(), alloca, { rhsVal }, arraySubscriptExpr->name(), _builder->GetInsertBlock());
+            LLVMIRGEN_RET_TRUE(ptr);
+        }
+        //else if (llvm::GlobalVariable *glbVar = llvm::dyn_cast<llvm::GlobalVariable>(lhsVar))
+        //    lhsVal = _builder->CreateLoad(glbVar->getValueType(), glbVar);
+        else
+            LLVMIRGEN_RET_FALSE();
     }
 }
