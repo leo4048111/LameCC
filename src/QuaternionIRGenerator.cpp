@@ -375,6 +375,11 @@ namespace lcc
         GEN_METHOD_NO_IMPLEMENT
     }
 
+    bool QuaternionIRGenerator::gen(AST::ArraySubscriptExpr *arraySubscriptExpr)
+    {
+        GEN_METHOD_NO_IMPLEMENT
+    }
+
     std::shared_ptr<QuaternionIRGenerator::SymbolTable> QuaternionIRGenerator::mkTable(std::shared_ptr<SymbolTable> previous)
     {
         auto tbl = std::make_shared<SymbolTable>(previous);

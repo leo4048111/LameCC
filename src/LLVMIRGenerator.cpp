@@ -1280,4 +1280,9 @@ namespace lcc
 
         LLVMIRGEN_RET_TRUE(asmRetVal);
     }
+
+    bool LLVMIRGenerator::gen(AST::ArraySubscriptExpr *arraySubscriptExpr)
+    {
+        return true;
+    }
 }

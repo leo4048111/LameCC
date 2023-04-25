@@ -183,6 +183,15 @@ namespace lcc
             return j;
         }
 
+        json ArraySubscriptExpr::asJson() const
+        {
+            json j;
+            j["type"] = "ArraySubscriptExpr";
+            j["lhs"] = json::array({_lhs->asJson()});
+            j["rhs"] = json::array({_rhs->asJson()});
+            return j;
+        }
+
         bool DeclRefExpr::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
@@ -234,6 +243,11 @@ namespace lcc
         }
 
         bool CallExpr::gen(lcc::IRGeneratorBase *generator)
+        {
+            return generator->gen(this);
+        }
+
+        bool ArraySubscriptExpr::gen(lcc::IRGeneratorBase *generator)
         {
             return generator->gen(this);
         }

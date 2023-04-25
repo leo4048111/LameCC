@@ -46,6 +46,7 @@ namespace lcc
         class CallExpr;
         class CastExpr;
         class ImplicitCastExpr;
+        class ArraySubscriptExpr;
 
         // Stmts
         class Stmt;
@@ -426,6 +427,22 @@ namespace lcc
         {
         public:
             ImplicitCastExpr(std::unique_ptr<Expr> expr, CastType type) : CastExpr(std::move(expr), type){};
+
+            virtual json asJson() const override;
+
+            virtual bool gen(lcc::IRGeneratorBase *generator) override;
+        };
+
+        class ArraySubscriptExpr : public Expr
+        {
+            friend class lcc::QuaternionIRGenerator;
+            friend class lcc::LLVMIRGenerator;
+
+        protected:
+            std::unique_ptr<Expr> _lhs, _rhs;
+
+        public:
+            ArraySubscriptExpr(std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs);
 
             virtual json asJson() const override;
 

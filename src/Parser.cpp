@@ -415,6 +415,28 @@ namespace lcc
         std::string name = _pCurToken->content; // function or var name
         nextToken();                            // eat name
 
+        if(_pCurToken->type == TokenType::TOKEN_LSQUARE) // array type
+        {
+            nextToken(); // eat '['
+            if(_pCurToken->type != TokenType::TOKEN_INTEGER)
+            {
+                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected array size");
+                return nullptr;
+            }
+            type += '[' + _pCurToken->content + ']';
+            nextToken(); // eat arr size integer
+            if(_pCurToken->type != TokenType::TOKEN_RSQUARE)
+            {
+                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ]");
+                return nullptr;
+            }
+            nextToken(); // eat ]
+            nextToken(); // eat ;
+            std::unique_ptr<AST::Decl> varDecl = std::make_unique<AST::VarDecl>(name, type);
+            decls.push_back(std::move(varDecl));
+            return std::make_unique<AST::DeclStmt>(decls); // array doesn't support {} initialization
+        }
+
         if (isExtern && !isExternC)
             name = name; // FIXME convertion to cpp symbol name
 
@@ -616,6 +638,7 @@ namespace lcc
     // VarRefOrFuncCall
     // ::= CallExpr '(' params ')'
     // ::= DeclRefExpr
+    // ::= DeclRefExpr '[' Expr ']'
     // params
     // ::= Expr
     // ::= Expr ',' params
@@ -625,7 +648,7 @@ namespace lcc
         nextToken(); // eat name
         switch (_pCurToken->type)
         {
-        case TokenType::TOKEN_LPAREN:
+        case TokenType::TOKEN_LPAREN: // function call
         {
             std::shared_ptr<Token> pLParen = _pCurToken;
             nextToken(); // eat '('
@@ -647,6 +670,20 @@ namespace lcc
 
             nextToken(); // eat ')'
             return std::make_unique<AST::CallExpr>(std::make_unique<AST::DeclRefExpr>(name, true), params);
+        }
+        case TokenType::TOKEN_LSQUARE:
+        {
+            nextToken(); // eat '['
+            std::unique_ptr<AST::Expr> index = nextRValue();
+            switch (_pCurToken->type)
+            {
+            case TokenType::TOKEN_RSQUARE:
+                nextToken(); // eat ']'
+                return std::make_unique<AST::ArraySubscriptExpr>(std::make_unique<AST::DeclRefExpr>(name), std::move(index));
+            default:
+                FATAL_ERROR(TOKEN_INFO(_pCurToken) << "Expected ] to match [ at " << _pCurToken->pos.line << ", " << _pCurToken->pos.column);
+                return nullptr;
+            }
         }
         default:
             return std::make_unique<AST::DeclRefExpr>(name);

@@ -36,4 +36,6 @@ BINARY_OPERATION(ShrAssign, ">>=")
 BINARY_OPERATION(AndAssign, "&=")
 BINARY_OPERATION(XorAssign, "^=")
 BINARY_OPERATION(OrAssign, "|=")
+BINARY_OPERATION(Subscript, "[]")
+
 
