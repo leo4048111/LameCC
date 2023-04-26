@@ -454,7 +454,7 @@ namespace lcc
             }
             else if (auto gepInst = llvm::dyn_cast<llvm::GetElementPtrInst>(_retVal))
             {
-                auto ld = _builder->CreateLoad(llvm::Type::getInt32Ty(_context), gepInst);
+                auto ld = _builder->CreateLoad(gepInst->getResultElementType(), gepInst);
                 LLVMIRGEN_RET_TRUE(ld);
             }
             else
@@ -503,7 +503,7 @@ namespace lcc
                 else if (llvm::GlobalVariable* glbVar = llvm::dyn_cast<llvm::GlobalVariable>(lhsVar))
                     lhsVal = _builder->CreateLoad(glbVar->getValueType(), glbVar);
                 else if (llvm::GetElementPtrInst* gepInst = llvm::dyn_cast<llvm::GetElementPtrInst>(lhsVar))
-                    lhsVal = _builder->CreateLoad(llvm::Type::getInt32Ty(_context), gepInst);
+                    lhsVal = _builder->CreateLoad(gepInst->getResultElementType(), gepInst);
                 else
                     LLVMIRGEN_RET_FALSE();
             }
