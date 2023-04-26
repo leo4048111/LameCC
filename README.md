@@ -8,8 +8,8 @@
 + **Recursive Descent Parser &#9745;**
 + **Semantic Analysis &#9745;**
 + **Intermediate Code Generator(in both Quaternion and LLVM IR forms) &#9745;**
-+ **Code Optimization &#9744; // TODO**
-+ **Assembly Generator &#9744; // TODO**
++ **Code Optimization &#9745;**
++ **Assembly Generator &#9745;**
 ## Miscellaneous features
 + **Prettified json dump**
 + **Log info/error**
