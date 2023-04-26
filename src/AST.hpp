@@ -28,7 +28,7 @@ namespace lcc
             virtual ~ASTNode(){};
         };
 
-        // Cecls
+        // Decls
         class Decl;
         class TranslationUnitDecl;
         class NamedDecl;
@@ -39,6 +39,8 @@ namespace lcc
         // Exprs
         class Expr;
         class IntegerLiteral;
+        class FloatingLiteral;
+        class CharacterLiteral;
         class DeclRefExpr;
         class BinaryOperator;
         class UnaryOperator;
@@ -55,6 +57,7 @@ namespace lcc
         class IfStmt;
         class WhileStmt;
         class DeclStmt;
+        class AsmStmt;
         class CompoundStmt;
         class ReturnStmt;
     }
