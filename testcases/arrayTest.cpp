@@ -16,8 +16,38 @@ void putInt(int i)
 
 int main()
 {
-    int a[5];
-    a[0] += 1;
-    a[1] = 3;
-    putInt(a[1]);
+    int a[10];
+    int idx = 0;
+    while(idx < 10)
+    {
+        a[idx] = 10 - idx;
+        idx++;
+    }
+
+    int i = 0;
+    while(i < 10)
+    {
+        int j = i;
+        while(j < 10)
+        {
+            if (a[i] > a[j])
+            {
+                int tmp = a[i];
+                a[i] = a[j];
+                a[j] = tmp;
+            }
+            j = j + 1;
+        }
+        i++;
+    }
+
+    i = 0;
+    while(i < 10)
+    {
+        putInt(a[i]);
+        puts("");
+        i = i + 1;
+    }
+
+    return 0;
 }

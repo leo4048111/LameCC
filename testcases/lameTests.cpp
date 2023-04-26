@@ -26,6 +26,49 @@ void integerLiteralTest()
     putchar('\n');
 }
 
+void arrayTest()
+{
+    puts("Array test:");
+    int a[10];
+    int idx = 0;
+    puts("Before sorted:");
+    while(idx < 10)
+    {
+        a[idx] = 10 - idx;
+        putInt(a[idx]);
+        putchar(' ');
+        idx++;
+    }
+    puts("");
+    puts("Bubble sorted:");
+    int i = 0;
+    while(i < 10)
+    {
+        int j = i;
+        while(j < 10)
+        {
+            if (a[i] > a[j])
+            {
+                int tmp = a[i];
+                a[i] = a[j];
+                a[j] = tmp;
+            }
+            j = j + 1;
+        }
+        i++;
+    }
+
+    i = 0;
+    while(i < 10)
+    {
+        putInt(a[i]);
+        putchar(' ');
+        i = i + 1;
+    }
+
+    puts("");
+}
+
 int main()
 {
     // external function linkage test
@@ -39,4 +82,7 @@ int main()
 
     // run integer literal test
     integerLiteralTest();
+
+    // run array test
+    arrayTest();
 }
