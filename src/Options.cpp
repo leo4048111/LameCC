@@ -29,7 +29,7 @@ namespace lcc
 
     llvm::cl::opt<std::string>
         Options::OutputFilename("o", llvm::cl::desc("Output filename"), llvm::cl::value_desc("filename"),
-                                llvm::cl::init(""));
+                                llvm::cl::init("asm.s"));
 
     llvm::cl::opt<std::string>
         Options::SplitDwarfOutputFile("split-dwarf-output",
