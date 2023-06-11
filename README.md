@@ -32,6 +32,22 @@
 ## Usage
 Example input source file(see `./testcases/test.cpp`):
 ```cpp
+extern "C" int putchar(char a);
+extern "C" int puts(char *a);
+
+void putInt(int i)
+{
+    if (i < 0)
+    {
+        putchar('-');
+        i = -i;
+    }
+    if (i >= 10)
+        putInt(i / 10);
+
+    putchar(i % 10 + '0');
+}
+
 // nonvoid return type function decl with params
 int NonVoidFuncDeclWithParams(int parm1, int parm2);
 
@@ -45,7 +61,7 @@ float NonVoidFuncDefWithoutParamsWithEmptyBody()
 }
 
 // nonvoid return type function definition with params
-int NonVoidFuncDefWithParamsWithEmptyBody(int param1, char param2)
+int NonVoidFuncDefWithParamsWithEmptyBody(int param1, int param2)
 {
     return 0;
 }
@@ -66,25 +82,96 @@ void VoidFuncDefWithParamsWithEmptyBody(int param1, int param2)
 {
 }
 
-// function definition
-int main()
+void integerLiteralTest()
 {
-    int left = 0;                                                                         // DeclStmt
-    int right = 100;                                                                      // DeclStmt
-    int target = (NonVoidFuncDefWithParamsWithEmptyBody(99, 100) % 2 + 5) - right * left; // complex Expression
+    puts("Integer literal test:");
+    int a = 0;
+    while(a < 100) {
+        putInt(a);
+        putchar(' ');
+        a++;
+    }
+    putchar('\n');
+}
 
-    while (left < right) // WhileStmt
+void arrayTest()
+{
+    puts("Array test:");
+    int a[10];
+    int idx = 0;
+    puts("Before sorted:");
+    while(idx < 10)
     {
-        int mid = (left + right) / 2;
-        if (mid == target)     // IfStmt
-            return mid;        // ReturnStmt
-        else if (mid < target) // elseBody which is another IfStmt
-            left = mid + 1;    // ValueStmt
-        else                   // elseBody
-            right = mid;       // ValueStmt
+        a[idx] = 10 - idx;
+        putInt(a[idx]);
+        putchar(' ');
+        idx++;
+    }
+    puts("");
+    puts("Bubble sorted:");
+    int i = 0;
+    while(i < 10)
+    {
+        int j = i;
+        while(j < 10)
+        {
+            if (a[i] > a[j])
+            {
+                int tmp = a[i];
+                a[i] = a[j];
+                a[j] = tmp;
+            }
+            j = j + 1;
+        }
+        i++;
     }
 
-    return left; // ReturnStmt
+    i = 0;
+    while(i < 10)
+    {
+        putInt(a[i]);
+        putchar(' ');
+        i = i + 1;
+    }
+
+    puts("");
+}
+
+int inlineAsmTest(int num1, int num2)
+{
+    int result = 0;
+    __asm__ ("movl %1, %%eax;"
+             "movl %2, %%ebx;"
+             "addl %%ebx, %%eax;"
+             "movl %%eax, %0;"
+             :"=r"(result)
+             :"r"(num1), "r"(num2)
+             :);
+
+    return result;
+}
+
+int main()
+{
+    // external function linkage test
+    puts("------------------------------------------------------------");
+    puts(".____                          _________ _________"); 
+    puts("|    |   _____    _____   ____ \\_   ___ \\\\_   ___ \\"); 
+    puts("|    |   \\__  \\  /     \\_/ __ \\/    \\  \\//    \\  \\/");
+    puts("|    |___ / __ \\|  Y Y  \\  ___/\\     \\___\\     \\____");
+    puts("|_______ (____  /__|_|  /\\___  >\\______  /\\______  /");
+    puts("------------------------------------------------------------");
+
+    // run integer literal test
+    integerLiteralTest();
+
+    // run array test
+    arrayTest();
+
+    // run inline asm test(which is a asm implementation of sum function)
+    puts("Inline asm test:");
+    int res = inlineAsmTest(1, 2);
+    putInt(res);
 }
 ```
 Command options:
