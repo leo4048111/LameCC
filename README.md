@@ -189,7 +189,7 @@ Available options:
 ```
 Run command:
 ```
-PS D:\Projects\CPP\Homework\LameCC\build> .\LameCC.exe ../testcases/test.cpp -A -T --LR1 ../src/grammar.gram --log
+PS D:\Projects\CPP\Homework\LameCC\build> .\LameCC.exe ../testcases/test.cpp
 ```
 Token dump:
 ```json
@@ -419,7 +419,7 @@ return:                                           ; preds = %while.end
   ret i32 %16
 }
 ```
-LR(1) Canonical Collections:  
+LR(1) Canonical Collections(The following statements will be printed if --log and --LR1 options are set during startup): 
 ![image](https://user-images.githubusercontent.com/74029782/201459552-b618b6cf-a947-4ea0-8bd2-84cfb20fd7a2.png)  
 ACTION GOTO Table:  
 ![image](https://user-images.githubusercontent.com/74029782/201459597-d13e2420-b846-4172-bd68-cf56a0d243ff.png)  
