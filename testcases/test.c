@@ -46,6 +46,7 @@ void VoidFuncDefWithoutParamsWithEmptyBody()
 // void return type function definition with params with empty body
 void VoidFuncDefWithParamsWithEmptyBody(int param1, int param2)
 {
+    
 }
 
 void integerLiteralTest()
